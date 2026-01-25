@@ -1,0 +1,165 @@
+/* style.css */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #fcfcfc;
+    color: #333;
+}
+
+/* NAVBAR */
+.navbar {
+    background-color: #fff;
+    padding: 15px 50px;
+    border-bottom: 3px solid #b8860b; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: #8b4513;
+    line-height: 1.2;
+}
+
+/* BUTTONS */
+.btn-login {
+    background-color: #c49a6c; 
+    color: white;
+    padding: 10px 25px;
+    text-decoration: none;
+    border-radius: 5px;
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+.btn-register {
+    background-color: #00b85c; 
+    color: white;
+    padding: 10px 25px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+/* HERO SECTION */
+.hero {
+    background-color: #f9f4ec; 
+    text-align: center;
+    padding: 80px 20px;
+    margin: 30px 50px;
+    border-radius: 15px;
+}
+
+.hero h1 {
+    color: #8b4513;
+    font-size: 42px;
+    margin-bottom: 15px;
+}
+
+.hero p {
+    font-size: 18px;
+    color: #555;
+    margin-bottom: 40px;
+}
+
+.btn-cta {
+    background-color: #c49a6c;
+    color: white;
+    padding: 15px 40px;
+    text-decoration: none;
+    font-size: 20px;
+    border-radius: 8px;
+    display: inline-block;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* SERVICES */
+.section-title {
+    text-align: center;
+    color: #8b4513;
+    margin-top: 50px;
+    font-size: 28px;
+}
+
+.services-container {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    padding: 0 50px;
+    flex-wrap: wrap;
+    margin-bottom: 50px;
+}
+
+.service-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 30px;
+    width: 220px;
+    text-align: center;
+    background: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.service-icon {
+    font-size: 40px;
+    color: #c49a6c;
+    margin-bottom: 20px;
+}
+
+/* INFO GRID (New Section) */
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    padding: 0 50px 50px 50px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.info-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.info-card h3 {
+    color: #8b4513;
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.info-card ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.info-card ul li {
+    margin-bottom: 12px;
+    position: relative;
+    padding-left: 25px;
+    color: #555;
+}
+
+.info-card ul li::before {
+    content: '●'; 
+    color: #c49a6c;
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+.payment-badge {
+    background-color: #f9f4ec;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+    color: #555;
+    font-weight: 600;
+}
