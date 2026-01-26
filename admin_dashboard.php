@@ -184,7 +184,7 @@ $total_posted = 0; $active_products = 0; $total_sold = 0; $total_earnings = 0.00
             <div class="empty-placeholder">
                 <i class="fas fa-folder-open"></i>
                 <p style="font-weight: 600; color: var(--palette-brown);">Your gallery is currently empty.</p>
-                <p style="font-size: 14px; color: #8a7e72;">Start by adding your first frame to the inventory.</p>
+                <p style="font-size: 14px; color: rgb(138, 126, 114);">Start by adding your first frame to the inventory.</p>
             </div>
         </div>
     </div>
