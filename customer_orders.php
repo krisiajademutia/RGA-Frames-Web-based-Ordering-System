@@ -1,2 +1,2 @@
- <?php include 'customer_header.php'; ?>
+<?php include 'customer_header.php'; ?>
 <!-- MUTIA--->

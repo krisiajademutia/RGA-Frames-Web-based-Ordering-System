@@ -1,41 +1,63 @@
-<!--(The Back-end Logic) Verifies password and redirects Admin to Admin Panel, Customer to Customer Home.-->
 <?php
 // login_process.php
 session_start();
 include 'db_connect.php';
 
 if (isset($_POST['login_btn'])) {
-    $phone = $_POST['phone_number'];
-    $pass  = $_POST['password'];
+    $email    = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
 
-    // 1. Find user by phone number
-    $sql = "SELECT * FROM users WHERE phone_number = '$phone'";
-    $result = $conn->query($sql);
+    if (empty($email) || empty($password)) {
+        $_SESSION['error'] = 'Please enter both email and password.';
+        header("Location: login.php");
+        exit();
+    }
 
-    if ($result->num_rows == 1) {
-        $row = $result->fetch_assoc();
+    $stmt = $conn->prepare("
+        SELECT user_id, first_name, last_name, password, role 
+        FROM tbl_users 
+        WHERE email = ?
+    ");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-        // 2. Verify Password
-        if (password_verify($pass, $row['password'])) {
-            
-            // 3. Set Session Variables
-            $_SESSION['user_id'] = $row['user_id'];
-            $_SESSION['first_name'] = $row['first_name'];
-            $_SESSION['role'] = $row['role'];
+    if ($result->num_rows === 1) {
+        $user = $result->fetch_assoc();
 
-            // 4. Redirect based on Role
-            if ($row['role'] == 'admin') {
-                header("Location: admin_dashboard.php"); 
+        if (password_verify($password, $user['password'])) {
+            // Login successful
+            $_SESSION['user_id']    = $user['user_id'];
+            $_SESSION['first_name'] = $user['first_name'];
+            $_SESSION['role']       = $user['role'];  // This must be 'ADMIN'
+
+            // Success message
+            $_SESSION['success'] = 'Login successful! Welcome back, ' . htmlspecialchars($user['first_name']) . '.';
+
+            // Redirect based on role
+            if (strtoupper($user['role']) === 'ADMIN') {
+                header("Location: admin_dashboard.php");
+                exit();
             } else {
-                header("Location: customer_dashboard.php"); 
+                header("Location: customer_dashboard.php");
+                exit();
             }
-            exit();
-
         } else {
-            echo "<script>alert('Incorrect Password!'); window.location='login.php';</script>";
+            $_SESSION['error'] = 'Incorrect password!';
+            header("Location: login.php");
+            exit();
         }
     } else {
-        echo "<script>alert('Phone number not found!'); window.location='login.php';</script>";
+        $_SESSION['error'] = 'Email not found!';
+        header("Location: login.php");
+        exit();
     }
+
+    $stmt->close();
+} else {
+    header("Location: login.php");
+    exit();
 }
+
+$conn->close();
 ?>

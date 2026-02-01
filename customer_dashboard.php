@@ -1,23 +1,28 @@
 <?php
 session_start();
-include 'db_connect.php'; // Ensure this file exists and connects to your DB
+include 'db_connect.php';
 
-// 1. Security Check: Redirect to login if not logged in
+// 1. Security Check
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
 
-// 2. Fetch User Name for the "Welcome" message
+// 2. Fetch User Name
 $user_id = $_SESSION['user_id'];
-$sql = "SELECT first_name FROM users WHERE user_id = '$user_id'";
-$result = $conn->query($sql);
+$sql = "SELECT first_name FROM tbl_users WHERE user_id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
 if ($result->num_rows > 0) {
     $user = $result->fetch_assoc();
     $first_name = $user['first_name'];
 } else {
     $first_name = "Customer";
 }
+$stmt->close();
 ?>
 
 <!DOCTYPE html>
@@ -26,329 +31,324 @@ if ($result->num_rows > 0) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - RGA Frames</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Georgia:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
     <style>
-        /* --- RGA FRAMES COLOR PALETTE --- */
         :root {
-            --primary-brown: #795338;  /* Deep Wood Brown */
-            --accent-gold: #B89655;    /* Metallic Gold */
-            --fresh-green: #A7C957;    /* Nature Green */
-            --bg-cream: #FFFBF0;       /* Light Cream Background */
-            --text-dark: #333333;
-            --text-muted: #666666;
+            --brand-brown:    #4a2c18;
+            --brand-gold:     #c19a5f;
+            --brand-cream:    #fffdf7;
+            --text-dark:      #1a0f09;
+            --text-muted:     #4a3c32;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-cream);
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: var(--brand-cream);
             color: var(--text-dark);
-            margin: 0;
-            padding-top: 80px; /* Space for your fixed Navbar */
+            font-size: 1.125rem;
+            line-height: 1.65;
+            padding-top: 80px;
         }
 
-        /* CONTAINER */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
+        @media (max-width: 991px) {
+            body {
+                padding-top: 140px;
+            }
         }
 
-        /* HERO SECTION */
-        .hero-section {
-            text-align: center;
-            padding: 50px 20px 40px;
+        @media (max-width: 576px) {
+            body {
+                padding-top: 130px;
+            }
         }
 
-        .hero-title {
-            color: var(--primary-brown);
-            font-size: 2.2rem;
-            font-weight: 800;
-            margin: 0 0 10px 0;
+        /* Thinner navbar */
+        .navbar {
+            padding: 0.6rem 0 !important;
+            min-height: 60px;
+            border-bottom: 3px solid var(--brand-gold);
+            background-color: white !important;
         }
 
-        .hero-subtitle {
-            color: var(--text-muted);
-            font-size: 1rem;
-            max-width: 600px;
-            margin: 0 auto 25px;
-            line-height: 1.5;
+        .navbar-brand {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: var(--brand-brown);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
         }
 
-        .welcome-msg {
-            display: inline-block;
-            color: #d97706; /* Darker orange/brown text */
-            font-weight: 600;
+        .nav-link, .btn {
             font-size: 1.1rem;
-            margin-bottom: 40px;
         }
 
-        /* SECTION HEADERS */
-        .section-header {
-            text-align: center;
-            margin-bottom: 30px;
+        .btn-outline-brown {
+            border: 2px solid var(--brand-brown);
+            color: var(--brand-brown);
+            font-weight: 600;
         }
-        .section-header h2 {
-            color: var(--primary-brown);
-            font-size: 1.5rem;
+
+        .btn-outline-brown:hover {
+            background-color: var(--brand-brown);
+            color: white;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Georgia', serif;
+            color: var(--brand-brown);
             font-weight: 700;
         }
 
-        /* SERVICES GRID (3 Cards) */
+        .hero-section {
+            background: white;
+            padding: 5rem 1rem 4rem;
+            text-align: center;
+            border-radius: 0 0 20px 20px;
+            margin-bottom: 3rem;
+        }
+
+        .hero-title {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            margin-bottom: 1.2rem;
+        }
+
+        .welcome-msg {
+            font-size: 1.4rem;
+            color: var(--brand-brown);
+            font-weight: 600;
+            margin-bottom: 3rem;
+        }
+
         .services-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-            margin-bottom: 60px;
+            gap: 1.8rem;
+            margin-bottom: 4rem;
         }
 
         .service-card {
             background: white;
+            border: 2px solid #e8d9c5;
             border-radius: 16px;
-            padding: 40px 30px;
+            padding: 2.5rem 1.8rem;
             text-align: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
             text-decoration: none;
             color: inherit;
-            border: 2px solid transparent;
+            display: block;
         }
 
         .service-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
-            border-color: var(--accent-gold);
+            transform: translateY(-6px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+            border-color: var(--brand-gold);
         }
 
         .icon-box {
-            width: 70px;
-            height: 70px;
-            background-color: #ff9f1c; /* Orange Background */
+            width: 80px;
+            height: 80px;
+            background-color: var(--brand-gold);
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 20px;
+            margin: 0 auto 1.5rem;
             color: white;
-            font-size: 32px;
+            font-size: 2.2rem;
         }
-        
-        /* Custom Colors for Icons if desired */
-        .icon-ready { background-color: #ff9f1c; } /* Orange */
-        .icon-custom { background-color: #e65100; } /* Darker Orange */
-        .icon-print { background-color: #f59e0b; } /* Gold/Yellow */
 
         .card-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #4a2c1d; /* Dark Brown */
-            margin-bottom: 12px;
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
         }
 
         .card-desc {
-            font-size: 0.9rem;
+            font-size: 1.05rem;
             color: var(--text-muted);
-            line-height: 1.6;
         }
 
-        /* INFO & BULK SECTION (2 Columns) */
         .info-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 25px;
-            margin-bottom: 50px;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 1.8rem;
         }
 
         .info-box {
-            padding: 30px;
+            padding: 2rem;
             border-radius: 12px;
-            border: 1px solid #eee;
-        }
-
-        .box-custom {
-            background-color: #FFF8E7; /* Light Yellow/Gold tint */
-            border-left: 5px solid #FFCA28;
-        }
-
-        .box-bulk {
-            background-color: #F0FDF4; /* Light Green tint */
-            border-left: 5px solid var(--fresh-green);
+            border: 2px solid #e8d9c5;
+            background: white;
         }
 
         .box-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            margin-bottom: 15px;
+            font-size: 1.35rem;
+            margin-bottom: 1.2rem;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 0.8rem;
         }
 
-        .text-brown { color: var(--primary-brown); }
-        .text-green { color: #15803d; } /* Dark Green */
-
-        .info-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
         .info-list li {
-            position: relative;
-            padding-left: 20px;
-            margin-bottom: 10px;
-            color: #555;
-            font-size: 0.95rem;
+            font-size: 1.05rem;
+            margin-bottom: 0.9rem;
         }
 
-        .info-list li::before {
-            content: "•";
-            color: var(--accent-gold);
-            font-weight: bold;
-            position: absolute;
-            left: 0;
-        }
-        
-        /* PAYMENT METHODS SECTION */
         .payment-section {
             background: white;
-            border-radius: 12px;
-            padding: 30px;
-            border: 1px solid #e5e7eb;
-            margin-bottom: 60px;
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin-top: 4rem;
+            border: 2px solid #e8d9c5;
         }
 
         .payment-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--primary-brown);
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-size: 1.35rem;
+            margin-bottom: 1.2rem;
         }
 
         .payment-badges {
             display: flex;
-            gap: 15px;
-            margin-top: 20px;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
 
         .pay-badge {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 1.1rem;
+            padding: 0.9rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 500;
         }
 
         .pay-cod {
-            background-color: #f3f4f6;
-            color: #1f2937;
-            border: 1px solid #d1d5db;
-        }
-        
-        .pay-gcash {
-            background-color: #eff6ff;
-            color: #1e40af; /* GCash Blue */
-            border: 1px solid #bfdbfe;
+            background-color: #f0fdf4;
+            color: #166534;
+            border: 1px solid #86efac;
         }
 
+        .pay-gcash {
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
     </style>
 </head>
 <body>
 
     <?php include 'customer_header.php'; ?>
 
+    <!-- Success / Error Messages -->
+    <div class="container mt-5 pt-3">
+        <?php
+        if (isset($_SESSION['success'])) {
+            echo '<div class="alert alert-success alert-dismissible fade show text-center" role="alert">
+                    ' . htmlspecialchars($_SESSION['success']) . '
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>';
+            unset($_SESSION['success']);
+        }
 
-    <div class="hero-section">
-        <h1 class="hero-title">Transform Your Memories into Art</h1>
-        <p class="hero-subtitle">Professional framing and large printing services with custom designs tailored to your style</p>
-        <div class="welcome-msg">Welcome, <?php echo htmlspecialchars($first_name); ?>!</div>
+        if (isset($_SESSION['error'])) {
+            echo '<div class="alert alert-danger alert-dismissible fade show text-center" role="alert">
+                    ' . htmlspecialchars($_SESSION['error']) . '
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>';
+            unset($_SESSION['error']);
+        }
+        ?>
     </div>
 
-    <div class="container">
-        
-        <div class="section-header">
-            <h2>Our Services</h2>
+    <!-- Hero / Welcome -->
+    <section class="hero-section">
+        <div class="container">
+            <h1 class="hero-title">Welcome, <?php echo htmlspecialchars($first_name); ?>!</h1>
+            <p class="welcome-msg">Let's create something beautiful with your memories today</p>
         </div>
+    </section>
 
+    <!-- Services -->
+    <section class="container py-5">
+        <h2 class="text-center mb-5" style="font-size: 2.2rem;">Our Services</h2>
         <div class="services-grid">
-            
             <a href="customer_shop_readymade.php" class="service-card">
-                <div class="icon-box icon-ready">
-                    <i class="fas fa-box"></i>
-                </div>
+                <div class="icon-box"><i class="fas fa-box"></i></div>
                 <h3 class="card-title">Ready-Made Frames</h3>
-                <p class="card-desc">Beautiful pre-designed frames in various sizes, ready for immediate use.</p>
+                <p class="card-desc">Beautiful pre-designed frames in various sizes — ready to hang today.</p>
             </a>
 
             <a href="customer_shop_custom.php" class="service-card">
-                <div class="icon-box icon-custom">
-                    <i class="fas fa-crop-alt"></i>
-                </div>
+                <div class="icon-box"><i class="fas fa-crop-alt"></i></div>
                 <h3 class="card-title">Custom Framing</h3>
-                <p class="card-desc">Design your own frame with custom sizes, materials, and mounting options.</p>
+                <p class="card-desc">Create your own frame with custom sizes, colors, and materials.</p>
             </a>
 
             <a href="customer_shop_printing.php" class="service-card">
-                <div class="icon-box icon-print">
-                    <i class="fas fa-print"></i>
-                </div>
+                <div class="icon-box"><i class="fas fa-print"></i></div>
                 <h3 class="card-title">Printing Services</h3>
-                <p class="card-desc">High-quality printing on canvas or photo paper for your cherished images.</p>
+                <p class="card-desc">High-quality printing on canvas or photo paper — your photos come to life.</p>
             </a>
-
         </div>
+    </section>
 
+    <!-- Info & Bulk -->
+    <section class="container py-5">
         <div class="info-grid">
-            
-            <div class="info-box box-custom">
-                <div class="box-title text-brown">
+            <div class="info-box">
+                <div class="box-title">
                     <i class="fas fa-palette"></i> Customization Options
                 </div>
-                <ul class="info-list">
-                    <li>Choose from various frame sizes and designs</li>
-                    <li>Select mount type: Wall hanging or with stand</li>
-                    <li>Pick paper quality: Canvas or photo paper</li>
-                    <li>Upload your own images for printing</li>
+                <ul class="list-unstyled">
+                    <li>Choose frame size and style</li>
+                    <li>Wall hanging or with stand</li>
+                    <li>Canvas or photo paper</li>
+                    <li>Upload your own photos</li>
                 </ul>
             </div>
 
-            <div class="info-box box-bulk">
-                <div class="box-title text-green">
+            <div class="info-box">
+                <div class="box-title">
                     <i class="fas fa-boxes"></i> Bulk Order Benefits
                 </div>
-                <ul class="info-list">
-                    <li>Order 30+ frames for special pricing</li>
-                    <li>Get 20% discount on each frame</li>
-                    <li>Free personal delivery by owners</li>
-                    <li>Quality assurance guaranteed</li>
+                <ul class="list-unstyled">
+                    <li>Special pricing for 30+ frames</li>
+                    <li>20% discount per frame</li>
+                    <li>Free delivery by us (owners)</li>
+                    <li>Quality guaranteed</li>
                 </ul>
             </div>
-
         </div>
+    </section>
 
-        <div class="payment-section">
-            <div class="payment-title">
-                <i class="fas fa-wallet"></i> Payment Methods
+    <!-- Payment Methods -->
+    <section class="container payment-section">
+        <h2 class="payment-title text-center mb-4">
+            <i class="fas fa-wallet"></i> Payment Methods
+        </h2>
+        <p class="text-center mb-4" style="font-size: 1.1rem; color: var(--text-muted);">
+            Choose the option that works best for you:
+        </p>
+        <div class="payment-badges justify-content-center">
+            <div class="pay-badge pay-cod">
+                <i class="fas fa-money-bill-wave"></i> Cash on Delivery / Pickup
             </div>
-            <p style="color: #666; font-size: 0.95rem;">We accept the following payment options:</p>
-            
-            <div class="payment-badges">
-                <div class="pay-badge pay-cod">
-                    <i class="fas fa-money-bill-wave" style="color: #10b981;"></i> Cash on Delivery
-                </div>
-                <div class="pay-badge pay-gcash">
-                    <i class="fas fa-mobile-alt" style="color: #2563eb;"></i> GCash
-                </div>
+            <div class="pay-badge pay-gcash">
+                <i class="fas fa-mobile-alt"></i> GCash (50% upfront)
             </div>
         </div>
+    </section>
 
-    </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

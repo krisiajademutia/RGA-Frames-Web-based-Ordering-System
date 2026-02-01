@@ -1,224 +1,154 @@
 <?php
 // customer_header.php
-if (session_status() === PHP_SESSION_NONE) { session_start(); }
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 include 'db_connect.php';
 
 $user_id = $_SESSION['user_id'] ?? 0;
 $display_name = htmlspecialchars($_SESSION['first_name'] ?? 'Customer');
 
-// Counter for the badge
-$notif_count = 0; 
+// Get unread notification count
+$notif_count = 0;
 if ($user_id > 0) {
-    $notif_res = $conn->query("SELECT COUNT(*) as total FROM notifications WHERE user_id = '$user_id' AND is_read = 0");
-    if ($notif_res) { 
+    $notif_res = $conn->query("SELECT COUNT(*) as total FROM tbl_notifications WHERE user_id = '$user_id' AND is_read = 0");
+    if ($notif_res) {
         $row = $notif_res->fetch_assoc();
-        $notif_count = $row['total'] ?? 0; 
+        $notif_count = $row['total'] ?? 0;
     }
 }
 ?>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
-    /* --- SYNCED NAVBAR DIMENSIONS --- */
+    :root {
+        --brand-brown:    #4a2c18;
+        --brand-gold:     #c19a5f;
+        --brand-cream:    #fffdf7;
+        --text-dark:      #1a0f09;
+    }
+
     .navbar {
-        background-color: #B89655;
-        height: 80px; /* MATCHES ADMIN HEADER HEIGHT EXACTLY */
-        width: 100%;
-        position: fixed;
-        top: 0; left: 0;
-        z-index: 1000;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0 30px; /* MATCHES ADMIN PADDING */
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* MATCHES ADMIN SHADOW */
-        box-sizing: border-box;
-        font-family: 'Inter', sans-serif;
+        padding: 0.6rem 0 !important;
+        min-height: 60px;
+        border-bottom: 3px solid var(--brand-gold);
+        background-color: white !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
-    .nav-logo { color: white; text-decoration: none; font-weight: 800; font-size: 20px; display: flex; align-items: center; gap: 12px; }
-    .nav-links { display: flex; gap: 20px; align-items: center; } /* Adjusted gap to match admin nav style */
-    
-    .nav-item { 
-        color: white; 
-        text-decoration: none; 
-        font-size: 13px; /* Matches admin font size */
-        font-weight: 600; 
-        padding: 8px 16px;
-        background: rgba(255,255,255,0.1); /* Subtle pill look */
-        border-radius: 6px;
-        display: flex; 
-        align-items: center; 
-        gap: 8px; 
-    }
-
-    /* --- RIGHT SECTION ALIGNMENT --- */
-    .nav-actions { display: flex; align-items: center; gap: 20px; }
-    
-    .icon-link { 
-        color: rgba(255,255,255,0.9); 
-        text-decoration: none; 
-        font-size: 20px; 
-        position: relative; 
-        cursor: pointer; 
-        display: flex; 
-        align-items: center;
-        background: none;
-        border: none;
-    }
-
-    /* --- THE FIXED 420px DROPDOWN --- */
-    .notif-wrapper { position: relative; }
-    
-    .notif-dropdown {
-        display: none;
-        position: absolute;
-        right: 0;
-        top: 60px; /* Align with Admin Popup position */
-        width: 420px; /* MATCHES ADMIN WIDTH EXACTLY */
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-        z-index: 2000;
-        border: 1px solid #e2e8f0;
-        overflow: hidden;
-    }
-    .notif-dropdown.show { display: block; animation: fadeIn 0.2s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* DROPDOWN HEADER: Synced with Admin Internal Padding */
-    .dropdown-header-custom {
-        padding: 20px 25px; /* MATCHES ADMIN INTERNAL PADDING */
-        border-bottom: 1px solid #f1f5f9; 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center;
-        background-color: #fff;
-    }
-    .dropdown-header-custom span { font-weight: 700; font-size: 15px; color: #1e293b; }
-    .mark-read-custom { font-size: 12px; color: #2563eb; text-decoration: none; font-weight: 500; }
-
-    /* --- THE "KANG TRISHA" CONTAINER --- */
-    .notif-content {
-        max-height: 500px; /* MATCHES ADMIN BODY HEIGHT */
-        overflow-y: auto;
-    }
-
-    .notif-empty {
-        text-align: center;
-        padding: 60px 40px; /* Balanced deep padding */
-        color: #94a3b8;
-    }
-    .notif-empty i { font-size: 40px; display: block; margin-bottom: 15px; opacity: 0.3; }
-    .notif-empty span { font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #64748b; }
-
-    /* FOOTER */
-    .notif-footer {
-        display: block;
-        text-align: center;
-        padding: 16px;
-        background: #f8fafc;
-        color: #B89655;
+    .navbar-brand {
+        font-size: 1.9rem;
         font-weight: 700;
-        font-size: 12px;
-        text-decoration: none;
-        border-top: 1px solid #eee;
+        color: var(--brand-brown);
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
     }
 
-    /* USER SECTION SYNC */
-    .user-profile { 
-        display: flex; 
-        align-items: center; 
-        gap: 15px; 
-        padding-left: 20px; 
-        border-left: 1px solid rgba(255,255,255,0.2); 
-        height: 30px; 
-    }
-    .user-name { font-weight: 600; font-size: 14px; color: white; }
-    .logout-btn-custom { 
-        text-decoration: none; 
-        color: white; 
-        font-size: 12px; 
-        font-weight: 600; 
-        border: 1px solid rgba(255,255,255,0.4); 
-        padding: 6px 12px; 
-        border-radius: 6px; 
+    .nav-link {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: var(--brand-brown) !important;
+        padding: 0.45rem 1rem !important;
     }
 
-    .badge-dot {
-        position: absolute; top: -2px; right: -2px;
-        background: #ef4444; color: white; font-size: 10px; font-weight: bold;
-        width: 16px; height: 16px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center; border: 2px solid #B89655;
+    .nav-link:hover {
+        color: #3a1f10 !important;
+    }
+
+    .btn-outline-brown {
+        border: 2px solid var(--brand-brown);
+        color: var(--brand-brown);
+        font-weight: 600;
+        padding: 0.45rem 1.2rem;
+    }
+
+    .btn-outline-brown:hover {
+        background-color: var(--brand-brown);
+        color: white;
+    }
+
+    .badge-notif {
+        font-size: 0.75rem;
+        padding: 0.35em 0.65em;
+        background-color: #dc3545;
+        color: white;
+        border-radius: 50%;
+        position: absolute;
+        top: -6px;
+        right: -10px;
+    }
+
+    .navbar-toggler {
+        border: none;
+        padding: 0.35rem 0.65rem;
     }
 </style>
 
-<nav class="navbar">
-    <div class="header-left" style="display: flex; align-items: center; gap: 20px;">
-        <a href="customer_dashboard.php" class="nav-logo">
-            <i class="fas fa-layer-group"></i> RGA Frames
+<nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container">
+        <a class="navbar-brand" href="customer_dashboard.php">
+            <i class="fas fa-box-open"></i>
+            RGA Frames
         </a>
-        <div class="nav-links">
-            <a href="customer_dashboard.php" class="nav-item"><i class="fas fa-home"></i> Home</a>
-            <a href="customer_orders.php" class="nav-item"><i class="fas fa-box-open"></i> Orders</a>
-        </div>
-    </div>
 
-    <div class="nav-actions">
-        <div class="notif-wrapper">
-            <button class="icon-link" onclick="toggleNotifs()">
-                <i class="fas fa-bell"></i>
-                <?php if($notif_count > 0): ?>
-                    <span class="badge-dot"><?php echo $notif_count; ?></span>
-                <?php endif; ?>
-            </button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCustomer" aria-controls="navbarCustomer" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-            <div class="notif-dropdown" id="custNotifDropdown">
-                <div class="dropdown-header-custom">
-                    <span>Notifications</span>
-                    <a href="#" class="mark-read-custom">Mark all read</a>
-                </div>
-                
-                <div class="notif-content">
-                    <?php if ($notif_count == 0): ?>
-                        <div class="notif-empty">
-                            <i class="fas fa-bell-slash"></i>
-                            <span>KANG MAY NI</span>
-                        </div>
-                    <?php else: ?>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarCustomer">
+            <ul class="navbar-nav align-items-center gap-3 gap-lg-4">
+                <!-- Dashboard -->
+                <li class="nav-item">
+                    <a class="nav-link" href="customer_dashboard.php">
+                        <i class="fas fa-home me-1"></i> Dashboard
+                    </a>
+                </li>
+
+                <!-- Shop -->
+                <li class="nav-item">
+                    <a class="nav-link" href="customer_orders.php">
+                        <i class="fas fa-store me-1"></i> My Order
+                    </a>
+                </li>
+
+                <!-- Cart -->
+                <li class="nav-item position-relative">
+                    <a class="nav-link" href="customer_cart.php">
+                        <i class="fas fa-shopping-cart me-1"></i> Cart
+                        <?php if (isset($cart_count) && $cart_count > 0): ?>
+                            <span class="badge-notif"><?php echo $cart_count; ?></span>
                         <?php endif; ?>
-                </div>
-                
-                <a href="customer_notifications.php" class="notif-footer">
-                    VIEW ALL NOTIFICATIONS
-                </a>
-            </div>
-        </div>
+                    </a>
+                </li>
 
-        <a href="customer_cart.php" class="icon-link">
-            <i class="fas fa-shopping-cart"></i>
-        </a>
+                <!-- Notifications -->
+                <li class="nav-item position-relative">
+                    <a class="nav-link" href="customer_notifications.php">
+                        <i class="fas fa-bell me-1"></i> Notifications
+                        <?php if ($notif_count > 0): ?>
+                            <span class="badge-notif"><?php echo $notif_count; ?></span>
+                        <?php endif; ?>
+                    </a>
+                </li>
 
-        <div class="user-profile">
-            <span class="user-name">Hi, <?php echo $display_name; ?></span>
-            <a href="index.php" class="logout-btn-custom">Logout</a>
+                <!-- User Dropdown (only Log out) -->
+                <!-- User Dropdown -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user me-1"></i> <?php echo $display_name; ?>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li>
+                            <a class="dropdown-item text-danger" href="index.php">
+                                <i class="fas fa-sign-out-alt me-2"></i> Log out
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
         </div>
     </div>
 </nav>
-
-<script>
-function toggleNotifs() {
-    const dropdown = document.getElementById("custNotifDropdown");
-    dropdown.classList.toggle("show");
-}
-
-window.onclick = function(event) {
-    if (!event.target.closest('.notif-wrapper')) {
-        const dropdown = document.getElementById("custNotifDropdown");
-        if (dropdown && dropdown.classList.contains('show')) {
-            dropdown.classList.remove('show');
-        }
-    }
-}
-</script>

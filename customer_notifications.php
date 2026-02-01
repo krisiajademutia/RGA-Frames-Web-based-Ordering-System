@@ -4,7 +4,7 @@ include 'db_connect.php';
 if (!isset($_SESSION['user_id'])) { header("Location: login.php"); exit(); }
 $user_id = $_SESSION['user_id'];
 
-$sql = "SELECT * FROM notifications WHERE user_id = '$user_id' ORDER BY created_at DESC";
+$sql = "SELECT * FROM tbl_notifications WHERE user_id = '$user_id' ORDER BY created_at DESC";
 $result = $conn->query($sql);
 ?>
 <!DOCTYPE html>

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 31, 2026 at 05:38 PM
+-- Generation Time: Feb 01, 2026 at 02:53 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -272,6 +272,7 @@ CREATE TABLE `tbl_users` (
   `last_name` varchar(100) NOT NULL,
   `username` varchar(100) NOT NULL,
   `email` varchar(150) NOT NULL,
+  `password` varchar(255) NOT NULL,
   `phone_number` varchar(20) DEFAULT NULL,
   `role` enum('CUSTOMER','ADMIN') NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()

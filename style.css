@@ -1,4 +1,26 @@
 /* style.css */
+:root {
+  --brand-brown:   #795338;
+  --brand-gold:    #B89655;
+  --brand-green:   #A7C957;
+  --brand-cream:   #FFFBF0;
+  --brand-dark:    #333333;
+  --brand-muted:   #666666;
+}
+
+/* Make Bootstrap use your colors where it makes sense */
+.btn-primary {
+  --bs-btn-bg: var(--brand-gold);
+  --bs-btn-border-color: var(--brand-gold);
+  --bs-btn-hover-bg: #a37c52;
+  --bs-btn-hover-border-color: #a37c52;
+  --bs-btn-active-bg: #8b6a3e;
+  --bs-btn-active-border-color: #8b6a3e;
+}
+
+.text-primary   { color: var(--brand-gold)    !important; }
+.text-brand     { color: var(--brand-brown)   !important; }
+.bg-cream       { background-color: var(--brand-cream) !important; }
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
