@@ -1,0 +1,685 @@
+/* =========================================
+   1. GLOBAL THEME & FONTS
+   ========================================= */
+:root {
+    --forest-dark:    #0F473A; 
+    --forest-muted:   #4F9280; 
+    --cream-dark:     #CDC3A0; 
+    --cream-light:    #ECE7D4; 
+    
+    --font-primary:   'Inter', sans-serif;
+    --font-secondary: 'Open Sans', sans-serif;
+    --text-black:     #000000;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-secondary);
+    background-color: #FFFFFF;
+    color: var(--text-black);
+}
+
+/* =========================================
+   2. INDEX PAGE STYLES (idx-)
+   ========================================= */
+.idx-navbar {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-bottom: 2px solid var(--cream-dark);
+    padding: 0.8rem 0;
+}
+
+.idx-brand {
+    font-family: var(--font-primary);
+    font-weight: 700;
+    color: var(--forest-dark) !important;
+    font-size: 1.5rem;
+}
+
+.idx-btn-outline-brown {
+    border: 2px solid var(--forest-dark);
+    color: var(--forest-dark);
+    font-weight: 600;
+    font-family: var(--font-primary);
+    transition: 0.3s;
+}
+
+.idx-btn-outline-brown:hover {
+    background-color: var(--forest-dark);
+    color: white !important;
+}
+
+.idx-hero {
+    background: linear-gradient(rgba(15, 71, 58, 0.8), rgba(15, 71, 58, 0.8)), 
+                url('../img/index_image.jpg');
+    background-size: cover;
+    background-position: center;
+    padding: 150px 0 100px;
+    color: white;
+    text-align: center;
+}
+
+.idx-hero-title {
+    font-family: var(--font-primary);
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+}
+
+.idx-hero-text {
+    font-size: 1.25rem;
+    max-width: 800px;
+    margin: 0 auto 2.5rem;
+    opacity: 0.9;
+}
+
+.idx-btn-cta {
+    background-color: var(--cream-dark);
+    color: var(--forest-dark);
+    padding: 15px 40px;
+    font-weight: 700;
+    font-size: 1.2rem;
+    border-radius: 50px;
+    font-family: var(--font-primary);
+    transition: 0.3s;
+}
+
+.idx-btn-cta:hover {
+    background-color: var(--cream-light);
+    transform: translateY(-3px);
+}
+
+.idx-section-title {
+    font-family: var(--font-primary);
+    text-align: center;
+    font-weight: 700;
+    margin-bottom: 3rem;
+    color: var(--forest-dark);
+}
+
+.idx-card {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    border: 1px solid var(--cream-light);
+    height: 100%;
+    transition: 0.3s;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.idx-card:hover {
+    transform: translateY(-10px);
+    border-color: var(--forest-muted);
+}
+
+.idx-service-icon {
+    font-size: 2.5rem;
+    color: var(--forest-muted);
+    margin-bottom: 1.5rem;
+}
+
+.idx-card-title {
+    font-family: var(--font-primary);
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.idx-list-unstyled {
+    list-style: none;
+    padding: 0;
+}
+
+.idx-list-unstyled li {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 0.95rem;
+}
+
+.idx-payment-badge {
+    background: var(--cream-light);
+    color: var(--forest-dark);
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-top: 10px;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+/* =========================================
+   3. SHARED AUTH INPUT STYLES (Common for Log/Reg)
+   ========================================= */
+
+/* Fixes the "cut off" text issue */
+.log-input, .reg-input {
+    width: 100%;
+    border: 1.5px solid var(--forest-dark); 
+    border-radius: 10px !important; 
+    padding-left: 45px !important; /* Space for left icon */
+    padding-right: 50px !important; /* Space for right eye-toggle */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Creates a reserved space below the wrapper for error messages */
+.log-input-wrapper, .reg-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 25px !important; 
+}
+
+/* Absolute Positioning for Error Messages */
+.invalid-feedback {
+    display: none;
+    position: absolute;
+    top: 100%; 
+    left: 5px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #dc3545;
+    margin-top: 2px;
+}
+
+.is-invalid ~ .invalid-feedback {
+    display: block;
+}
+
+.is-invalid {
+    border-color: #dc3545 !important;
+}
+
+/* =========================================
+   4. LOGIN PAGE STYLES (log-)
+   ========================================= */
+.log-body-reset { padding: 0 !important; }
+
+.log-brand-wrapper {
+    display: flex;
+    align-items: center;
+    color: var(--forest-dark);
+    font-family: var(--font-primary);
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.log-form-container {
+    max-width: 400px; 
+    width: 100%;
+}
+
+.log-title { 
+    font-family: var(--font-primary);
+    font-size: 2.2rem; 
+    font-weight: 700; 
+    color: var(--text-black);
+    margin-bottom: 0.5rem;
+}
+
+.log-input { height: 52px; }
+
+.log-field-icon {
+    position: absolute; 
+    left: 15px; 
+    color: var(--forest-dark); 
+    z-index: 5;
+    pointer-events: none;
+}
+
+.log-eye-toggle {
+    position: absolute;
+    right: 15px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 5;
+    color: #888;
+}
+
+.log-btn-submit { 
+    width: 100%; 
+    height: 54px; 
+    background-color: var(--forest-dark); 
+    color: #FFFFFF; 
+    border-radius: 10px; 
+    font-weight: 600;
+    border: none;
+    margin-top: 10px;
+}
+
+.log-image-side { 
+    background-size: cover; 
+    background-position: center;
+    background-image: url('../img/index_image.jpg');
+}
+
+/* =========================================
+   5. REGISTER PAGE STYLES (reg-)
+   ========================================= */
+.reg-body-reset { padding: 0 !important; }
+
+.reg-brand-wrapper {
+    display: flex;
+    align-items: center;
+    color: var(--forest-dark);
+    font-family: var(--font-primary);
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.reg-form-container {
+    max-width: 460px; 
+    width: 100%;
+}
+
+.reg-title { 
+    font-family: var(--font-primary);
+    font-size: 2rem; 
+    font-weight: 700; 
+    color: var(--text-black);
+}
+
+.reg-subtitle {
+    font-size: 0.95rem;
+    color: #555;
+    line-height: 1.5;
+}
+
+.reg-label {
+    font-family: var(--font-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.reg-input { 
+    height: 45px; 
+    font-size: 0.9rem;
+}
+
+/* Reduced padding for name fields which don't have toggles */
+.col-md-6 .reg-input {
+    padding-right: 15px !important;
+}
+
+.reg-field-icon {
+    position: absolute; 
+    left: 15px; 
+    color: var(--forest-dark); 
+    z-index: 5;
+    pointer-events: none;
+}
+
+.reg-eye-toggle {
+    position: absolute;
+    right: 15px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 5;
+    color: #888;
+}
+
+.reg-btn-submit { 
+    width: 100%; 
+    height: 52px; 
+    background-color: var(--forest-dark); 
+    color: #FFFFFF; 
+    border-radius: 10px; 
+    font-weight: 600;
+    border: none;
+    margin-top: 10px;
+}
+
+.reg-login-link {
+    color: var(--forest-dark);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.reg-image-side { 
+    background-size: cover; 
+    background-position: center;
+    background-image: url('../img/index_image.jpg'); 
+}
+
+/* =========================================
+   6. GUEST HEADER (gh-)
+   ========================================= */
+.gh-navbar {
+    background-color: rgba(255, 255, 255, 0.98) !important;
+    padding: 15px 0 !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+    border-bottom: 1px solid var(--cream-dark); 
+}
+
+.gh-navbar-brand {
+    font-family: var(--font-primary);
+    font-weight: 700;
+    color: var(--forest-dark) !important;
+    font-size: 1.4rem;
+    letter-spacing: -0.5px;
+}
+
+.gh-nav-link {
+    font-family: var(--font-primary);
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--forest-dark) !important;
+    transition: 0.3s;
+    padding: 8px 12px !important;
+}
+
+.gh-nav-link:hover {
+    color: var(--forest-muted) !important;
+}
+
+.gh-nav-link-btn {
+    font-family: var(--font-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 8px 24px !important;
+    border-radius: 8px;
+    transition: 0.3s;
+    text-align: center;
+}
+
+.gh-login {
+    color: var(--forest-dark) !important;
+    border: 1.5px solid var(--forest-dark);
+    margin-right: 5px;
+}
+
+.gh-login:hover {
+    background-color: var(--cream-light);
+}
+
+.gh-register {
+    background-color: var(--forest-dark);
+    color: white !important;
+    border: 1.5px solid var(--forest-dark);
+}
+
+.gh-register:hover {
+    background-color: var(--forest-muted);
+    border-color: var(--forest-muted);
+}
+/* =========================================
+   7. FORGOT PASSWORD STYLES (fgt-)
+   ========================================= */
+.fgt-body {
+    background-color: #FFFFFF;
+}
+
+.fgt-form-container {
+    max-width: 420px;
+    width: 100%;
+    padding: 20px;
+}
+
+.fgt-title {
+    font-family: var(--font-primary);
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-black);
+    margin-bottom: 0.5rem;
+}
+
+.fgt-subtitle {
+    font-size: 0.95rem;
+    color: #555;
+    margin-bottom: 1.5rem;
+}
+
+.fgt-label {
+    font-family: var(--font-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.fgt-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 25px !important; /* Space reserved for the error message */
+}
+
+.fgt-input {
+    height: 52px;
+    width: 100%;
+    border: 1.5px solid var(--forest-dark) !important;
+    border-radius: 10px !important;
+    padding-left: 45px !important;
+    padding-right: 20px !important;
+    font-size: 0.95rem;
+}
+
+/* Fix for cut-off text */
+.fgt-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(15, 71, 58, 0.1);
+    border-color: var(--forest-muted) !important;
+}
+
+.fgt-field-icon {
+    position: absolute;
+    left: 15px;
+    color: var(--forest-dark);
+    z-index: 5;
+    pointer-events: none;
+}
+
+.fgt-btn-submit {
+    width: 100%;
+    height: 54px;
+    background-color: var(--forest-dark);
+    color: #FFFFFF;
+    border-radius: 10px;
+    font-weight: 600;
+    border: none;
+    transition: 0.3s ease;
+}
+
+.fgt-btn-submit:hover {
+    background-color: var(--forest-muted);
+    transform: translateY(-1px);
+}
+
+.fgt-back-link {
+    color: var(--forest-dark);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+
+.fgt-back-link:hover {
+    color: var(--forest-muted);
+}
+/* =========================================
+   8. OTP VERIFICATION STYLES (votp-)
+   ========================================= */
+.votp-body {
+    background-color: #FFFFFF;
+}
+
+.votp-page-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 90vh; 
+    padding: 140px 20px 60px 20px; /* Pushed down significantly */
+}
+
+.votp-form-container {
+    max-width: 480px; /* Slightly wider for the 6 boxes */
+    width: 100%;
+}
+
+.votp-title {
+    font-family: var(--font-primary);
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-black);
+}
+
+.votp-subtitle {
+    font-size: 0.95rem;
+    color: #555;
+    line-height: 1.6;
+}
+
+.votp-label {
+    font-family: var(--font-primary);
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: block;
+    margin-bottom: 20px;
+}
+
+/* 6-Box Container */
+.votp-inputs-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.votp-digit {
+    width: 55px;
+    height: 65px;
+    border: 2px solid var(--forest-dark) !important;
+    border-radius: 12px !important;
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--forest-dark);
+    background-color: #fff;
+    transition: all 0.2s ease;
+}
+
+.votp-digit:focus {
+    outline: none;
+    border-color: var(--forest-muted) !important;
+    box-shadow: 0 0 0 4px rgba(15, 71, 58, 0.1);
+}
+
+.votp-error-msg {
+    color: #dc3545;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 15px;
+}
+
+.votp-btn-submit {
+    width: 100%;
+    height: 54px;
+    background-color: var(--forest-dark);
+    color: #FFFFFF;
+    border-radius: 10px;
+    font-weight: 600;
+    border: none;
+    margin-top: 20px;
+    transition: 0.3s ease;
+}
+
+.votp-btn-submit:hover {
+    background-color: var(--forest-muted);
+}
+
+.votp-link {
+    color: var(--forest-dark);
+    font-weight: 700;
+    text-decoration: none;
+}
+/* =========================================
+   9. RESET PASSWORD STYLES (vpsw-)
+   ========================================= */
+.vpsw-body { background-color: #FFFFFF; }
+
+.vpsw-page-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 85vh;
+    padding: 140px 20px 60px 20px; /* Centered but pushed down */
+}
+
+.vpsw-form-container { max-width: 450px; width: 100%; }
+
+.vpsw-icon-box {
+    font-size: 2.5rem;
+    color: var(--forest-dark);
+    margin-bottom: 15px;
+    display: inline-block;
+    border: 2px solid var(--forest-dark);
+    padding: 10px 20px;
+    border-radius: 12px;
+}
+
+.vpsw-title { font-size: 2rem; font-weight: 800; color: #000; margin-bottom: 10px; }
+
+.vpsw-subtitle { font-size: 0.95rem; color: #666; margin-bottom: 30px; }
+
+.vpsw-label { font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; display: block; }
+
+/* Input field matching your screens */
+.vpsw-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.vpsw-input {
+    height: 55px;
+    border: 1.5px solid #d1d1d1 !important;
+    border-radius: 12px !important;
+    padding-left: 45px !important;
+    font-size: 1rem;
+}
+
+.vpsw-input:focus {
+    border-color: var(--forest-dark) !important;
+    box-shadow: 0 0 0 4px rgba(15, 71, 58, 0.1) !important;
+}
+
+.vpsw-field-icon {
+    position: absolute;
+    left: 15px;
+    color: #666;
+    z-index: 5;
+}
+
+/* Error State */
+.vpsw-is-invalid .vpsw-input { border-color: #dc3545 !important; }
+.vpsw-error-msg { color: #dc3545; font-size: 0.85rem; font-weight: 600; }
+
+.vpsw-btn-submit {
+    width: 100%;
+    height: 54px;
+    background-color: var(--forest-dark);
+    color: white;
+    border-radius: 10px;
+    font-weight: 600;
+    border: none;
+    transition: 0.3s;
+}
+
+.vpsw-btn-submit:hover { background-color: var(--forest-muted); opacity: 0.9; }
+
+.vpsw-back-link { color: #666; text-decoration: none; font-size: 0.9rem; font-weight: 500; }
+.vpsw-back-link:hover { color: #000; }
+
+.vpsw-success-card {
+    background: #f8fff9;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #d4edda;
+    color: #155724;
+}
