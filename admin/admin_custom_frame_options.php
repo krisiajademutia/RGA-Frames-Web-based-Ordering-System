@@ -1,12 +1,7 @@
 <?php
-// admin_custom_frame_options.php
-
-// === MUST BE FIRST LINE - NO SPACE, NO BLANK LINE BEFORE THIS ===
-
-ob_start();           // Start output buffering immediately
+ob_start();           
 session_start();
 
-// Load database connection FIRST - before header or anything else
 echo "<!-- Debug: attempting to load db_connect.php -->\n";
 
 $conn_file = __DIR__ . '/../config/db_connect.php';
@@ -504,7 +499,6 @@ if (isset($query_map[$active_tab])) {
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         async function toggleActive(tab, id, checkbox) {
             const newActive = checkbox.checked ? 1 : 0;
@@ -545,5 +539,7 @@ if (isset($query_map[$active_tab])) {
             }
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>

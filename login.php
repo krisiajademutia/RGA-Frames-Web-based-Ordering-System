@@ -1,8 +1,8 @@
 <?php
 session_start();
 $errors = $_SESSION['errors'] ?? [];
-$old_email = $_SESSION['old_email'] ?? '';
-unset($_SESSION['errors'], $_SESSION['old_email']);
+$old_username = $_SESSION['old_username'] ?? '';
+unset($_SESSION['errors'], $_SESSION['old_username']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -25,7 +25,6 @@ unset($_SESSION['errors'], $_SESSION['old_email']);
 
     <div class="container-fluid p-0">
         <div class="row g-0 min-vh-100">
-            
             <div class="col-lg-6 d-flex flex-column p-4 p-md-5">
                 
                 <div class="log-header-area">
@@ -38,7 +37,7 @@ unset($_SESSION['errors'], $_SESSION['old_email']);
                 <div class="log-form-container my-auto mx-auto">
                     <div class="mb-5">
                         <h1 class="log-title">Welcome Back!</h1>
-                        <p class="log-subtitle">Log in to access order history, view frame designs, and manage custom frame selections.</p>
+                        <p class="log-subtitle">Log in with your username to manage your custom frame selections.</p>
                     </div>
 
                     <form action="process/login_process.php" method="POST" novalidate>
@@ -46,12 +45,12 @@ unset($_SESSION['errors'], $_SESSION['old_email']);
                         <div class="mb-4">
                             <label class="log-label">Username</label>
                             <div class="log-input-wrapper">
-                                <span class="log-field-icon">@</span>
-                                <input type="email" name="email" 
-                                       class="form-control log-input <?php echo isset($errors['email']) ? 'is-invalid' : ''; ?>" 
+                                <span class="log-field-icon"><i class="fas fa-user"></i></span>
+                                <input type="text" name="username" 
+                                       class="form-control log-input <?php echo isset($errors['username']) ? 'is-invalid' : ''; ?>" 
                                        placeholder="Enter your username" 
-                                       value="<?php echo htmlspecialchars($old_email); ?>" required>
-                                <div class="invalid-feedback"><?php echo $errors['email'] ?? ''; ?></div>
+                                       value="<?php echo htmlspecialchars($old_username); ?>" required>
+                                <div class="invalid-feedback"><?php echo $errors['username'] ?? ''; ?></div>
                             </div>
                         </div>
 
@@ -83,11 +82,9 @@ unset($_SESSION['errors'], $_SESSION['old_email']);
                 </div>
             </div>
 
-            <div class="col-lg-6 d-none d-lg-block log-image-side">
-                </div>
-
+            <div class="col-lg-6 d-none d-lg-block log-image-side"></div>
         </div>
-    </div>
+    </div>  
 
     <script src="assets/js/main.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

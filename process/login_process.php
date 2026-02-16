@@ -4,20 +4,20 @@ include __DIR__ . '/../config/db_connect.php';
 
 if (isset($_POST['login_btn'])) {
     $errors = [];
-    $email = trim($_POST['email'] ?? '');
+    $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
 
     // 1. Check for empty fields
-    if (empty($email)) {
-        $errors['email'] = "Please enter your registered Gmail address.";
+    if (empty($username)) {
+        $errors['username'] = "Please enter your username.";
     }
     if (empty($password)) {
         $errors['password'] = "Please enter your password.";
     }
 
     if (empty($errors)) {
-        $stmt = $conn->prepare("SELECT user_id, first_name, password, role FROM tbl_users WHERE email = ?");
-        $stmt->bind_param("s", $email);
+        $stmt = $conn->prepare("SELECT user_id, first_name, password, role FROM tbl_users WHERE username = ?");
+        $stmt->bind_param("s", $username);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -41,14 +41,14 @@ if (isset($_POST['login_btn'])) {
                 $errors['password'] = "Incorrect password. Please try again or reset it.";
             }
         } else {
-            $errors['email'] = "No account found with this email address.";
+            $errors['username'] = "No account found with this email address.";
         }
         $stmt->close();
     }
 
     // Return to login with errors
     $_SESSION['errors'] = $errors;
-    $_SESSION['old_email'] = $email;
+    $_SESSION['old_username'] = $username;
     header("Location: ../login.php");
     exit();
 } else {
