@@ -7,7 +7,7 @@ ob_start();           // Start output buffering immediately
 session_start();
 
 // Load database connection FIRST - before header or anything else
-echo "\n";
+echo "<!-- Debug: attempting to load db_connect.php -->\n";
 
 $conn_file = __DIR__ . '/../config/db_connect.php';
 if (!file_exists($conn_file)) {
@@ -16,7 +16,7 @@ if (!file_exists($conn_file)) {
 
 include $conn_file;
 
-echo "\n";
+echo "<!-- Debug: db_connect.php included -->\n";
 
 // Check connection immediately
 if (!$conn) {
@@ -26,12 +26,12 @@ if ($conn->connect_error) {
     die("Fatal: Connection error: " . $conn->connect_error);
 }
 
-echo "\n";
+echo "<!-- Debug: \$conn is alive (" . $conn->host_info . ") -->\n";
 
 // Now safe to include header
 include __DIR__ . '/../includes/admin_header.php';
 
-echo "\n";
+echo "<!-- Debug: admin_header.php included -->\n";
 
 // Check again after header
 if (!$conn) {
@@ -49,6 +49,11 @@ if (!$conn || $conn->connect_error) {
     echo "</pre>";
     exit;
 }
+
+// Debug: confirm connection is alive
+// (remove these lines after testing if you want)
+echo "<!-- Debug: db_connect.php included successfully -->\n";
+echo "<!-- Debug: \$conn is valid (" . $conn->host_info . ") -->\n";
 
 // === AJAX TOGGLE HANDLER ===
 if (isset($_POST['action']) && $_POST['action'] === 'toggle_active') {
@@ -71,7 +76,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'toggle_active') {
         'sizes'     => ['table' => 'tbl_frame_sizes',     'id_col' => 'frame_size_id'],
         'mounts'    => ['table' => 'tbl_mount_type',      'id_col' => 'mount_type_id'],
         'paper'     => ['table' => 'tbl_paper_type',      'id_col' => 'paper_type_id'],
-        'types'     => ['table' => 'tbl_frame_types',      'id_col' => 'frame_type_id'],
+        'types'     => ['table' => 'tbl_frame_type',      'id_col' => 'frame_type_id'],
     ];
 
     if (!isset($table_map[$tab])) {
@@ -94,16 +99,15 @@ if (isset($_POST['action']) && $_POST['action'] === 'toggle_active') {
     exit;
 }
 
+// === ONLY NOW include the header ===
+
+
 // === REST OF YOUR CODE STARTS HERE ===
 $message = "";
 
 // Upload directories
 $upload_base_dir = __DIR__ . '/../uploads/';
-$upload_urls = [
-    'designs' => '/rga_frames/uploads/designs/',
-    'matboards' => '/rga_frames/uploads/matboards/',
-    'types' => '/rga_frames/uploads/types/'
-];
+$upload_base_url = '/rga_frames/uploads/';
 
 foreach (['designs', 'matboards', 'types'] as $sub) {
     $dir = $upload_base_dir . $sub . '/';
@@ -124,7 +128,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
         'sizes'     => ['table' => 'tbl_frame_sizes',     'id_col' => 'frame_size_id'],
         'mounts'    => ['table' => 'tbl_mount_type',      'id_col' => 'mount_type_id'],
         'paper'     => ['table' => 'tbl_paper_type',      'id_col' => 'paper_type_id'],
-        'types'     => ['table' => 'tbl_frame_types',      'id_col' => 'frame_type_id'],
+        'types'     => ['table' => 'tbl_frame_type',      'id_col' => 'frame_type_id'],
     ];
 
     if (isset($table_map[$active_tab])) {
@@ -147,7 +151,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_option'])) {
     $category   = $_POST['category'] ?? '';
     $name       = trim($_POST['option_name'] ?? '');
-    $price      = !empty($_POST['price']) ? floatval($_POST['price']) : 0.00;
+    $price      = !empty($_POST['price']) ? floatval($_POST['price']) : null;
     $is_active  = isset($_POST['is_active']) ? 1 : 0;
     $image_name = '';
 
@@ -165,7 +169,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_option'])) {
             $image_name = time() . '_' . preg_replace('/[^A-Za-z0-9\._-]/', '', basename($_FILES['image']['name']));
             $target = $upload_base_dir . $subfolder . $image_name;
 
-            if (!move_uploaded_file($_FILES['image']['tmp_name'], $target)) {
+            if (move_uploaded_file($_FILES['image']['tmp_name'], $target)) {
+                // success
+            } else {
                 $message = '<div class="alert alert-danger">Failed to upload image.</div>';
             }
         } else {
@@ -205,16 +211,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_option'])) {
                 break;
             case 'paper':
                 $size = trim($_POST['size'] ?? '');
-                $p_dimension = trim($_POST['dimension'] ?? '');
+                $dimension = trim($_POST['dimension'] ?? '');
                 $width_inch = !empty($_POST['width_inch']) ? floatval($_POST['width_inch']) : null;
                 $height_inch = !empty($_POST['height_inch']) ? floatval($_POST['height_inch']) : null;
-                $p_total_inch = ($width_inch && $height_inch) ? $width_inch * $height_inch : null;
+                $total_inch = ($width_inch && $height_inch) ? $width_inch * $height_inch : null;
                 $stmt = $conn->prepare("INSERT INTO tbl_paper_type (paper_name, size, dimension, width_inch, height_inch, total_inch, price, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("sssdddii", $name, $size, $p_dimension, $width_inch, $height_inch, $p_total_inch, $price, $is_active);
+                $stmt->bind_param("sssdddii", $name, $size, $dimension, $width_inch, $height_inch, $total_inch, $price, $is_active);
                 break;
             case 'types':
-                // Updated to use type_price column as per your schema
-                $stmt = $conn->prepare("INSERT INTO tbl_frame_types (type_name, type_price, image_name, is_active) VALUES (?, ?, ?, ?)");
+                $stmt = $conn->prepare("INSERT INTO tbl_frame_types (type_name, price, image_name, is_active) VALUES (?, ?, ?, ?)");
                 $stmt->bind_param("sdsi", $name, $price, $image_name, $is_active);
                 break;
         }
@@ -224,8 +229,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_option'])) {
                             Added successfully!
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>';
-        } else if ($stmt) {
-            $message = '<div class="alert alert-danger">Error adding: ' . htmlspecialchars($stmt->error) . '</div>';
+        } else {
+            $error_msg = $stmt ? $stmt->error : 'Unknown error';
+            $message = '<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            Error adding: ' . htmlspecialchars($error_msg) . '
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>';
         }
 
         if ($stmt) $stmt->close();
@@ -299,6 +308,7 @@ if (isset($query_map[$active_tab])) {
                 <li class="nav-item"><a class="nav-link <?= $active_tab == 'types' ? 'active' : '' ?>" href="?tab=types">Frame Types</a></li>
             </ul>
 
+            <!-- Add Form -->
             <div class="card mb-4 border-0 shadow-sm">
                 <div class="card-header bg-light">
                     <h5 class="mb-0">Add New <?php 
@@ -317,68 +327,74 @@ if (isset($query_map[$active_tab])) {
                 <div class="card-body">
                     <form method="POST" action="" enctype="multipart/form-data" class="row g-3">
                         <input type="hidden" name="category" value="<?= htmlspecialchars($active_tab) ?>">
+                        <input type="hidden" name="edit_id" id="edit_id" value="0">
 
                         <div class="col-md-6">
                             <label class="form-label">Name *</label>
-                            <input type="text" name="option_name" class="form-control" required>
+                            <input type="text" name="option_name" id="option_name" class="form-control" required>
                         </div>
 
                         <?php if (in_array($active_tab, ['designs', 'matboards', 'types'])): ?>
                         <div class="col-md-6">
                             <label class="form-label">Image</label>
                             <input type="file" name="image" class="form-control" accept="image/*">
+                            <small id="current_image" class="form-text text-muted"></small>
                         </div>
                         <?php endif; ?>
 
                         <?php if (in_array($active_tab, ['designs', 'sizes', 'mounts', 'paper', 'types'])): ?>
                         <div class="col-md-6">
                             <label class="form-label">Price (₱)</label>
-                            <input type="number" step="0.01" name="price" class="form-control">
+                            <input type="number" step="0.01" name="price" id="price" class="form-control">
                         </div>
                         <?php endif; ?>
 
                         <?php if ($active_tab == 'sizes' || $active_tab == 'paper'): ?>
                         <div class="col-md-3">
                             <label class="form-label">Width (inch)</label>
-                            <input type="number" step="0.1" name="width_inch" class="form-control">
+                            <input type="number" step="0.1" name="width_inch" id="width_inch" class="form-control">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Height (inch)</label>
-                            <input type="number" step="0.1" name="height_inch" class="form-control">
+                            <input type="number" step="0.1" name="height_inch" id="height_inch" class="form-control">
                         </div>
                         <?php endif; ?>
 
                         <?php if ($active_tab == 'sizes'): ?>
                         <div class="col-md-3">
                             <label class="form-label">Dimension</label>
-                            <input type="text" name="dimension" class="form-control" placeholder="e.g. 8x10">
+                            <input type="text" name="dimension" id="dimension" class="form-control" placeholder="e.g. 8x10">
                         </div>
                         <?php endif; ?>
 
                         <?php if ($active_tab == 'paper'): ?>
                         <div class="col-md-6">
                             <label class="form-label">Size (e.g. A4)</label>
-                            <input type="text" name="size" class="form-control">
+                            <input type="text" name="size" id="size" class="form-control">
                         </div>
                         <?php endif; ?>
 
                         <div class="col-md-6">
                             <label class="form-label">Available</label>
                             <div class="form-check form-switch mt-2">
-                                <input class="form-check-input" type="checkbox" name="is_active" id="is_active_check" checked>
-                                <label class="form-check-label" for="is_active_check">Yes / No</label>
+                                <input class="form-check-input" type="checkbox" name="is_active" id="is_active" checked>
+                                <label class="form-check-label" for="is_active">Yes / No</label>
                             </div>
                         </div>
 
                         <div class="col-12">
-                            <button type="submit" name="add_option" class="btn btn-primary">
+                            <button type="submit" name="add_option" class="btn btn-primary" id="submitBtn">
                                 <i class="fas fa-plus me-1"></i> Add
+                            </button>
+                            <button type="button" class="btn btn-secondary ms-2" id="cancelEdit" style="display:none;">
+                                Cancel Edit
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
 
+            <!-- Table -->
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-light">
                     <h5 class="mb-0">Existing Options</h5>
@@ -404,6 +420,9 @@ if (isset($query_map[$active_tab])) {
                                     <?php if (in_array($active_tab, ['designs', 'matboards', 'types'])): ?>
                                         <th>Image</th>
                                     <?php endif; ?>
+                                    <?php if ($active_tab == 'mounts'): ?>
+                                        <th>Additional Fee</th>
+                                    <?php endif; ?>
                                     <th>Available</th>
                                     <th>Actions</th>
                                 </tr>
@@ -412,9 +431,7 @@ if (isset($query_map[$active_tab])) {
                                 <?php if (empty($options)): ?>
                                     <tr><td colspan="12" class="text-center py-5">No options found.</td></tr>
                                 <?php else: ?>
-                                    <?php $counter = 1; foreach ($options as $option): 
-                                        $id_val = $option[array_key_first($option)];
-                                    ?>
+                                    <?php $counter = 1; foreach ($options as $option): ?>
                                         <tr>
                                             <td><?= $counter++ ?></td>
                                             <td>
@@ -440,7 +457,7 @@ if (isset($query_map[$active_tab])) {
                                             <?php endif; ?>
 
                                             <?php if (in_array($active_tab, ['designs', 'sizes', 'mounts', 'paper', 'types'])): ?>
-                                                <td>₱<?= number_format($option['price'] ?? $option['additional_fee'] ?? $option['type_price'] ?? 0, 2) ?></td>
+                                                <td>₱<?= number_format($option['price'] ?? $option['additional_fee'] ?? 0, 2) ?></td>
                                             <?php endif; ?>
 
                                             <?php if (in_array($active_tab, ['designs', 'matboards', 'types'])): ?>
@@ -454,16 +471,24 @@ if (isset($query_map[$active_tab])) {
                                                 </td>
                                             <?php endif; ?>
 
+                                            <?php if ($active_tab == 'mounts'): ?>
+                                                <td>₱<?= number_format($option['additional_fee'] ?? 0, 2) ?></td>
+                                            <?php endif; ?>
+
                                             <td>
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input" type="checkbox" 
                                                            <?= $option['is_active'] ? 'checked' : '' ?>
-                                                           onchange="toggleActive('<?= $active_tab ?>', <?= $id_val ?>, this)">
+                                                           onchange="toggleActive('<?= $active_tab ?>', <?= $option[array_key_first($option)] ?>, this)">
                                                 </div>
                                             </td>
 
                                             <td>
-                                                <a href="?tab=<?= urlencode($active_tab) ?>&action=delete&id=<?= $id_val ?>" 
+                                                <button class="btn btn-sm btn-warning edit-btn" 
+                                                        data-id="<?= $option[array_key_first($option)] ?>">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                                <a href="?tab=<?= urlencode($active_tab) ?>&action=delete&id=<?= $option[array_key_first($option)] ?>" 
                                                    class="btn btn-sm btn-danger" onclick="return confirm('Delete permanently?')">
                                                     <i class="fas fa-trash"></i> Delete
                                                 </a>
@@ -478,42 +503,47 @@ if (isset($query_map[$active_tab])) {
             </div>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    async function toggleActive(tab, id, checkbox) {
-        const newActive = checkbox.checked ? 1 : 0;
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function toggleActive(tab, id, checkbox) {
+            const newActive = checkbox.checked ? 1 : 0;
 
-        try {
-            const formData = new FormData();
-            formData.append('action', 'toggle_active');
-            formData.append('id', id);
-            formData.append('new_active', newActive);
-            formData.append('tab', tab);
-
-            const response = await fetch(window.location.href, {
-                method: 'POST',
-                body: formData
-            });
-
-            const text = await response.text();
-            let data;
             try {
-                data = JSON.parse(text);
-            } catch (e) {
-                throw new Error('Invalid JSON from server');
-            }
+                const formData = new FormData();
+                formData.append('action', 'toggle_active');
+                formData.append('id', id);
+                formData.append('new_active', newActive);
+                formData.append('tab', tab);
 
-            if (!data.success) {
-                alert('Update failed: ' + (data.error || 'Unknown error'));
+                const response = await fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const text = await response.text();
+
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.log('Raw response (not JSON):', text.substring(0, 500));
+                    throw new Error('Invalid JSON from server');
+                }
+
+                if (data.success) {
+                    const label = checkbox.nextElementSibling;
+                    label.textContent = newActive ? 'Available' : 'Unavailable';
+                } else {
+                    alert('Update failed: ' + (data.error || 'Unknown error'));
+                    checkbox.checked = !checkbox.checked;
+                }
+            } catch (err) {
+                console.error('Toggle error:', err);
+                alert('Connection problem: ' + err.message);
                 checkbox.checked = !checkbox.checked;
             }
-        } catch (err) {
-            alert('Connection problem: ' + err.message);
-            checkbox.checked = !checkbox.checked;
         }
-    }
-</script>
+    </script>
 </body>
 </html>
