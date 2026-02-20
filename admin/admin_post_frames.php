@@ -1,8 +1,4 @@
 <?php
-// admin_custom_frame_options.php
-
-// === MUST BE FIRST LINE - NO SPACE, NO BLANK LINE BEFORE THIS ===
-
 ob_start();           // Start output buffering immediately
 session_start();
 

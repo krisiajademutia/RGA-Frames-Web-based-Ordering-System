@@ -1,5 +1,3 @@
-<<<<<<< Updated upstream
-=======
 <?php
 // includes/admin_header.php
 if (session_status() === PHP_SESSION_NONE) {
@@ -54,4 +52,3 @@ $display_name = htmlspecialchars($_SESSION['first_name'] ?? 'Admin');
         </div>
     </div>
 </header>
->>>>>>> Stashed changes

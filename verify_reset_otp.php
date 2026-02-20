@@ -1,5 +1,12 @@
-<?php include 'process/verify_otp_process.php';?>
-
+<?php
+session_start();
+// Security: If we don't know who is resetting, send them back
+if (!isset($_SESSION['reset_email'])) {
+    header("Location: forgot_password.php");
+    exit();
+}
+$email = $_SESSION['reset_email'];
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +14,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify OTP - RGA Frames</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body class="votp-body">
@@ -20,7 +26,7 @@
                 <p class="votp-subtitle">We sent a 6-digit code to<br><strong><?php echo htmlspecialchars($email); ?></strong></p>
             </div>
 
-            <form method="POST" id="otpForm">
+            <form action="process/verify_otp_process.php" method="POST" id="otpForm">
                 <div class="mb-4">
                     <label class="votp-label text-center">Enter 6-Digit Code</label>
                     <div class="votp-inputs-group">
@@ -34,9 +40,10 @@
 
                     <input type="hidden" name="otp" id="full_otp">
 
-                    <?php if ($error): ?>
-                        <div class="votp-error-msg">
-                            <i class="fas fa-exclamation-circle me-1"></i> <?php echo $error; ?>
+                    <?php if (isset($_SESSION['error'])): ?>
+                        <div class="alert alert-danger mt-3 text-center">
+                            <i class="fas fa-exclamation-circle me-1"></i> 
+                            <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -52,5 +59,15 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="assets/js/otp-handler.js"></script>
+    
+    <script>
+        document.getElementById('otpForm').addEventListener('submit', function(e) {
+            let otp = '';
+            document.querySelectorAll('.votp-digit').forEach(input => {
+                otp += input.value;
+            });
+            document.getElementById('full_otp').value = otp;
+        });
+    </script>
 </body>
 </html>

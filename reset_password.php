@@ -1,5 +1,11 @@
-<?php include 'process/reset_password_process.php'; ?>
-
+<?php
+session_start();
+// Security: Kick user out if they haven't verified OTP yet
+if (!isset($_SESSION['reset_verified']) || $_SESSION['reset_verified'] !== true) {
+    header("Location: login.php");
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,8 +13,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reset Password - RGA Frames</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body class="vpsw-body">
     <?php include 'includes/guest_header.php'; ?>
@@ -20,50 +26,44 @@
                     <i class="fas fa-lock"></i>
                 </div>
                 <h2 class="vpsw-title">Set New Password</h2>
-                <p class="vpsw-subtitle">Password must be at least 8 characters.</p>
+                <p class="vpsw-subtitle">Create a strong password for your account.</p>
             </div>
 
-            <?php if ($success): ?>
-                <div class="vpsw-success-card text-center">
-                    <i class="fas fa-check-circle mb-3"></i>
-                    <p><?php echo $success; ?></p>
-                    <a href="login.php" class="vpsw-btn-submit text-decoration-none d-block">Go to Login</a>
+            <form action="process/reset_password_process.php" method="POST">
+                
+                <div class="mb-4">
+                    <label class="vpsw-label">New Password</label>
+                    <div class="vpsw-input-wrapper">
+                        <span class="vpsw-field-icon"><i class="fas fa-lock"></i></span>
+                        <input type="password" name="new_password" class="form-control vpsw-input" placeholder="********" required minlength="8">
+                    </div>
                 </div>
-            <?php else: ?>
-                <form method="POST">
-                    <div class="mb-4">
-                        <label class="vpsw-label">Password</label>
-                        <div class="vpsw-input-wrapper <?php echo $error ? 'vpsw-is-invalid' : ''; ?>">
-                            <span class="vpsw-field-icon"><i class="fas fa-lock"></i></span>
-                            <input type="password" name="new_password" class="form-control vpsw-input" placeholder="********" required>
-                        </div>
-                    </div>
 
-                    <div class="mb-4">
-                        <label class="vpsw-label">Confirm Password</label>
-                        <div class="vpsw-input-wrapper <?php echo $error ? 'vpsw-is-invalid' : ''; ?>">
-                            <span class="vpsw-field-icon"><i class="fas fa-lock"></i></span>
-                            <input type="password" name="confirm_password" class="form-control vpsw-input" placeholder="********" required>
-                        </div>
-                        <?php if ($error): ?>
-                            <div class="vpsw-error-msg mt-2">
-                                <i class="fas fa-exclamation-circle"></i> <?php echo $error; ?>
-                            </div>
-                        <?php endif; ?>
+                <div class="mb-4">
+                    <label class="vpsw-label">Confirm Password</label>
+                    <div class="vpsw-input-wrapper">
+                        <span class="vpsw-field-icon"><i class="fas fa-lock"></i></span>
+                        <input type="password" name="confirm_password" class="form-control vpsw-input" placeholder="********" required minlength="8">
                     </div>
+                </div>
 
-                    <button type="submit" name="reset_password" class="vpsw-btn-submit">
-                        Reset Password
-                    </button>
-                </form>
-            <?php endif; ?>
+                <?php if (isset($_SESSION['error'])): ?>
+                    <div class="alert alert-danger text-center">
+                        <i class="fas fa-exclamation-circle"></i> 
+                        <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
+                    </div>
+                <?php endif; ?>
+
+                <button type="submit" name="reset_password" class="vpsw-btn-submit">
+                    Reset Password
+                </button>
+            </form>
 
             <div class="text-center mt-4">
                 <a href="login.php" class="vpsw-back-link"><i class="fas fa-arrow-left me-2"></i>back to login</a>
             </div>
         </div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

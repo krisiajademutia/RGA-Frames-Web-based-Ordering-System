@@ -7,51 +7,80 @@ if (isset($_POST['login_btn'])) {
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
 
-    // 1. Check for empty fields
+    // 1. Validation
     if (empty($username)) {
-        $errors['username'] = "Please enter your username.";
+        $errors['username'] = "Please enter your username or email.";
     }
     if (empty($password)) {
         $errors['password'] = "Please enter your password.";
     }
 
     if (empty($errors)) {
-        $stmt = $conn->prepare("SELECT user_id, first_name, password, role FROM tbl_users WHERE username = ?");
-        $stmt->bind_param("s", $username);
+        
+        // --- STEP 1: Check ADMIN Table First ---
+        // (Better to check admin first to ensure staff get priority access)
+        $stmt = $conn->prepare("SELECT admin_id, first_name, password FROM tbl_admin WHERE username = ? OR email = ?");
+        $stmt->bind_param("ss", $username, $username);
         $stmt->execute();
         $result = $stmt->get_result();
 
         if ($result->num_rows === 1) {
-            $user = $result->fetch_assoc();
-            
-            if (password_verify($password, $user['password'])) {
-                // Success
-                $_SESSION['user_id'] = $user['user_id'];
-                $_SESSION['first_name'] = $user['first_name'];
-                $_SESSION['role'] = $user['role'];
+            $admin = $result->fetch_assoc();
+            if (password_verify($password, $admin['password'])) {
+                // SUCCESS: Logged in as ADMIN
+                $_SESSION['user_id']    = $admin['admin_id'];
+                $_SESSION['first_name'] = $admin['first_name'];
+                $_SESSION['role']       = 'ADMIN';
 
-                // FIXED REDIRECT: go up from process/ then into admin/ or customer/
-                $redirect = (strtoupper($user['role']) === 'ADMIN') 
-                    ? "../admin/admin_dashboard.php" 
-                    : "../customer/customer_dashboard.php";
+                // Update Last Login for Admin tracking
+                $admin_id = $admin['admin_id'];
+                $conn->query("UPDATE tbl_admin SET last_login = NOW() WHERE admin_id = $admin_id");
 
-                header("Location: " . $redirect);
+                header("Location: ../admin/admin_dashboard.php");
                 exit();
             } else {
-                $errors['password'] = "Incorrect password. Please try again or reset it.";
+                $errors['password'] = "Incorrect password.";
             }
         } else {
-            $errors['username'] = "No account found with this email address.";
+            // --- STEP 2: Check CUSTOMER Table (if no admin match found) ---
+            $stmt->close(); // Close the previous statement
+            
+            $stmt = $conn->prepare("SELECT customer_id, first_name, password FROM tbl_customer WHERE username = ? OR email = ?");
+            $stmt->bind_param("ss", $username, $username);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if ($result->num_rows === 1) {
+                $user = $result->fetch_assoc();
+                if (password_verify($password, $user['password'])) {
+                    // SUCCESS: Logged in as CUSTOMER
+                    $_SESSION['user_id']    = $user['customer_id'];
+                    $_SESSION['first_name'] = $user['first_name'];
+                    $_SESSION['role']       = 'CUSTOMER';
+
+                    header("Location: ../customer/customer_dashboard.php");
+                    exit();
+                } else {
+                    $errors['password'] = "Incorrect password.";
+                }
+            } else {
+                // If we get here, the user doesn't exist in either table
+                $errors['username'] = "No account found with that username or email.";
+            }
         }
         $stmt->close();
     }
 
-    // Return to login with errors
+    // --- LOGIN FAILED ---
+    // Save errors and redirect back to login page
     $_SESSION['errors'] = $errors;
     $_SESSION['old_username'] = $username;
     header("Location: ../login.php");
     exit();
+
 } else {
+    // If someone tries to access this file directly without clicking login
     header("Location: ../login.php");
     exit();
 }
+?>

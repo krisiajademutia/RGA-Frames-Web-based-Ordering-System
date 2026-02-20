@@ -20,7 +20,7 @@
                 <p class="fgt-subtitle">Enter your email and we'll send you a code.</p>
             </div>
 
-            <form method="POST" action="forgot_password.php">
+            <form method="POST" action="process/forgot_password_process.php">
                 <div class="mb-3">
                     <label class="fgt-label">Email Address</label>
                     <div class="fgt-input-wrapper">

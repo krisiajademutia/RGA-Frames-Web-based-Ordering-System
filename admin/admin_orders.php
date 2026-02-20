@@ -23,12 +23,12 @@ $status_names = [
 // Fetch counts using delivery_status
 $counts = array_fill_keys(array_values($status_names), 0);
 
-$count_sql = "SELECT delivery_status, COUNT(*) as total FROM tbl_orders GROUP BY delivery_status";
+$count_sql = "SELECT order_status, COUNT(*) as total FROM tbl_orders GROUP BY order_status";
 $count_result = $conn->query($count_sql);
 
 if ($count_result) {
     while ($row = $count_result->fetch_assoc()) {
-        $status_code = $row['delivery_status'];
+        $status_code = $row['order_status'];
         if (isset($status_names[$status_code])) {
             $counts[$status_names[$status_code]] = $row['total'];
         }
@@ -50,7 +50,7 @@ $status_map = [
 
 $selected_status = $status_map[$active_tab] ?? 0; // Default to Pending (0)
 
-$where_clause = "o.delivery_status = $selected_status";
+$where_clause = "o.order_status = $selected_status";
 ?>
 
 <!DOCTYPE html>
@@ -330,11 +330,9 @@ $where_clause = "o.delivery_status = $selected_status";
             <!-- Orders List -->
             <div class="orders-content p-3">
                 <?php
-                // Use delivery_status and tbl_users
-                $sql = "SELECT o.*, u.first_name, u.last_name, u.phone_number 
-                        FROM tbl_orders o
-                        JOIN tbl_users u ON o.user_id = u.user_id
-                        WHERE o.delivery_status = $selected_status
+                $sql = "SELECT o.*, c.first_name, c.last_name 
+                        FROM tbl_orders o 
+                        JOIN tbl_customer c ON o.customer_id = c.customer_id 
                         ORDER BY o.created_at DESC";
 
                 $result = $conn->query($sql);
@@ -349,7 +347,7 @@ $where_clause = "o.delivery_status = $selected_status";
                             : '<span class="badge bg-warning">Partial Payment</span>';
 
                         // Map numeric delivery_status to name
-                        $current_status = $status_names[$row['delivery_status']] ?? 'Unknown';
+                        $current_status = $status_names[$row['order_status']] ?? 'Unknown';
                         ?>
                         <div class="order-item border-bottom py-4">
                             <div class="order-info flex-grow-1">

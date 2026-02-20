@@ -4,13 +4,16 @@ include __DIR__ . '/../config/db_connect.php';
 
 // 1. Security Check
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
+    header("Location: ../login.php"); // Go back to main folder for login
     exit();
 }
 
 // 2. Fetch User Name
 $user_id = $_SESSION['user_id'];
-$sql = "SELECT first_name FROM tbl_users WHERE user_id = ?";
+
+// 🔴 FIX: Changed 'tbl_users' to 'tbl_customer' and 'user_id' to 'customer_id'
+$sql = "SELECT first_name FROM tbl_customer WHERE customer_id = ?";
+
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -32,15 +35,12 @@ $stmt->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - RGA Frames</title>
 
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Georgia:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 
-    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <style>
@@ -249,7 +249,6 @@ $stmt->close();
 
     <?php include '../includes/customer_header.php'; ?>
 
-    <!-- Success / Error Messages -->
     <div class="container mt-5 pt-3">
         <?php
         if (isset($_SESSION['success'])) {
@@ -270,7 +269,6 @@ $stmt->close();
         ?>
     </div>
 
-    <!-- Hero / Welcome -->
     <section class="hero-section">
         <div class="container">
             <h1 class="hero-title">Welcome, <?php echo htmlspecialchars($first_name); ?>!</h1>
@@ -278,23 +276,23 @@ $stmt->close();
         </div>
     </section>
 
-    <!-- Services -->
     <section class="container py-5">
         <h2 class="text-center mb-5" style="font-size: 2.2rem;">Our Services</h2>
         <div class="services-grid">
+            
             <a href="customer_shop_readymade.php" class="service-card">
                 <div class="icon-box"><i class="fas fa-box"></i></div>
                 <h3 class="card-title">Ready-Made Frames</h3>
                 <p class="card-desc">Beautiful pre-designed frames in various sizes — ready to hang today.</p>
             </a>
 
-            <a href="customer/customer_shop_custom.php" class="service-card">
+            <a href="customer_shop_custom.php" class="service-card">
                 <div class="icon-box"><i class="fas fa-crop-alt"></i></div>
                 <h3 class="card-title">Custom Framing</h3>
                 <p class="card-desc">Create your own frame with custom sizes, colors, and materials.</p>
             </a>
 
-            <a href="customer/customer_shop_printing.php" class="service-card">
+            <a href="customer_shop_printing.php" class="service-card">
                 <div class="icon-box"><i class="fas fa-print"></i></div>
                 <h3 class="card-title">Printing Services</h3>
                 <p class="card-desc">High-quality printing on canvas or photo paper — your photos come to life.</p>
@@ -302,7 +300,6 @@ $stmt->close();
         </div>
     </section>
 
-    <!-- Info & Bulk -->
     <section class="container py-5">
         <div class="info-grid">
             <div class="info-box">
@@ -331,7 +328,6 @@ $stmt->close();
         </div>
     </section>
 
-    <!-- Payment Methods -->
     <section class="container payment-section">
         <h2 class="payment-title text-center mb-4">
             <i class="fas fa-wallet"></i> Payment Methods

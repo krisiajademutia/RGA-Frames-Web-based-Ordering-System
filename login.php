@@ -18,73 +18,76 @@ unset($_SESSION['errors'], $_SESSION['old_username']);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body class="log-body-reset">
-
+<body class="log-body">
 
     <?php include 'includes/guest_header.php'; ?>
 
-    <div class="container-fluid p-0">
-        <div class="row g-0 min-vh-100">
-            <div class="col-lg-6 d-flex flex-column p-4 p-md-5">
-                
-                <div class="log-header-area">
-                    <div class="log-brand-wrapper">
-                        <i class="fas fa-box-open me-2"></i> 
-                        <span class="log-brand-text">RGA Frames</span>
-                    </div>
-                </div>
+    <div class="log-container">
+        <div class="log-split-layout">
 
-                <div class="log-form-container my-auto mx-auto">
-                    <div class="mb-5">
+            <!-- Form Side -->
+            <div class="log-form-side">
+                <div class="log-form-wrapper">
+
+                    <div class="log-welcome-section">
+                        <div class="log-icon-badge">
+                            <i class="fas fa-box-open"></i>
+                        </div>
                         <h1 class="log-title">Welcome Back!</h1>
                         <p class="log-subtitle">Log in with your username to manage your custom frame selections.</p>
                     </div>
 
-                    <form action="process/login_process.php" method="POST" novalidate>
-                        
-                        <div class="mb-4">
+                    <form action="process/login_process.php" method="POST" novalidate class="log-form">
+
+                        <div class="log-form-group">
                             <label class="log-label">Username</label>
                             <div class="log-input-wrapper">
                                 <span class="log-field-icon"><i class="fas fa-user"></i></span>
-                                <input type="text" name="username" 
-                                       class="form-control log-input <?php echo isset($errors['username']) ? 'is-invalid' : ''; ?>" 
-                                       placeholder="Enter your username" 
+                                <input type="text" name="username"
+                                       class="log-input <?php echo isset($errors['username']) ? 'log-input-error' : ''; ?>"
+                                       placeholder="Enter your username"
                                        value="<?php echo htmlspecialchars($old_username); ?>" required>
-                                <div class="invalid-feedback"><?php echo $errors['username'] ?? ''; ?></div>
                             </div>
+                            <?php if (isset($errors['username'])): ?>
+                                    <p class="log-error-message"><i class="fas fa-circle-exclamation"></i><?php echo $errors['username']; ?></p>
+                                <?php endif; ?>
                         </div>
 
-                        <div class="mb-3">
+                        <div class="log-form-group">
                             <label class="log-label">Password</label>
                             <div class="log-input-wrapper">
                                 <span class="log-field-icon"><i class="fas fa-lock"></i></span>
-                                <input type="password" name="password" id="loginPassword" 
-                                       class="form-control log-input <?php echo isset($errors['password']) ? 'is-invalid' : ''; ?>" 
+                                <input type="password" name="password" id="loginPassword"
+                                       class="log-input <?php echo isset($errors['password']) ? 'log-input-error' : ''; ?>"
                                        placeholder="Enter your password" required>
-                                
                                 <button class="log-eye-toggle" type="button" onclick="togglePassword('loginPassword', this)">
                                     <i class="fas fa-eye-slash"></i>
                                 </button>
-                                
-                                <div class="invalid-feedback"><?php echo $errors['password'] ?? ''; ?></div>
                             </div>
-                            <div class="text-end mt-2">
+                             <?php if (isset($errors['password'])): ?>
+                                    <p class="log-error-message"><i class="fas fa-circle-exclamation"></i><?php echo $errors['password']; ?></p>
+                                <?php endif; ?>
+                            <div class="log-forgot-wrapper">
                                 <a href="forgot_password.php" class="log-forgot-link">Forgot Password?</a>
                             </div>
                         </div>
 
-                        <button type="submit" name="login_btn" class="log-btn-submit">Log-in</button>
+                        <button type="submit" name="login_btn" class="log-btn-submit">
+                            Log In <i class="fas fa-arrow-right"></i>
+                        </button>
                     </form>
 
-                    <p class="log-footer-text mt-5 text-center">
+                    <p class="log-footer-text">
                         Don't have an account? <a href="register.php" class="log-register-link">Register Here</a>
                     </p>
                 </div>
             </div>
 
-            <div class="col-lg-6 d-none d-lg-block log-image-side"></div>
+            <!-- Image Side -->
+            <div class="log-image-side"></div>
+
         </div>
-    </div>  
+    </div>
 
     <script src="assets/js/main.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

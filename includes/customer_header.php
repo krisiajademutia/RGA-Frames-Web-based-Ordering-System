@@ -4,16 +4,33 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 include_once __DIR__ . '/../config/db_connect.php';
-$user_id = $_SESSION['user_id'] ?? 0;
+
+$current_user_id = $_SESSION['user_id'] ?? 0;
 $display_name = htmlspecialchars($_SESSION['first_name'] ?? 'Customer');
 
 $notif_count = 0;
-if ($user_id > 0) {
-    $notif_res = $conn->query("SELECT COUNT(*) as total FROM tbl_notifications WHERE user_id = '$user_id' AND is_read = 0");
-    if ($notif_res) {
-        $row = $notif_res->fetch_assoc();
-        $notif_count = $row['total'] ?? 0;
+$cart_count = 0;
+
+if ($current_user_id > 0) {
+    // 1. Fix: Count Notifications (Changed 'user_id' to 'customer_id')
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM tbl_notifications WHERE customer_id = ? AND is_read = 0");
+    $stmt->bind_param("i", $current_user_id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    if ($res && $row = $res->fetch_assoc()) {
+        $notif_count = $row['total'];
     }
+    $stmt->close();
+
+    // 2. Fix: Calculate Cart Count (Added this query because you use $cart_count in HTML)
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM tbl_cart WHERE customer_id = ?");
+    $stmt->bind_param("i", $current_user_id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    if ($res && $row = $res->fetch_assoc()) {
+        $cart_count = $row['total'];
+    }
+    $stmt->close();
 }
 ?>
 

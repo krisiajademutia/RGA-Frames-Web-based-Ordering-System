@@ -2,47 +2,45 @@
 session_start();
 include __DIR__ . '/../config/db_connect.php';
 
-if (!isset($_SESSION['user_id'])) { header("Location: login.php"); exit(); }
-$user_id = $_SESSION['user_id'];
+// 1. Security Check
+if (!isset($_SESSION['user_id'])) { 
+    header("Location: ../login.php"); 
+    exit(); 
+}
 
-$sql = "SELECT * FROM tbl_notifications WHERE user_id = '$user_id' ORDER BY created_at DESC";
-$result = $conn->query($sql);
+$current_user_id = $_SESSION['user_id'];
+
+// 2. Fetch Notifications
+$sql = "SELECT * FROM tbl_notifications WHERE customer_id = ? ORDER BY created_at DESC";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $current_user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+// 🔴 MOVE CLOSE HERE: Close it as soon as we have the $result set
+$stmt->close(); 
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Notification History - RGA Frames</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
     <style>
-        body {
-            background-color: #fffdf7 !important; /* Match your brand cream */
-        }
-        /* Style the notification list specifically */
-        .notif-card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-        .notif-item {
-            padding: 1.25rem;
-            border-bottom: 1px solid #f0f0f0;
-            transition: background 0.2s ease;
-        }
-        .notif-item:last-child {
-            border-bottom: none;
-        }
-        .notif-item.unread {
-            background-color: #fdf8ef; /* Slight gold tint for unread */
-            border-left: 4px solid var(--brand-gold, #c19a5f);
-        }
-        .notif-icon {
-            font-size: 1.25rem;
-            color: #4a2c18;
-            margin-top: 3px;
-        }
+        body { background-color: #fffdf7 !important; }
+        .notif-card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .notif-item { padding: 1.25rem; border-bottom: 1px solid #f0f0f0; transition: background 0.2s ease; }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-item.unread { background-color: #fdf8ef; border-left: 4px solid #c19a5f; }
+        .notif-icon { font-size: 1.25rem; color: #4a2c18; margin-top: 3px; }
     </style>
 </head>
-<body style="padding-top: 100px;"> <?php include '../includes/customer_header.php'; ?>
+<body style="padding-top: 100px;"> 
+    
+    <?php include '../includes/customer_header.php'; ?>
 
     <div class="container mt-5">
         <div class="row justify-content-center">
@@ -56,7 +54,7 @@ $result = $conn->query($sql);
                     <div class="card-body p-0">
                         <?php if ($result && $result->num_rows > 0): ?>
                             <?php while($row = $result->fetch_assoc()): ?>
-                                <div class="notif-item d-flex gap-3 <?php echo $row['is_read']==0 ? 'unread' : ''; ?>">
+                                <div class="notif-item d-flex gap-3 <?php echo ($row['is_read'] == 0) ? 'unread' : ''; ?>">
                                     <div class="notif-icon">
                                         <i class="fas fa-info-circle"></i>
                                     </div>
