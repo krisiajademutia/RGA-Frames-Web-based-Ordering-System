@@ -9,7 +9,7 @@ $display_name = htmlspecialchars($_SESSION['first_name'] ?? 'Admin');
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link rel="stylesheet" href="/RGA-Frames-Web-based-Ordering-System-main/assets/css/style.css">
+<link rel="stylesheet" href="/rga_frames/assets/css/style.css">
 
 <header class="admn-hdr-container">
     <div class="admn-hdr-left">
@@ -21,16 +21,16 @@ $display_name = htmlspecialchars($_SESSION['first_name'] ?? 'Admin');
     </div>
 
     <nav class="admn-hdr-nav">
-        <a href="/RGA-Frames-Web-based-Ordering-System-main/admin/admin_dashboard.php" class="admn-hdr-nav-link">
+        <a href="/rga_frames/admin/admin_dashboard.php" class="admn-hdr-nav-link">
             <i class="fas fa-chart-line"></i> Dashboard
         </a>
-        <a href="/RGA-Frames-Web-based-Ordering-System-main/admin/admin_orders.php" class="admn-hdr-nav-link">
+        <a href="/rga_frames/admin/admin_orders.php" class="admn-hdr-nav-link">
             <i class="fas fa-shopping-bag"></i> Orders
         </a>
-        <a href="/RGA-Frames-Web-based-Ordering-System-main/admin/admin_post_frames.php" class="admn-hdr-nav-link">
+        <a href="/rga_frames/admin/admin_post_frames.php" class="admn-hdr-nav-link">
             <i class="fas fa-image"></i> Post Frames
         </a>
-        <a href="/RGA-Frames-Web-based-Ordering-System-main/admin/admin_custom_frame_options.php" class="admn-hdr-nav-link">
+        <a href="/rga_frames/admin/admin_custom_frame_options.php" class="admn-hdr-nav-link">
             <i class="fas fa-tools"></i> Frame Options
         </a>
     </nav>

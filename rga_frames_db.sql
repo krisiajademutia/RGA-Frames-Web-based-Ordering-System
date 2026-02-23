@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 20, 2026 at 07:09 AM
+-- Generation Time: Feb 23, 2026 at 11:14 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -43,7 +43,7 @@ CREATE TABLE `tbl_admin` (
 --
 
 INSERT INTO `tbl_admin` (`admin_id`, `first_name`, `last_name`, `username`, `email`, `password`, `created_at`, `last_login`) VALUES
-(1, 'Admin', 'User', 'admin', 'mutiakrisiaj@gmail.com', '$2y$10$s4WDlv178NFxurKY2nSHnOjqM70Afhlk37Lx.T68KYTpMofJ1SnqO', '2026-02-18 12:57:20', '2026-02-19 21:55:25');
+(1, 'Admin', 'User', 'admin', 'mutiakrisiaj@gmail.com', '$2y$10$s4WDlv178NFxurKY2nSHnOjqM70Afhlk37Lx.T68KYTpMofJ1SnqO', '2026-02-18 12:57:20', '2026-02-21 15:37:26');
 
 -- --------------------------------------------------------
 
@@ -79,7 +79,9 @@ CREATE TABLE `tbl_customer` (
 --
 
 INSERT INTO `tbl_customer` (`customer_id`, `first_name`, `last_name`, `username`, `email`, `password`, `phone_number`, `created_at`) VALUES
-(1, 'Krisia Jade', 'Mutia', 'krisia_jade', 'mutiakrisiajade@gmail.com', '$2y$10$eRG5oCTiS7hVF8bhLiT11OiNc5pbJh6P6OP42W7VJSXWO6gwIRM.q', '09306282413', '2026-02-18 01:32:41');
+(1, 'Krisia Jade', 'Mutia', 'krisia_jade', 'mutiakrisiajade@gmail.com', '$2y$10$69kfh2Rlc36elHglY7FOvuF5UWpPysONWJM60kuNaClGbLs2nnWnu', '09306282413', '2026-02-18 01:32:41'),
+(2, 'Customer', 'Test', 'customer_101', 'customer@gmail.com', '$2y$10$aqvIYWozM8Rk0pK/7Ra6J.PeUelKWfcW8zna4vuGQN.xoH1YWy.fy', '09890987154', '2026-02-21 03:22:36'),
+(5, 'Kim', 'Taehyung', 'taehyung_v', 'taehyungkim@gmail.com', '$2y$10$e6mIsdSUXZjZGoxatmiLmOvsfPIaaXa3gBgApsaEruRoPFhDjNopu', '09898922312', '2026-02-21 12:27:48');
 
 -- --------------------------------------------------------
 
@@ -107,16 +109,17 @@ CREATE TABLE `tbl_custom_frame_product` (
 CREATE TABLE `tbl_frame_colors` (
   `frame_color_id` int(11) NOT NULL,
   `color_name` varchar(50) NOT NULL,
-  `is_active` tinyint(1) DEFAULT 1
+  `is_active` tinyint(1) DEFAULT 1,
+  `color_image` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `tbl_frame_colors`
 --
 
-INSERT INTO `tbl_frame_colors` (`frame_color_id`, `color_name`, `is_active`) VALUES
-(1, 'Red', 1),
-(2, 'Gold', 1);
+INSERT INTO `tbl_frame_colors` (`frame_color_id`, `color_name`, `is_active`, `color_image`) VALUES
+(1, 'Red', 1, NULL),
+(2, 'Gold', 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -298,7 +301,8 @@ CREATE TABLE `tbl_otp` (
 --
 
 INSERT INTO `tbl_otp` (`otp_id`, `customer_id`, `admin_id`, `otp_code`, `expired_at`, `is_used`) VALUES
-(8, NULL, 1, '113669', '2026-02-18 16:54:56', 1);
+(8, NULL, 1, '113669', '2026-02-18 16:54:56', 1),
+(18, 1, NULL, '041958', '2026-02-21 15:53:19', 1);
 
 -- --------------------------------------------------------
 
@@ -553,7 +557,7 @@ ALTER TABLE `tbl_cart`
 -- AUTO_INCREMENT for table `tbl_customer`
 --
 ALTER TABLE `tbl_customer`
-  MODIFY `customer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `customer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `tbl_custom_frame_product`
@@ -619,7 +623,7 @@ ALTER TABLE `tbl_orders`
 -- AUTO_INCREMENT for table `tbl_otp`
 --
 ALTER TABLE `tbl_otp`
-  MODIFY `otp_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `otp_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `tbl_paper_type`
