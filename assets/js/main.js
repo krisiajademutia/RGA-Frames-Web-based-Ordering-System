@@ -17,39 +17,7 @@ function togglePassword(inputId, btn) {
     }
 }
 
-// 2. REGISTRATION FORM VALIDATION
-document.addEventListener('DOMContentLoaded', function() {
-    const regForm = document.getElementById('regForm');
-
-    if (regForm) {
-        regForm.addEventListener('submit', function(e) {
-            const email = document.getElementById('email');
-            const phone = document.getElementById('phone_number');
-            let isValid = true;
-
-            // Reset previous validation states
-            email.classList.remove('is-invalid');
-            phone.classList.remove('is-invalid');
-
-            // Gmail Validation: Must end with @gmail.com
-            const emailValue = email.value.trim().toLowerCase();
-            if (!emailValue.endsWith('@gmail.com')) {
-                email.classList.add('is-invalid');
-                isValid = false;
-            }
-
-            // Phone Validation: Must be 11 digits and start with 09
-            const phoneValue = phone.value.trim().replace(/\D/g, ''); // Remove non-digits
-            if (phoneValue.length !== 11 || !phoneValue.startsWith('09')) {
-                phone.classList.add('is-invalid');
-                isValid = false;
-            }
-
-            // If any validation failed, stop the form from submitting to the PHP process
-            if (!isValid) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        });
-    }
-});
+// NOTE: Registration form validation has been removed from JS. 
+// We are now letting the PHP backend handle validation so that 
+// ALL error messages (empty fields, duplicates, etc.) show up 
+// perfectly under the inputs at the same time!

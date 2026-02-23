@@ -33,17 +33,25 @@ if (!isset($_SESSION['reset_verified']) || $_SESSION['reset_verified'] !== true)
                 
                 <div class="mb-4">
                     <label class="vpsw-label">New Password</label>
-                    <div class="vpsw-input-wrapper">
+                    <div class="vpsw-input-wrapper position-relative">
                         <span class="vpsw-field-icon"><i class="fas fa-lock"></i></span>
-                        <input type="password" name="new_password" class="form-control vpsw-input" placeholder="********" required minlength="8">
+                        <input type="password" name="new_password" id="newPassword" class="form-control vpsw-input" placeholder="********" required minlength="8">
+                        
+                        <button class="reg-eye-toggle" type="button" onclick="togglePassword('newPassword', this)">
+                            <i class="fas fa-eye-slash"></i>
+                        </button>
                     </div>
                 </div>
 
                 <div class="mb-4">
                     <label class="vpsw-label">Confirm Password</label>
-                    <div class="vpsw-input-wrapper">
+                    <div class="vpsw-input-wrapper position-relative">
                         <span class="vpsw-field-icon"><i class="fas fa-lock"></i></span>
-                        <input type="password" name="confirm_password" class="form-control vpsw-input" placeholder="********" required minlength="8">
+                        <input type="password" name="confirm_password" id="confirmPassword" class="form-control vpsw-input" placeholder="********" required minlength="8">
+                        
+                        <button class="reg-eye-toggle" type="button" onclick="togglePassword('confirmPassword', this)">
+                            <i class="fas fa-eye-slash"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -64,6 +72,7 @@ if (!isset($_SESSION['reset_verified']) || $_SESSION['reset_verified'] !== true)
             </div>
         </div>
     </div>
+    <script src="assets/js/main.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

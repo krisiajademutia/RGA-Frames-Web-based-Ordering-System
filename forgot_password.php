@@ -1,5 +1,9 @@
-<?php include 'process/forgot_password_process.php'; ?>
-
+<?php 
+session_start(); 
+// Grab the error from the session, then clear it so it doesn't stay there forever
+$error = $_SESSION['error'] ?? '';
+unset($_SESSION['error']);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -31,7 +35,7 @@
                                value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" required autofocus>
                         
                         <div class="invalid-feedback">
-                            <?php echo $error; ?>
+                            <?php echo htmlspecialchars($error); ?>
                         </div>
                     </div>
                 </div>

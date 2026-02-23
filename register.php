@@ -1,8 +1,8 @@
 <?php
 session_start();
+
 $errors = $_SESSION['errors'] ?? [];
-$old = $_SESSION['old_input'] ?? [];
-unset($_SESSION['errors'], $_SESSION['old_input']);
+$old    = $_SESSION['old_input'] ?? [];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -31,7 +31,7 @@ unset($_SESSION['errors'], $_SESSION['old_input']);
                 <div class="reg-header-area">
                     <div class="reg-brand-wrapper">
                         <i class="fas fa-box-open me-2"></i> 
-                        <span class="reg-brand-text">RGA Frames</span>
+                        <span class="reg-brand-text"> </span>
                     </div>
                 </div>
 
@@ -53,8 +53,13 @@ unset($_SESSION['errors'], $_SESSION['old_input']);
                                            placeholder="Enter your first name" 
                                            value="<?php echo htmlspecialchars($old['first_name'] ?? ''); ?>" required>
                                 </div>
-                                <div class="invalid-feedback"><?php echo $errors['first_name'] ?? ''; ?></div>
+                                <?php if (isset($errors['first_name'])): ?>
+                                    <div class="text-danger small mt-1">
+                                        <?php echo htmlspecialchars($errors['first_name']); ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
+                            
                             <div class="col-md-6 mb-3">
                                 <label class="reg-label">Last Name</label>
                                 <div class="reg-input-wrapper">
@@ -64,7 +69,11 @@ unset($_SESSION['errors'], $_SESSION['old_input']);
                                            placeholder="Enter your last name" 
                                            value="<?php echo htmlspecialchars($old['last_name'] ?? ''); ?>" required>
                                 </div>
-                                <div class="invalid-feedback"><?php echo $errors['last_name'] ?? ''; ?></div>
+                                <?php if (isset($errors['last_name'])): ?>
+                                    <div class="text-danger small mt-1">
+                                        <?php echo htmlspecialchars($errors['last_name']); ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
 
@@ -77,7 +86,11 @@ unset($_SESSION['errors'], $_SESSION['old_input']);
                                        placeholder="Enter your username" 
                                        value="<?php echo htmlspecialchars($old['username'] ?? ''); ?>" required>
                             </div>
-                            <div class="invalid-feedback"><?php echo $errors['username'] ?? ''; ?></div>
+                            <?php if (isset($errors['username'])): ?>
+                                <div class="text-danger small mt-1">
+                                    <?php echo htmlspecialchars($errors['username']); ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
 
                         <div class="mb-3">
@@ -89,7 +102,11 @@ unset($_SESSION['errors'], $_SESSION['old_input']);
                                        placeholder="example@gmail.com" 
                                        value="<?php echo htmlspecialchars($old['email'] ?? ''); ?>" required>
                             </div>
-                            <div class="invalid-feedback"><?php echo $errors['email'] ?? 'A Gmail address is required.'; ?></div>
+                            <?php if (isset($errors['email'])): ?>
+                                <div class="text-danger small mt-1">
+                                    <?php echo htmlspecialchars($errors['email']); ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
 
                         <div class="mb-3">
@@ -99,9 +116,13 @@ unset($_SESSION['errors'], $_SESSION['old_input']);
                                 <input type="tel" name="phone_number" id="phone_number"
                                        class="form-control reg-input <?php echo isset($errors['phone_number']) ? 'is-invalid' : ''; ?>" 
                                        placeholder="09xxxxxxxxx" 
-                                       value="<?php echo htmlspecialchars($old['phone_number'] ?? ''); ?>">
+                                       value="<?php echo htmlspecialchars($old['phone_number'] ?? ''); ?>"required>
                             </div>
-                            <div class="invalid-feedback"><?php echo $errors['phone_number'] ?? ''; ?></div>
+                            <?php if (isset($errors['phone_number'])): ?>
+                                <div class="text-danger small mt-1">
+                                    <?php echo htmlspecialchars($errors['phone_number']); ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
 
                         <div class="mb-4">
@@ -115,7 +136,11 @@ unset($_SESSION['errors'], $_SESSION['old_input']);
                                     <i class="fas fa-eye-slash"></i>
                                 </button>
                             </div>
-                            <div class="invalid-feedback"><?php echo $errors['password'] ?? ''; ?></div>
+                            <?php if (isset($errors['password'])): ?>
+                                <div class="text-danger small mt-1">
+                                    <?php echo htmlspecialchars($errors['password']); ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
 
                         <button type="submit" name="register_btn" class="reg-btn-submit">Register Account</button>
@@ -132,6 +157,11 @@ unset($_SESSION['errors'], $_SESSION['old_input']);
 
         </div>
     </div>
+    
+    <?php
+    unset($_SESSION['errors']);
+    unset($_SESSION['old_input']);
+    ?>
 
     <script src="assets/js/main.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
