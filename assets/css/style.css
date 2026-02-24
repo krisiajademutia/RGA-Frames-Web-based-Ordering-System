@@ -129,6 +129,7 @@ html {
     transform: translateY(0);
 }
 
+
 /* =========================================
    3. INDEX PAGE STYLES (idx-)
    ========================================= */
@@ -146,7 +147,7 @@ html {
     top: 0;
     left: 0;
     right: 0;
-    background: #ffffff;
+    background: #004030;
     backdrop-filter: blur(10px);
     height: 88px; 
     display: flex;
@@ -199,17 +200,16 @@ html {
 
 .idx-hdr-brand h1 {
     margin: 0;
-    font-size: 18px; 
+    font-size: 22px; 
     font-weight: 700; 
     font-family: var(--font-primary); 
-    color: #000000; 
+    color: white; 
     letter-spacing: -0.02em;
     line-height: 1;
     transition: color 0.3s ease;
 }
-/* Mobile Menu Toggle */
 .idx-mobile-menu-toggle {
-    display: none;
+    display: none; /* Hidden on desktop */
     flex-direction: column;
     justify-content: space-around;
     width: 30px;
@@ -218,46 +218,106 @@ html {
     border: none;
     cursor: pointer;
     padding: 0;
-    z-index: 2001;
+    z-index: 2100; /* Highest level to stay above the white drawer */
     position: relative;
 }
 
+/* 2. The Burger Lines (Spans) */
 .idx-mobile-menu-toggle span {
     width: 30px;
     height: 3px;
-    background: var(--forest-dark);
+    background: white; /* Your brand color */
     border-radius: 10px;
-    transition: all 0.3s ease;
+    transition: all 0.3s ease-in-out;
     transform-origin: center;
 }
 
+/* 3. Burger to 'X' Transformation (Controlled by JS .active) */
 .idx-mobile-menu-toggle.active span:nth-child(1) {
-    transform: translateY(8px) rotate(45deg);
+    transform: translateY(8.5px) rotate(45deg);
 }
-
 .idx-mobile-menu-toggle.active span:nth-child(2) {
     opacity: 0;
 }
-
 .idx-mobile-menu-toggle.active span:nth-child(3) {
-    transform: translateY(-8px) rotate(-45deg);
+    transform: translateY(-8.5px) rotate(-45deg);
 }
 
+/* 4. The Semi-Transparent Background Overlay */
 .idx-mobile-overlay {
-    display: none;
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
     z-index: 1999;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    visibility: hidden;
+    transition: all 0.3s ease-in-out;
 }
 
 .idx-mobile-overlay.active {
     opacity: 1;
+    visibility: visible;
+}
+
+/* 5. Mobile Drawer Logic (Max-width 768px) */
+@media (max-width: 768px) {
+    .idx-mobile-menu-toggle {
+        display: flex; 
+    }
+
+    /* This turns your standard nav into the white drawer */
+    .idx-hdr-nav {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 75%;
+        height: 100vh;
+        background: #ffffff;
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 2rem;
+        transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
+    }
+
+    /* When JS adds .active, the menu slides in */
+    .idx-hdr-nav.active {
+        right: 0;
+    }
+
+    /* Links inside the mobile drawer */
+    .idx-hdr-nav-link {
+        width: 100%;
+        max-width: 260px;
+        text-align: center;
+        padding: 14px;
+        font-size: 1.1rem;
+        text-decoration: none;
+        border-radius: 12px;
+        font-weight: 600;
+        display: block;
+        transition: transform 0.2s ease;
+    }
+
+    /* Match the button colors in your screenshot */
+    .idx-hdr-btn-login {
+        background: #004030;
+        color: #ffffff !important;
+    }
+
+    .idx-hdr-btn-register {
+        background: #ffffff;
+        color: #004030 !important;
+        border: 1px solid #e0e0e0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
 }
 
 /* Index Navigation */
@@ -271,8 +331,8 @@ html {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 105px;
-    height: 36.35px;
+    width: 120px;
+    height: 50px;
     border-radius: 50px; 
     font-size: 0.95rem;
     font-weight: 600;
@@ -505,7 +565,17 @@ html {
     color: white;
     margin-bottom: 1.5rem;
 }
-
+@media (max-width: 768px) {
+    .idx-service-icon {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
 /* Typography */
 .idx-card-title {
     color: white;

@@ -1,45 +1,46 @@
 // =========================================
 // MOBILE MENU TOGGLE
 // =========================================
-const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-const mainNav = document.getElementById('mainNav');
-const mobileOverlay = document.getElementById('mobileOverlay');
-const body = document.body;
+(function() {
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const mainNav = document.getElementById('mainNav');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+    const body = document.body;
 
-function toggleMobileMenu() {
-    mobileMenuToggle.classList.toggle('active');
-    mainNav.classList.toggle('active');
-    mobileOverlay.classList.toggle('active');
-    body.style.overflow = mainNav.classList.contains('active') ? 'hidden' : '';
-}
-
-function closeMobileMenu() {
-    mobileMenuToggle.classList.remove('active');
-    mainNav.classList.remove('active');
-    mobileOverlay.classList.remove('active');
-    body.style.overflow = '';
-}
-
-if (mobileMenuToggle) {
-    mobileMenuToggle.addEventListener('click', toggleMobileMenu);
-}
-
-if (mobileOverlay) {
-    mobileOverlay.addEventListener('click', closeMobileMenu);
-}
-
-// Close menu when clicking nav links
-document.querySelectorAll('.idx-hdr-nav-link').forEach(link => {
-    link.addEventListener('click', closeMobileMenu);
-});
-
-// Close menu on window resize to desktop
-window.addEventListener('resize', () => {
-    if (window.innerWidth > 768) {
-        closeMobileMenu();
+    function toggleMobileMenu() {
+        mobileMenuToggle.classList.toggle('active');
+        mainNav.classList.toggle('active');
+        mobileOverlay.classList.toggle('active');
+        body.style.overflow = mainNav.classList.contains('active') ? 'hidden' : '';
     }
-});
 
+    function closeMobileMenu() {
+        mobileMenuToggle.classList.remove('active');
+        mainNav.classList.remove('active');
+        mobileOverlay.classList.remove('active');
+        body.style.overflow = '';
+    }
+
+    if (mobileMenuToggle) {
+        mobileMenuToggle.addEventListener('click', toggleMobileMenu);
+    }
+
+    if (mobileOverlay) {
+        mobileOverlay.addEventListener('click', closeMobileMenu);
+    }
+
+    // Close menu when clicking nav links
+    document.querySelectorAll('.idx-hdr-nav-link').forEach(link => {
+        link.addEventListener('click', closeMobileMenu);
+    });
+
+    // Close menu on window resize to desktop
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 768) {
+            closeMobileMenu();
+        }
+    });
+})();
 // =========================================
 // SCROLL EFFECTS FOR HEADER
 // =========================================
