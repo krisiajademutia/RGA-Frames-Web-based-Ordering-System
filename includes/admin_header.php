@@ -9,7 +9,7 @@ $display_name = htmlspecialchars($_SESSION['first_name'] ?? 'Admin');
 <body class="admn-body">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link rel="stylesheet" href="/RGA-Frames-Web-based-Ordering-System-main/assets/css/style.css">
+<link rel="stylesheet" href="/rga_frames/assets/css/style.css">
 
 <header class="admn-hdr-container" id="mainHeader">
     <div class="admn-hdr-left">
@@ -32,25 +32,26 @@ $display_name = htmlspecialchars($_SESSION['first_name'] ?? 'Admin');
     </button>
 
     <nav class="admn-hdr-nav" id="mainNav">
-        <a href="/RGA-Frames-Web-based-Ordering-System-main/admin/admin_dashboard.php" class="admn-hdr-nav-link">
-            <i class="fas fa-chart-line"></i> Dashboard
+        <a href="/rga_frames/admin/admin_dashboard.php" class="admn-hdr-nav-link">
+            <svg height="18px" width="18px" version="1.1" id="_x32_" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <style type="text/css"> .st0{fill:#ffffff;} </style> <g> <path class="st0" d="M453.794,170.688L283.185,10.753c-15.287-14.337-39.083-14.337-54.37,0L58.206,170.688 c-8.012,7.515-12.565,18.01-12.565,29V472.25c0,21.954,17.803,39.75,39.75,39.75h120.947V395.145h99.324V512h120.946 c21.947,0,39.751-17.796,39.751-39.75V199.688C466.359,188.698,461.805,178.203,453.794,170.688z"></path> </g> </g></svg> 
+            My Dashboard
         </a>
-        <a href="/RGA-Frames-Web-based-Ordering-System-main/admin/admin_orders.php" class="admn-hdr-nav-link">
+        <a href="/rga_frames/admin/admin_orders.php" class="admn-hdr-nav-link">
             <i class="fas fa-shopping-bag"></i> Orders
         </a>
-        <a href="/RGA-Frames-Web-based-Ordering-System-main/admin/admin_post_frames.php" class="admn-hdr-nav-link">
-            <i class="fas fa-image"></i> Post Frames
+        <a href="/rga_frames/admin/admin_post_frames.php" class="admn-hdr-nav-link">
+            <i class="fas fa-plus"></i> Post Frames
         </a>
-        <a href="/RGA-Frames-Web-based-Ordering-System-main/admin/admin_custom_frame_options.php" class="admn-hdr-nav-link">
-            <i class="fas fa-tools"></i> Frame Options
+        <a href="/rga_frames/admin/admin_custom_frame_options.php" class="admn-hdr-nav-link">
+            <svg width="24px" height="24px" viewBox="0 0 24.00 24.00" xmlns="http://www.w3.org/2000/svg" fill="#ffffff" stroke="#ffffff" stroke-width="0.00024000000000000003"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path fill="none" d="M0 0h24v24H0z"></path> <path d="M5.33 3.271a3.5 3.5 0 0 1 4.254 4.963l10.709 10.71-1.414 1.414-10.71-10.71a3.502 3.502 0 0 1-4.962-4.255L5.444 7.63a1.5 1.5 0 1 0 2.121-2.121L5.329 3.27zm10.367 1.884l3.182-1.768 1.414 1.414-1.768 3.182-1.768.354-2.12 2.121-1.415-1.414 2.121-2.121.354-1.768zm-6.718 8.132l1.414 1.414-5.303 5.303a1 1 0 0 1-1.492-1.327l.078-.087 5.303-5.303z"></path> </g> </g></svg> Frame Options
         </a>
-        <a href="/RGA-Frames-Web-based-Ordering-System-main/logout.php" class="admn-hdr-nav-link d-lg-none logout-mobile">
+        <a href="/rga_frames/logout.php" class="admn-hdr-nav-link d-lg-none logout-mobile">
             <i class="fas fa-power-off"></i> Log out
         </a>
     </nav>
 
     <div class="admn-hdr-user-area">
-    <div class="dropdown">
+    <div class="admn-dropdown">
         <a class="admn-hdr-dropdown-toggle dropdown-toggle" href="#" id="hdrAdminDrop" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             <svg width="36px" height="36px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path opacity="0.5" d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" fill="#489883"></path> 
@@ -59,9 +60,9 @@ $display_name = htmlspecialchars($_SESSION['first_name'] ?? 'Admin');
             </svg>
             <span class="d-none d-lg-inline"><?php echo $display_name; ?></span>
         </a>
-        <ul class="dropdown-menu dropdown-menu-end admn-hdr-dropdown-menu" aria-labelledby="hdrAdminDrop">
+        <ul class="admn-dropdown-menu admn-dropdown-menu-end admn-hdr-dropdown-menu" aria-labelledby="hdrAdminDrop">
             <li>
-                <a class="dropdown-item" href="/RGA-Frames-Web-based-Ordering-System-main/logout.php">
+                <a class="admn-dropdown-item" href="/rga_frames/logout.php">
                     <i class="fas fa-power-off me-2"></i> Log out
                 </a>
             </li>
@@ -72,5 +73,5 @@ $display_name = htmlspecialchars($_SESSION['first_name'] ?? 'Admin');
     <div class="admn-mobile-overlay" id="mobileOverlay"></div>
 </header>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/RGA-Frames-Web-based-Ordering-System-main/assets/js/mobile_menu.js"></script>
+<script src="/rga_frames/assets/js/mobile_menu.js"></script>
 </body>
