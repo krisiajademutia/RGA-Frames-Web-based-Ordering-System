@@ -2562,6 +2562,228 @@ html {
         font-size: 0.95rem;
     }
 }
+/* ========================================================
+   FIGMA-PERFECT ADMIN DASHBOARD CSS
+   ======================================================== */
+
+/* 1. Base & Reset */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #FAFAFB !important; /* Soft, very light tint from Figma */
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+/* 2. Main Wrapper - FIXES THE HEADER OVERLAP */
+.admn-dshbrd-wrapper {
+    max-width: 1050px; /* Constrains width to match Figma proportions */
+    /* 130px top margin pushes it out from under your fixed header */
+    margin: 130px auto 60px auto; 
+    padding: 0 20px;
+    width: 100%;
+}
+
+/* 3. Top Section (Welcome & Total Earnings) */
+.admn-dshbrd-top-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* Centers the Welcome text with the entire right block */
+    margin-bottom: 50px; /* Matches Figma's large gap before bottom cards */
+    gap: 30px;
+    flex-wrap: wrap; 
+}
+
+.admn-dshbrd-welcome-box {
+    flex: 1 1 350px;
+}
+
+.admn-dshbrd-title {
+    font-size: 34px; /* Big and bold like Figma */
+    font-weight: 700;
+    color: #1A1A1A;
+    margin: 0 0 12px 0;
+    letter-spacing: -0.5px;
+}
+
+.admn-dshbrd-subtitle {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.6;
+    margin: 0;
+    max-width: 400px; /* Stops text from stretching too far */
+}
+
+/* 4. Earnings Side & Daily Sales Button */
+.admn-dshbrd-earnings-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; 
+    gap: 15px; /* Spacing between button and card */
+}
+
+.admn-dshbrd-btn-daily-sales {
+    background: transparent;
+    border: 1px solid #333; /* Darker border from Figma */
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    color: #1A1A1A;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+}
+
+.admn-dshbrd-btn-daily-sales:hover {
+    background: #e9ecef;
+}
+
+/* 5. Stat Cards Base (Matches Figma styling exactly) */
+.admn-dshbrd-stat-card {
+    background: #FFFFFF;
+    border-radius: 16px; /* Smooth rounded corners */
+    padding: 30px 35px; /* Thick padding inside cards */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #EAEAEA; /* Crisp outline, no heavy shadows */
+    width: 100%;
+}
+
+.admn-dshbrd-total-earnings-card {
+    width: 420px; /* Wider card specifically for top right */
+}
+
+/* 6. Bottom Section (3 Cards Grid) */
+.admn-dshbrd-bottom-section {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px; /* Spacing between the 3 bottom cards */
+    width: 100%;
+}
+
+/* 7. Typography inside Cards */
+.admn-dshbrd-stat-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 15px; /* Gap between label and big number */
+}
+
+.admn-dshbrd-stat-value {
+    font-size: 42px; /* Huge numbers like Figma */
+    font-weight: 700;
+    color: #000;
+    margin: 0;
+    letter-spacing: -1px;
+}
+
+/* 8. Icons & Colors */
+.admn-dshbrd-stat-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px; /* Bigger icons */
+}
+
+/* Exact Figma pastel block colors */
+.admn-dshbrd-icon-earnings { background-color: #E8F5E9; color: #2ECC71; }
+.admn-dshbrd-icon-rm { background-color: #E3F2FD; color: #5D9CEC; }
+.admn-dshbrd-icon-custom { background-color: #FFEBEE; color: #FF6B6B; }
+.admn-dshbrd-icon-posted { background-color: #F3E5F5; color: #BA68C8; }
+
+/* ========================================================
+   9. MOBILE RESPONSIVENESS
+   ======================================================== */
+@media (max-width: 992px) {
+    .admn-dshbrd-bottom-section {
+        grid-template-columns: repeat(2, 1fr); 
+    }
+    .admn-dshbrd-total-earnings-card {
+        width: 350px; 
+    }
+}
+
+@media (max-width: 768px) {
+    .admn-dshbrd-wrapper {
+        margin-top: 100px; /* Slightly smaller top margin on mobile */
+    }
+
+    .admn-dshbrd-top-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 20px;
+    }
+
+    .admn-dshbrd-earnings-side {
+        align-items: flex-end; 
+        width: 100%;
+    }
+
+    .admn-dshbrd-total-earnings-card {
+        width: 100%;
+    }
+
+    .admn-dshbrd-bottom-section {
+        grid-template-columns: 1fr; /* Stacks cards straight down */
+    }
+    
+    .admn-dshbrd-title {
+        font-size: 28px; 
+    }
+}
+
+/* ========================================================
+   9. MOBILE RESPONSIVENESS (DO NOT REMOVE)
+   ======================================================== */
+@media (max-width: 992px) {
+    .admn-dshbrd-bottom-section {
+        grid-template-columns: repeat(2, 1fr); /* Changes from 3 columns to 2 on tablets */
+    }
+}
+
+@media (max-width: 768px) {
+    .admn-dshbrd-top-section {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .admn-dshbrd-earnings-side {
+        align-items: stretch; /* Forces the earnings card to take full width on phones */
+        flex: 1 1 100%;
+    }
+
+    .admn-dshbrd-btn-wrapper {
+        display: flex;
+        justify-content: flex-end; /* Keeps the button on the right */
+    }
+
+    .admn-dshbrd-total-earnings-card {
+        max-width: 100%;
+    }
+
+    .admn-dshbrd-bottom-section {
+        grid-template-columns: 1fr; /* Stacks the bottom 3 cards in a single column */
+    }
+    
+    .admn-dshbrd-title {
+        font-size: 28px; /* Slightly smaller text for phones */
+    }
+}
 
 @media (min-width: 769px) and (max-width: 992px) {
     .idx-hdr-container {
