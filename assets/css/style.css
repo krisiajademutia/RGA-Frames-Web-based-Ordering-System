@@ -799,14 +799,6 @@ html {
 .idx-bg-white {
     background-color: #fafafa;
 }
- :root {
-            --post-primary: #0a332c;
-            --post-accent: #559688;
-            --post-bg: #f8f9fc;
-            --post-input: #eef2f1;
-            --post-border: #d1dbd9;
-        }
-
         /* Scoped Classes using post- prefix */
         .post-admin-container {
             width: 1258px;
@@ -825,7 +817,7 @@ html {
 
         .post-dropbtn {
             width: 220px;
-            background-color: var(--post-accent);
+            background-color: var(--forest-muted);
             color: white;
             padding: 10px 15px;
             font-size: 14px;
@@ -842,13 +834,13 @@ html {
             position: absolute;
             right: 0;
             top: 100%;
-            background-color: white;
+            background-color:#489883;
             min-width: 220px;
             box-shadow: 0px 8px 24px rgba(0,0,0,0.15);
             z-index: 1100;
             border-radius: 8px;
             overflow: hidden;
-            border: 1px solid var(--post-border);
+            border: 1px solid #d1dbd9;
         }
 
         .post-dropdown:hover .post-dropdown-menu { display: block; }
@@ -858,26 +850,28 @@ html {
             text-decoration: none;
             display: block;
             font-size: 13px;
-            color: var(--post-primary);
+            color: var(--forest-dark);
         }
 
         .post-card {
             background: white !important;
-            border: 1px solid var(--post-border) !important;
-            border-radius: 40px !important;
+            border: 1px solid  #ADADAD !important;
+            border-radius: 20px !important;
             min-height: 818px;
             box-shadow: 0 8px 30px rgba(0,0,0,0.05) !important;
         }
 
         .post-card-header {
+            margin-left:20px;
+            font-family: var(--font-secondary);
             padding: 20px 35px;
-            border-bottom: 1px solid #eee;
-            font-size: 12px;
-            font-weight: 800;
-            color: #4a7a71;
+            border-bottom: 1.5px solid #ADADAD;
+            font-size: 14px;
+            font-weight: 600;
+            color:var(--forest-dark);
             text-transform: uppercase;
         }
-
+        
         .post-form-grid {
             display: grid;
             grid-template-columns: 535px 535px;
@@ -886,19 +880,20 @@ html {
         }
 
         .post-label {
+            font-family: var(--font-secondary);
             display: block;
-            font-size: 11px;
-            font-weight: 800;
+            font-size: 14px;
+            font-weight: 600;
             margin-bottom: 8px;
-            color: var(--post-primary);
+            color: #004030;
         }
 
         .post-input {
             width: 100%;
             height: 44px;
-            background-color: var(--post-input);
-            border: 1px solid var(--post-border);
-            border-radius: 8px;
+            background-color: #EEEEEE;
+            border: 2px solid  #00403036;
+            border-radius: 10px;
             padding: 0 15px;
             font-size: 14px;
         }
@@ -909,9 +904,9 @@ html {
             margin-top: 27px;
             width: 522px;
             height: 116px;
-            border: 1.5px dashed #b0b8b7;
+            border: 2px dashed #b0b8b7;
             border-radius: 12px;
-            background-color: var(--post-input);
+            background-color: #EEEEEE;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -933,8 +928,8 @@ html {
             width: 156px;
             height: 44px;
             background: white;
-            border: 1.5px solid var(--post-accent);
-            color: var(--post-accent);
+            border: 1.5px solid var(- --forest-muted);
+            color: var( --forest-muted);
             border-radius: 10px;
         }
 /* =========================================
