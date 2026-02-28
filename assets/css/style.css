@@ -2746,6 +2746,86 @@ body {
         font-size: 28px; 
     }
 }
+/* ========================================================
+   DAILY SALES REPORT CSS
+   ======================================================== */
+.admn-sales-wrapper {
+    max-width: 1050px;
+    margin: 130px auto 60px auto; 
+    padding: 0 20px;
+    width: 100%;
+}
+
+.admn-sales-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.admn-sales-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin: 0 0 10px 0;
+}
+
+.admn-sales-subtitle {
+    font-size: 14px;
+    color: #555;
+    margin: 0;
+}
+
+.admn-sales-table-container {
+    background: #FFFFFF;
+    border-radius: 12px;
+    overflow: hidden; 
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid #EAEAEA;
+}
+
+.admn-sales-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+.admn-sales-table th {
+    background-color: #004030;
+    color: #FFFFFF;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 18px 15px;
+}
+
+.admn-sales-table td {
+    padding: 16px 15px;
+    border-bottom: 1px solid #EAEAEA;
+    vertical-align: middle;
+}
+
+.admn-sales-table tbody tr:nth-child(odd) { background-color: #FFFFFF; }
+.admn-sales-table tbody tr:nth-child(even) { background-color: #FFFDF0; }
+
+.sales-date { font-weight: 600; color: #333; font-size: 14px; }
+.sales-earnings { font-weight: 700; color: #2ECC71; font-size: 15px; }
+
+.sales-pill {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.pill-rm { background-color: #E3F2FD; color: #5D9CEC; }
+.pill-custom { background-color: #FFEBEE; color: #FF6B6B; }
+.pill-total { background-color: #F3E5F5; color: #BA68C8; }
+
+@media (max-width: 768px) {
+    .admn-sales-table-container { overflow-x: auto; }
+    .admn-sales-table { min-width: 700px; }
+}
 
 /* ========================================================
    9. MOBILE RESPONSIVENESS (DO NOT REMOVE)

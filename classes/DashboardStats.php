@@ -1,61 +1,48 @@
 <?php
-// classes/DashboardStats.php
+class DashboardStats {
+    private $conn;
 
-interface IDashboardStats {
-    public function getTotalEarnings();
-    public function getSoldReadyMadeFrames();
-    public function getSoldCustomFrames();
-    public function getPostedReadyMadeFrames();
-}
-
-class DashboardStats implements IDashboardStats {
-    private $db;
-
-    // Changed from PDO to mysqli to match your db_connect.php
-    public function __construct(mysqli $dbConnection) {
-        $this->db = $dbConnection;
+    public function __construct($dbConnection) {
+        $this->conn = $dbConnection;
     }
 
     public function getTotalEarnings() {
-        $sql = "SELECT COALESCE(SUM(amount), 0) as total FROM tbl_payment WHERE payment_status = 'FULL'";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        $query = "SELECT SUM(total_price) as total FROM tbl_orders WHERE order_status = 'COMPLETED'";
+        $result = $this->conn->query($query);
         $row = $result->fetch_assoc();
-        return $row['total'];
+        return $row['total'] ? (float)$row['total'] : 0.00;
     }
 
     public function getSoldReadyMadeFrames() {
-        $sql = "SELECT COALESCE(SUM(i.quantity), 0) as total 
-                FROM tbl_frame_order_items i 
-                JOIN tbl_orders o ON i.order_id = o.order_id 
-                WHERE i.frame_category = 'READY_MADE' AND o.order_status = 'COMPLETED'";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        $query = "
+            SELECT SUM(i.quantity) as total 
+            FROM tbl_frame_order_items i
+            JOIN tbl_orders o ON i.order_id = o.order_id
+            WHERE o.order_status = 'COMPLETED' AND i.frame_category = 'READY_MADE'
+        ";
+        $result = $this->conn->query($query);
         $row = $result->fetch_assoc();
-        return $row['total'];
+        return $row['total'] ? (int)$row['total'] : 0;
     }
 
     public function getSoldCustomFrames() {
-        $sql = "SELECT COALESCE(SUM(i.quantity), 0) as total 
-                FROM tbl_frame_order_items i 
-                JOIN tbl_orders o ON i.order_id = o.order_id 
-                WHERE i.frame_category = 'CUSTOM' AND o.order_status = 'COMPLETED'";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        $query = "
+            SELECT SUM(i.quantity) as total 
+            FROM tbl_frame_order_items i
+            JOIN tbl_orders o ON i.order_id = o.order_id
+            WHERE o.order_status = 'COMPLETED' AND i.frame_category = 'CUSTOM'
+        ";
+        $result = $this->conn->query($query);
         $row = $result->fetch_assoc();
-        return $row['total'];
+        return $row['total'] ? (int)$row['total'] : 0;
     }
 
     public function getPostedReadyMadeFrames() {
-        $sql = "SELECT COUNT(r_product_id) as total FROM tbl_ready_made_product";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        // Counting the total number of ready-made products in the inventory
+        $query = "SELECT COUNT(*) as total FROM tbl_ready_made_product";
+        $result = $this->conn->query($query);
         $row = $result->fetch_assoc();
-        return $row['total'];
+        return $row['total'] ? (int)$row['total'] : 0;
     }
 }
 ?>
