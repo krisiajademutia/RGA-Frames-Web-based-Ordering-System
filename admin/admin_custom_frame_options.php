@@ -1,5 +1,5 @@
 <?php
-// Since this file is in /admin/, we go up one level then into /process/
+
 require_once __DIR__ . '/../process/fetch_options.php';
 ?>
 <!DOCTYPE html>
@@ -42,7 +42,7 @@ require_once __DIR__ . '/../process/fetch_options.php';
 
     <div class="opt-card">
         <div class="opt-card-header">Add New <?= htmlspecialchars($tab_label ?? '') ?></div>
-        <form action="process/posting_options.php?tab=<?= urlencode($active_tab) ?>" method="POST" enctype="multipart/form-data">
+        <form action="../process/posting_options.php?tab=<?= urlencode($active_tab) ?>" method="POST" enctype="multipart/form-data">
             <div class="opt-form-grid">
                 
                 <?php if($active_tab == 'frame_types'): ?>
@@ -78,12 +78,86 @@ require_once __DIR__ . '/../process/fetch_options.php';
 
                 <?php elseif($active_tab == 'frame_sizes'): ?>
                     <div>
-                        <label class="opt-label">Dimension (e.g. 8x10) <span>*</span></label>
-                        <input type="text" name="dimension" class="opt-input" required>
+                        <label class="opt-label">Width (Inches) <span>*</span></label>
+                        <input type="number" step="0.01" name="width" class="opt-input" required placeholder="e.g. 16">
+                    </div>
+                    <div>
+                        <label class="opt-label">Height (Inches) <span>*</span></label>
+                        <input type="number" step="0.01" name="height" class="opt-input" required placeholder="e.g. 20">
+                    </div>
+                    <div>
+                        <label class="opt-label">Total Inches <span>*</span></label>
+                        <input type="number" step="0.01" name="total_inches" class="opt-input" required placeholder="e.g. 72">
                     </div>
                     <div>
                         <label class="opt-label">Base Price (₱) <span>*</span></label>
-                        <input type="number" step="0.01" name="base_price" class="opt-input" required>
+                        <input type="number" step="0.01" name="base_price" class="opt-input" required placeholder="0.00">
+                    </div>
+
+                <?php elseif($active_tab == 'matboard_colors'): ?>
+                    <div>
+                        <label class="opt-label">Color Name <span>*</span></label>
+                        <input type="text" name="matboard_color_name" class="opt-input" required placeholder="e.g. Cream White, Ivory, Sage Green">
+                    </div>
+                    <div>
+                        <label class="opt-label">Status</label>
+                        <select name="is_active" class="opt-input" style="width: 100%;">
+                            <option value="1">Active - visible to customers</option>
+                            <option value="0">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="opt-upload-zone" style="grid-column: span 2; width: 100%; border: 2px dashed #ccc; padding: 20px; text-align: center;">
+                        <input type="file" name="matboard_image" required style="display: none;" id="matboard_upload">
+                        <label for="matboard_upload" style="cursor: pointer;">
+                            <i data-lucide="image" style="margin-bottom: 10px;"></i><br>
+                            <span style="font-weight: 600;">Click to upload product photo</span><br>
+                            <span style="font-size: 12px; color: #6B7280;">PNG or JPG | Max of 3MB</span>
+                        </label>
+                    </div>
+
+                <?php elseif($active_tab == 'mount_types'): ?>
+                    <div>
+                        <label class="opt-label">Mount Type <span>*</span></label>
+                        <input type="text" name="generic_name" class="opt-input" required placeholder="e.g. Hanging, With Stand">
+                    </div>
+                    <div>
+                        <label class="opt-label">Additional Fee (₱) <span>*</span></label>
+                        <input type="number" step="0.01" name="generic_price" class="opt-input" required placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="opt-label">Status</label>
+                        <select name="is_active" class="opt-input" style="width: 100%;">
+                            <option value="1">Active - visible to customers</option>
+                            <option value="0">Inactive</option>
+                        </select>
+                    </div>
+                <?php elseif($active_tab == 'paper_types'): ?>
+                    <div>
+                        <label class="opt-label">Paper Name <span>*</span></label>
+                        <input type="text" name="generic_name" class="opt-input" required placeholder="e.g. Glossy Photo Paper, Matte Fine Art">
+                    </div>
+                    <div>
+                        <label class="opt-label">Height (Inches) <span>*</span></label>
+                        <input type="number" step="0.01" name="height" class="opt-input" required placeholder="e.g. 11.69">
+                    </div>
+                    <div>
+                        <label class="opt-label">Width (Inches) <span>*</span></label>
+                        <input type="number" step="0.01" name="width" class="opt-input" required placeholder="e.g. 8.27">
+                    </div>
+                    <div>
+                        <label class="opt-label">Pricing Logic</label>
+                        <select name="pricing_logic" class="opt-input">
+                            <option value="fixed">Fixed - flat rate for this size</option>
+                            <option value="per_inch">Per Inch Calculation</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="opt-label">Total Inches <span>*</span></label>
+                        <input type="number" step="0.01" name="total_inches" class="opt-input" required placeholder="e.g. 39.92">
+                    </div>
+                    <div>
+                        <label class="opt-label">Price (₱) <span>*</span></label>
+                        <input type="number" step="0.01" name="generic_price" class="opt-input" required placeholder="0.00">
                     </div>
 
                 <?php else: ?>
@@ -97,13 +171,15 @@ require_once __DIR__ . '/../process/fetch_options.php';
                     </div>
                 <?php endif; ?>
 
+                <?php if($active_tab !== 'matboard_colors' && $active_tab !== 'mount_types'): ?>
                 <div style="grid-column: span 2;">
                     <label class="opt-label">Status</label>
                     <select name="is_active" class="opt-input" style="width: 100%;">
-                        <option value="1">Active</option>
+                        <option value="1">Active - visible to customers</option>
                         <option value="0">Inactive</option>
                     </select>
                 </div>
+                <?php endif; ?>
 
                 <div style="grid-column: span 2; display: flex; justify-content: center; gap: 15px; margin-top: 10px;">
                     <button type="reset" class="opt-btn-clear">Clear</button>
