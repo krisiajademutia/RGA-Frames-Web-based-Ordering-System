@@ -1,13 +1,22 @@
 <?php
-
+/**
+ * admin_custom_frame_options.php
+ * * Powered by: 
+ * - OptionService
+ * - Individual Repositories (FrameType, FrameDesign, etc.)
+ */
 require_once __DIR__ . '/../process/fetch_options.php';
+
+// Success/Error handling for UI feedback
+$status = $_GET['success'] ?? null;
+$error_msg = $_GET['error'] ?? null;
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frame Options Management</title>
+    <title>Frame Options Management | Admin</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -23,6 +32,7 @@ require_once __DIR__ . '/../process/fetch_options.php';
             <h1 style="color: var(--forest-dark); font-weight: 800; font-size: 28px; margin:0;">Frame Options</h1>
             <p style="color: #6B7280; margin-top: 5px; font-size: 15px;">Manage your custom framing components.</p>
         </div>
+        
         <div class="opt-dropdown">
             <button class="opt-dropbtn">
                 <span><?= htmlspecialchars($tab_label ?? 'Select Tab') ?></span>
@@ -40,6 +50,18 @@ require_once __DIR__ . '/../process/fetch_options.php';
         </div>
     </div>
 
+    <?php if($status === '1'): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            Successfully added new <?= strtolower($tab_label) ?>.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php elseif($status === '0' || $error_msg): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            Failed to add option. Please ensure all required fields and images are provided.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
     <div class="opt-card">
         <div class="opt-card-header">Add New <?= htmlspecialchars($tab_label ?? '') ?></div>
         <form action="../process/posting_options.php?tab=<?= urlencode($active_tab) ?>" method="POST" enctype="multipart/form-data">
@@ -53,6 +75,10 @@ require_once __DIR__ . '/../process/fetch_options.php';
                     <div>
                         <label class="opt-label">Price (₱) <span>*</span></label>
                         <input type="number" step="0.01" name="type_price" class="opt-input" required>
+                    </div>
+                    <div class="opt-upload-zone" style="grid-column: span 2; width: 100%;">
+                        <label class="opt-label">Type Preview Image <span>*</span></label>
+                        <input type="file" name="type_image" class="form-control" required>
                     </div>
 
                 <?php elseif($active_tab == 'frame_designs'): ?>
@@ -71,9 +97,8 @@ require_once __DIR__ . '/../process/fetch_options.php';
                         <input type="text" name="color_name" class="opt-input" required>
                     </div>
                     <div class="opt-upload-zone" style="grid-column: span 1; width: 100%;">
-                        <input type="file" name="color_image" required>
-                        <i data-lucide="image"></i>
-                        <span>Upload Color Reference</span>
+                        <label class="opt-label">Color Texture <span>*</span></label>
+                        <input type="file" name="color_image" class="form-control" required>
                     </div>
 
                 <?php elseif($active_tab == 'frame_sizes'): ?>
@@ -97,7 +122,7 @@ require_once __DIR__ . '/../process/fetch_options.php';
                 <?php elseif($active_tab == 'matboard_colors'): ?>
                     <div>
                         <label class="opt-label">Color Name <span>*</span></label>
-                        <input type="text" name="matboard_color_name" class="opt-input" required placeholder="e.g. Cream White, Ivory, Sage Green">
+                        <input type="text" name="matboard_color_name" class="opt-input" required placeholder="e.g. Cream White">
                     </div>
                     <div>
                         <label class="opt-label">Status</label>
@@ -118,7 +143,7 @@ require_once __DIR__ . '/../process/fetch_options.php';
                 <?php elseif($active_tab == 'mount_types'): ?>
                     <div>
                         <label class="opt-label">Mount Type <span>*</span></label>
-                        <input type="text" name="generic_name" class="opt-input" required placeholder="e.g. Hanging, With Stand">
+                        <input type="text" name="generic_name" class="opt-input" required placeholder="e.g. Hanging">
                     </div>
                     <div>
                         <label class="opt-label">Additional Fee (₱) <span>*</span></label>
@@ -127,37 +152,38 @@ require_once __DIR__ . '/../process/fetch_options.php';
                     <div>
                         <label class="opt-label">Status</label>
                         <select name="is_active" class="opt-input" style="width: 100%;">
-                            <option value="1">Active - visible to customers</option>
+                            <option value="1">Active</option>
                             <option value="0">Inactive</option>
                         </select>
                     </div>
+
                 <?php elseif($active_tab == 'paper_types'): ?>
                     <div>
                         <label class="opt-label">Paper Name <span>*</span></label>
-                        <input type="text" name="generic_name" class="opt-input" required placeholder="e.g. Glossy Photo Paper, Matte Fine Art">
+                        <input type="text" name="generic_name" class="opt-input" required placeholder="e.g. Glossy">
                     </div>
                     <div>
                         <label class="opt-label">Height (Inches) <span>*</span></label>
-                        <input type="number" step="0.01" name="height" class="opt-input" required placeholder="e.g. 11.69">
+                        <input type="number" step="0.01" name="height" class="opt-input" required>
                     </div>
                     <div>
                         <label class="opt-label">Width (Inches) <span>*</span></label>
-                        <input type="number" step="0.01" name="width" class="opt-input" required placeholder="e.g. 8.27">
+                        <input type="number" step="0.01" name="width" class="opt-input" required>
                     </div>
                     <div>
                         <label class="opt-label">Pricing Logic</label>
                         <select name="pricing_logic" class="opt-input">
-                            <option value="fixed">Fixed - flat rate for this size</option>
-                            <option value="per_inch">Per Inch Calculation</option>
+                            <option value="fixed">Fixed Rate</option>
+                            <option value="per_inch">Per Inch</option>
                         </select>
                     </div>
                     <div>
                         <label class="opt-label">Total Inches <span>*</span></label>
-                        <input type="number" step="0.01" name="total_inches" class="opt-input" required placeholder="e.g. 39.92">
+                        <input type="number" step="0.01" name="total_inches" class="opt-input" required>
                     </div>
                     <div>
                         <label class="opt-label">Price (₱) <span>*</span></label>
-                        <input type="number" step="0.01" name="generic_price" class="opt-input" required placeholder="0.00">
+                        <input type="number" step="0.01" name="generic_price" class="opt-input" required>
                     </div>
 
                 <?php else: ?>
@@ -198,25 +224,39 @@ require_once __DIR__ . '/../process/fetch_options.php';
         <div class="opted-list-wrapper">
             <?php if ($res && $res->num_rows > 0): ?>
                 <?php while($row = $res->fetch_assoc()): 
-                    $title = $row['type_name'] ?? $row['design_name'] ?? $row['color_name'] ?? $row['dimension'] ?? $row['matboard_color_name'] ?? $row['mount_name'] ?? $row['paper_name'];
-                    $price = $row['type_price'] ?? $row['price'] ?? $row['additional_fee'] ?? $row['base_price'] ?? 0;
+                    // Safely check for a name from any table
+                    $title = $row['type_name'] ?? $row['design_name'] ?? $row['color_name'] ?? 
+                             $row['matboard_color_name'] ?? $row['mount_name'] ?? $row['paper_name'] ?? 
+                             $row['generic_name'] ?? null;
+
+                    // If it's a size, width/height are the title
+                    if ($title === null && isset($row['width'], $row['height'])) {
+                        $title = $row['width'] . '" x ' . $row['height'] . '"';
+                    }
+
+                    // Safely check for price from any table
+                    $price = $row['type_price'] ?? $row['price'] ?? $row['additional_fee'] ?? 
+                             $row['base_price'] ?? $row['generic_price'] ?? 0;
                 ?>
                 <div class="opted-row-item">
                     <div class="opted-item-main">
-                        <h4 class="opted-item-name"><?= htmlspecialchars($title) ?></h4>
+                        <h4 class="opted-item-name"><?= htmlspecialchars($title ?? 'Unnamed') ?></h4>
                         <p class="opted-item-sub">Price: ₱<?= number_format($price, 2) ?></p>
                     </div>
                     <div class="opted-actions">
                         <span class="status-pill <?= $row['is_active'] ? 'active' : 'inactive' ?>">
                             <?= $row['is_active'] ? 'Active' : 'Inactive' ?>
                         </span>
-                        <button class="action-icon-btn opt-btn-edit"><i data-lucide="pencil" size="16"></i></button>
-                        <button class="action-icon-btn opt-btn-delete"><i data-lucide="trash-2" size="16"></i></button>
+                        <button class="action-icon-btn opt-btn-edit" title="Edit"><i data-lucide="pencil" size="16"></i></button>
+                        <button class="action-icon-btn opt-btn-delete" title="Delete"><i data-lucide="trash-2" size="16"></i></button>
                     </div>
                 </div>
                 <?php endwhile; ?>
             <?php else: ?>
-                <div class="p-5 text-center text-muted">No records found for this category.</div>
+                <div class="p-5 text-center text-muted">
+                    <i data-lucide="inbox" size="48" style="opacity: 0.3; margin-bottom: 15px;"></i>
+                    <p>No records found for this category.</p>
+                </div>
             <?php endif; ?>
         </div>
     </div>
@@ -224,6 +264,8 @@ require_once __DIR__ . '/../process/fetch_options.php';
 
 <script src="../assets/js/custom_options_script.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>lucide.createIcons();</script>
+<script>
+    lucide.createIcons();
+</script>
 </body>
 </html>
