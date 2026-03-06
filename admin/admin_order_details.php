@@ -1,332 +1,445 @@
 <?php
-// admin_order_details.php
+// admin/admin_order_details.php
 session_start();
 include __DIR__ . '/../config/db_connect.php';
+require_once __DIR__ . '/../classes/Order/OrderService.php';
 
-// 1. Security Check
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header("Location: login.php");
+if (!isset($_SESSION['user_id']) || strtoupper($_SESSION['role'] ?? '') !== 'ADMIN') {
+    header("Location: ../login.php");
     exit();
 }
 
-// 2. Validate Order ID
-if (!isset($_GET['id'])) { die("Error: Order ID is missing."); }
-$order_id = intval($_GET['id']);
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    die("Invalid order ID.");
+}
 
-// 3. Fetch Order & User Info
-$sql_order = "SELECT o.*, u.first_name, u.last_name, u.phone_number, u.address 
-              FROM orders o
-              LEFT JOIN users u ON o.user_id = u.user_id
-              WHERE o.order_id = $order_id";
-$result_order = $conn->query($sql_order);
-if ($result_order->num_rows == 0) { die("Order not found."); }
-$order = $result_order->fetch_assoc();
+$order_id = (int)$_GET['id'];
+$service  = new OrderService($conn);
+$order    = $service->getFullOrderDetails($order_id);
 
-// 4. Fetch Order Items
-$sql_items = "
-    SELECT oi.*, p.frame_name, p.frame_design, p.base_image_url,
-        pv.size AS variant_size, pv.color AS variant_color,
-        cs.size_label AS custom_size_val,
-        co.name AS custom_color_val, cm.name AS custom_matboard_val
-    FROM order_items oi
-    LEFT JOIN product_variants pv ON oi.product_variant_id = pv.variant_id
-    LEFT JOIN products p ON pv.product_id = p.product_id
-    LEFT JOIN custom_sizes cs ON oi.custom_size_id = cs.size_id
-    LEFT JOIN custom_options co ON oi.custom_color_id = co.option_id
-    LEFT JOIN custom_options cm ON oi.custom_matboard_id = cm.option_id
-    WHERE oi.order_id = $order_id
-";
-$result_items = $conn->query($sql_items);
+if (!$order) {
+    die("Order not found.");
+}
+
+// Status stepper config
+$status_steps = [
+    ['key' => 'PENDING',    'label' => 'Pending'],
+    ['key' => 'PROCESSING', 'label' => 'Processing'],
+    ['key' => 'PICKUP_DELIVERY', 'label' => 'Pick-up / Delivery'], // virtual step
+    ['key' => 'COMPLETED',  'label' => 'Completed'],
+];
+$status_order = ['PENDING'=>0,'PROCESSING'=>1,'READY_FOR_PICKUP'=>2,'FOR_DELIVERY'=>2,'COMPLETED'=>3,'REJECTED'=>3,'CANCELLED'=>3];
+$current_step = $status_order[$order['order_status']] ?? 0;
+
+// Payment info
+$amount_paid = (float)($order['amount_paid'] ?? 0);
+$total_price = (float)($order['total_price'] ?? 0);
+$balance_due = max(0, $total_price - $amount_paid);
+$payment_status = $order['payment_status'] ?? null;
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Details #<?php echo $order_id; ?></title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <style>
-        /* --- BRAND PALETTE --- */
-        :root { 
-            --color-green: #A7C957;
-            --color-gold: #B89655;
-            --color-brown: #795338;
-            
-            --bg-light: #f8f9fa;
-            --card-bg: #ffffff; 
-            --text-main: #333; 
-            --border: #e5e7eb; 
-            --color-danger: #dc3545;
-        }
-        
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-light); color: var(--text-main); margin: 0; padding-top: 100px; }
-
-        .container { max-width: 1000px; margin: 0 auto; padding: 0 20px 40px; }
-        
-        /* Back Button */
-        .back-btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: #6b7280; font-weight: 600; margin-bottom: 20px; font-size: 0.9rem; transition: color 0.2s; }
-        .back-btn:hover { color: var(--color-gold); }
-
-        /* Card Styles */
-        .order-header-card, .info-card, .table-card, .proof-section {
-            background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.03); margin-bottom: 20px; padding: 25px;
-            /* Top border accent in Gold */
-            border-top: 3px solid var(--color-gold);
-        }
-        
-        .order-header-card { display: flex; justify-content: space-between; align-items: flex-start; }
-        
-        /* Typography */
-        .order-title h1 { margin: 0; font-size: 1.6rem; color: var(--color-brown); font-weight: 700; }
-        .order-meta { color: #6b7280; font-size: 0.9rem; margin-top: 5px; }
-        
-        /* Status Badges */
-        .status-badge { padding: 6px 16px; border-radius: 50px; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        
-        /* Status Colors mapped to Brand/Logic */
-        .status-Pending { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
-        .status-Preparing { background: #fdf8f6; color: var(--color-brown); border: 1px solid #ebd5c1; } /* Light Brown */
-        .status-Ready { background: #fefce8; color: #854d0e; border: 1px solid #fef08a; } /* Yellowish */
-        .status-To { background: #eff6ff; color: #1e40af; border: 1px solid #dbeafe; } /* Blue (To be Delivered) */
-        .status-Completed { background: #f2f7e6; color: #5a6e2e; border: 1px solid #dae8b5; } /* Green Palette */
-        .status-Rejected { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
-        .status-Cancelled { background: #f3f4f6; color: #666; text-decoration: line-through; border: 1px solid #e5e7eb; }
-
-        /* Grid & Tables */
-        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .card-title { font-size: 0.85rem; text-transform: uppercase; color: var(--color-brown); font-weight: 700; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .info-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.95rem; }
-        .info-value { font-weight: 500; color: #111; text-align: right; }
-
-        .table-card { padding: 0; overflow: hidden; border-top: 3px solid var(--color-green); /* Differentiate table slightly */ }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #fcfcfc; text-align: left; padding: 15px 25px; font-size: 0.85rem; color: var(--color-brown); font-weight: 600; border-bottom: 1px solid #eee; }
-        td { padding: 20px 25px; border-bottom: 1px solid var(--border); font-size: 0.95rem; vertical-align: top; }
-        .item-main { font-weight: 600; color: var(--color-brown); display: block; }
-        .item-sub { font-size: 0.85rem; color: #6b7280; line-height: 1.5; margin-top: 4px; }
-        .item-type-badge { padding: 3px 8px; background: #f3f4f6; color: #4b5563; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
-
-        /* Proof Images */
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
-        .proof-item { text-align: center; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; transition: border-color 0.2s; }
-        .proof-item:hover { border-color: var(--color-gold); }
-        .proof-item img { width: 100%; height: 120px; object-fit: cover; border-radius: 4px; cursor: pointer; }
-    </style>
+    <title>Order #<?= $order_id ?> - RGA Frames</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
 
-    <?php include __DIR__ . '/../includes/admin_header.php'; ?>
+<?php include __DIR__ . '/../includes/admin_header.php'; ?>
 
-    <div class="container">
-        
-        <a href="admin_orders.php" class="back-btn">
-            <i class="fas fa-arrow-left"></i> Back to Order List
-        </a>
+<div class="container-fluid px-4 admn-ordr-dtls-page">
 
-        <div class="order-header-card">
-            <div class="order-title">
-                <h1>Order #<?php echo str_pad($order['order_id'], 6, '0', STR_PAD_LEFT); ?></h1>
-                <div class="order-meta">
-                    <i class="far fa-clock"></i> Placed on <?php echo date("F j, Y • g:i A", strtotime($order['created_at'])); ?>
+    <!-- Back -->
+    <a href="admin_orders.php" class="admn-ordr-dtls-back">
+        ← Back to Order List
+    </a>
+
+    <!-- Status Stepper -->
+    <div class="admn-ordr-dtls-stepper-wrap">
+        <?php foreach ($status_steps as $i => $step):
+            $stepKey     = $step['key'];
+            $stepIndex   = ($stepKey === 'PICKUP_DELIVERY') ? 2 : $status_order[$stepKey];
+            $isDone      = $current_step > $stepIndex;
+            $isActive    = $current_step === $stepIndex;
+            $isCancelled = in_array($order['order_status'], ['REJECTED','CANCELLED']);
+            // For step 4 (Completed), show number 4 if active/done
+            $stepNum = $i + 1;
+        ?>
+            <div class="admn-ordr-dtls-step <?= $isDone || $isActive ? 'done' : '' ?> <?= $isCancelled && $i === 3 ? 'cancelled' : '' ?>">
+                <div class="admn-ordr-dtls-step-circle">
+                    <?php if ($isDone || ($isActive && $i < 3)): ?>
+                        <i class="fas fa-check"></i>
+                    <?php else: ?>
+                        <?= $stepNum ?>
+                    <?php endif; ?>
                 </div>
+                <span class="admn-ordr-dtls-step-label"><?= $step['label'] ?></span>
             </div>
-            <div class="order-status">
-                <?php 
-                    $status_class = explode(' ', $order['status'])[0]; 
-                    if($order['status'] == 'To be Delivered') $status_class = 'To';
-                ?>
-                <span class="status-badge status-<?php echo $status_class; ?>">
-                    <?php echo $order['status']; ?>
-                </span>
-            </div>
-        </div>
-
-        <div class="info-grid">
-            <div class="info-card">
-                <div class="card-title">Customer Details</div>
-                <div class="info-row">
-                    <span style="color:#6b7280;">Name</span>
-                    <span class="info-value"><?php echo htmlspecialchars($order['first_name'] . ' ' . $order['last_name']); ?></span>
-                </div>
-                <div class="info-row">
-                    <span style="color:#6b7280;">Phone</span>
-                    <span class="info-value"><?php echo htmlspecialchars($order['phone_number']); ?></span>
-                </div>
-                <div class="info-row">
-                    <span style="color:#6b7280;">Address</span>
-                    <span class="info-value" style="max-width: 60%;">
-                        <?php echo nl2br(htmlspecialchars($order['delivery_address'] ?? 'N/A')); ?>
-                    </span>
-                </div>
-            </div>
-
-            <div class="info-card">
-                <div class="card-title">Payment & Totals</div>
-                <div class="info-row">
-                    <span style="color:#6b7280;">Method</span>
-                    <span class="info-value">
-                        <?php echo $order['payment_method']; ?> 
-                        <small style="color: var(--color-gold); font-weight:bold;">(<?php echo $order['payment_status']; ?>)</small>
-                    </span>
-                </div>
-                <div class="info-row">
-                    <span style="color:#6b7280;">Delivery</span>
-                    <span class="info-value"><?php echo $order['delivery_option']; ?></span>
-                </div>
-                <div style="border-top: 1px dashed #e5e7eb; margin: 15px 0;"></div>
-                <div class="info-row" style="font-size: 1.1rem;">
-                    <span style="color: #111; font-weight: 600;">Grand Total</span>
-                    <span style="color: var(--color-brown); font-weight: 700;">₱<?php echo number_format($order['grand_total'], 2); ?></span>
-                </div>
-                <div class="info-row">
-                    <span style="color:#6b7280;">Downpayment</span>
-                    <span class="info-value" style="color: #666;">-₱<?php echo number_format($order['downpayment_amount'], 2); ?></span>
-                </div>
-                <div class="info-row">
-                    <span style="color:#6b7280;">Balance Due</span>
-                    <?php $bal = $order['grand_total'] - $order['downpayment_amount']; ?>
-                    <span class="info-value" style="color: <?php echo ($bal > 0) ? 'var(--color-danger)' : 'var(--color-green)'; ?>;">
-                        ₱<?php echo number_format($bal, 2); ?>
-                    </span>
-                </div>
-            </div>
-        </div>
-
-        <div class="table-card">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 55%;">Item Details</th>
-                        <th style="width: 15%;">Type</th>
-                        <th style="width: 10%; text-align: center;">Qty</th>
-                        <th style="width: 20%; text-align: right;">Subtotal</th>
-                    </tr>
-                </thead>
-                <tbody>
-    <?php if ($result_items && $result_items->num_rows > 0): ?>
-        <?php while($item = $result_items->fetch_assoc()): ?>
-        <tr>
-            <td>
-                <?php 
-                // --- CASE 1: READY-MADE (Both types) ---
-                if (strpos($item['service_type'], 'Ready-Made') !== false): ?>
-                    <span class="item-main"><?php echo htmlspecialchars($item['frame_name']); ?></span>
-                    <div class="item-details-list">
-                        <div class="detail-line"><span class="detail-label">Size:</span> <span class="detail-val"><?php echo $item['variant_size']; ?></span></div>
-                        <div class="detail-line"><span class="detail-label">Color:</span> <span class="detail-val"><?php echo $item['variant_color']; ?></span></div>
-                    </div>
-
-                <?php 
-                // --- CASE 2: CUSTOM FRAMES (Both types) ---
-                elseif (strpos($item['service_type'], 'Custom') !== false): ?>
-                    <span class="item-main"><i class="fas fa-tools"></i> Custom Frame</span>
-                    <div class="item-details-list">
-                         <div class="detail-line"><span class="detail-label">Size:</span> <span class="detail-val"><?php echo $item['custom_size_val']; ?></span></div>
-                         <div class="detail-line"><span class="detail-label">Frame:</span> <span class="detail-val"><?php echo $item['custom_color_val']; ?></span></div>
-                         <?php if($item['custom_matboard_val']): ?>
-                             <div class="detail-line"><span class="detail-label">Mat:</span> <span class="detail-val"><?php echo $item['custom_matboard_val']; ?></span></div>
-                         <?php endif; ?>
-                    </div>
-                
-                <?php 
-                // --- CASE 3: PRINT ONLY ---
-                elseif ($item['service_type'] === 'Print-Only'): ?>
-                     <span class="item-main" style="color:#e67e22;"><i class="fas fa-print"></i> Printing Service</span>
-                     <div class="item-details-list">
-                         <div class="detail-line">
-                             <span class="detail-label">Size:</span> 
-                             <span class="detail-val"><?php echo $item['custom_size_val']; // e.g. A4, A3 ?></span>
-                         </div>
-                         <div class="detail-line">
-                             <span class="detail-label">Paper:</span> 
-                             <span class="detail-val"><?php echo $item['custom_matboard_val'] ?? 'Standard'; ?></span>
-                         </div>
-                     </div>
-                <?php endif; ?>
-
-                <?php if (!empty($item['print_image'])): ?>
-                    <div style="margin-top: 10px; padding: 10px; background: #fffbeb; border: 1px dashed #eab308; border-radius: 6px; display: flex; gap: 10px; align-items: center;">
-                        <img src="<?php echo htmlspecialchars($item['print_image']); ?>" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border:1px solid #ccc;">
-                        <div>
-                            <div style="font-size: 0.85rem; font-weight: 700; color: #795338;">
-                                <?php echo ($item['service_type'] == 'Print-Only') ? 'Image to Print' : 'Image to Mount'; ?>
-                            </div>
-                            <a href="<?php echo htmlspecialchars($item['print_image']); ?>" download class="text-blue-600 hover:underline" style="font-size: 0.8rem; color: #2563eb;">
-                                <i class="fas fa-download"></i> Download High-Res
-                            </a>
-                        </div>
-                    </div>
-                <?php endif; ?>
-            </td>
-
-            <td>
-                <?php 
-                if (strpos($item['service_type'], 'Ready-Made') !== false) {
-                    $badgeClass = 'badge-ready';
-                    $badgeText = 'Ready-Made';
-                } elseif ($item['service_type'] === 'Print-Only') {
-                    $badgeClass = 'badge-custom'; // You can make a new 'badge-print' class yellow/orange
-                    $badgeText = 'Print Only';
-                } else {
-                    $badgeClass = 'badge-custom';
-                    $badgeText = 'Custom';
-                }
-                ?>
-                <span class="item-type-badge <?php echo $badgeClass; ?>">
-                    <?php echo $badgeText; ?>
-                </span>
-            </td>
-
-            <td style="text-align: center;">x<?php echo $item['frame_quantity']; ?></td>
-            <td style="text-align: right;">₱<?php echo number_format($item['item_subtotal'], 2); ?></td>
-        </tr>
-        <?php endwhile; ?>
-    <?php endif; ?>
-</tbody>
-            </table>
-        </div>
-
-        <?php if(!empty($order['payment_proof_image']) || !empty($order['initial_receipt_image']) || !empty($order['final_receipt_image'])): ?>
-        <div class="proof-section">
-            <div class="card-title">Attached Documents</div>
-            <div class="gallery-grid">
-                
-                <?php if(!empty($order['payment_proof_image'])): ?>
-                <div class="proof-item">
-                    <a href="<?php echo htmlspecialchars($order['payment_proof_image']); ?>" target="_blank">
-                        <img src="<?php echo htmlspecialchars($order['payment_proof_image']); ?>" alt="Customer Proof">
-                    </a>
-                    <div style="font-size:12px; margin-top:5px; color:#666;">Customer Proof</div>
-                </div>
-                <?php endif; ?>
-
-                <?php if(!empty($order['initial_receipt_image'])): ?>
-                <div class="proof-item">
-                    <a href="<?php echo htmlspecialchars($order['initial_receipt_image']); ?>" target="_blank">
-                        <img src="<?php echo htmlspecialchars($order['initial_receipt_image']); ?>" alt="Shop Receipt">
-                    </a>
-                    <div style="font-size:12px; margin-top:5px; color:#666;">Downpayment Receipt</div>
-                </div>
-                <?php endif; ?>
-
-                <?php if(!empty($order['final_receipt_image'])): ?>
-                <div class="proof-item">
-                    <a href="<?php echo htmlspecialchars($order['final_receipt_image']); ?>" target="_blank">
-                        <img src="<?php echo htmlspecialchars($order['final_receipt_image']); ?>" alt="Final Receipt">
-                    </a>
-                    <div style="font-size:12px; margin-top:5px; color:#666;">Final Receipt</div>
-                </div>
-                <?php endif; ?>
-
-            </div>
-        </div>
-        <?php endif; ?>
-
+            <?php if ($i < count($status_steps) - 1): ?>
+                <div class="admn-ordr-dtls-step-line <?= $current_step > $stepIndex ? 'done' : '' ?>"></div>
+            <?php endif; ?>
+        <?php endforeach; ?>
     </div>
 
+    <!-- Order ID Card -->
+    <div class="admn-ordr-dtls-id-card">
+        <div class="admn-ordr-dtls-id-header">ORDER</div>
+        <div class="admn-ordr-dtls-id-number"># <?= $order_id ?></div>
+        <div class="admn-ordr-dtls-id-meta">
+            <span class="admn-ordr-dtls-ref-pill"><?= htmlspecialchars($order['order_reference_no'] ?? '—') ?></span>
+            <span class="admn-ordr-dtls-placed">
+                <i class="fas fa-circle text-warning" style="font-size:0.5rem; vertical-align:middle;"></i>
+                Placed on <?= date('M d, Y | g:i A', strtotime($order['created_at'])) ?>
+            </span>
+        </div>
+    </div>
+
+    <!-- Customer + Payment Row -->
+    <div class="row g-4 mb-4">
+
+        <!-- Customer Details -->
+        <div class="col-lg-6">
+            <div class="admn-ordr-dtls-card admn-ordr-dtls-card-blue">
+                <div class="admn-ordr-dtls-card-header">
+                    <i class="fas fa-user-circle text-warning"></i> CUSTOMER DETAILS
+                </div>
+                <div class="admn-ordr-dtls-card-body">
+                    <div class="admn-ordr-dtls-row">
+                        <span class="admn-ordr-dtls-label">Full Name</span>
+                        <span class="admn-ordr-dtls-value"><?= htmlspecialchars($order['first_name'] . ' ' . $order['last_name']) ?></span>
+                    </div>
+                    <div class="admn-ordr-dtls-row">
+                        <span class="admn-ordr-dtls-label">Username</span>
+                        <span class="admn-ordr-dtls-value">@<?= htmlspecialchars($order['username'] ?? '—') ?></span>
+                    </div>
+                    <div class="admn-ordr-dtls-row">
+                        <span class="admn-ordr-dtls-label">Phone</span>
+                        <span class="admn-ordr-dtls-value"><?= htmlspecialchars($order['phone_number'] ?? '—') ?></span>
+                    </div>
+                    <div class="admn-ordr-dtls-row">
+                        <span class="admn-ordr-dtls-label">Email</span>
+                        <span class="admn-ordr-dtls-value"><?= htmlspecialchars($order['email'] ?? '—') ?></span>
+                    </div>
+
+                    <div class="admn-ordr-dtls-section-divider">
+                        <i class="fas fa-coins text-warning"></i> DELIVERY INFO
+                    </div>
+                    <div class="admn-ordr-dtls-row">
+                        <span class="admn-ordr-dtls-label">Option</span>
+                        <span class="admn-ordr-dtls-value">
+                            <?php if (($order['delivery_option'] ?? '') === 'DELIVERY'): ?>
+                                <span class="admn-ordr-dtls-option-pill delivery">
+                                    <i class="fas fa-truck"></i> Delivery
+                                </span>
+                            <?php else: ?>
+                                <span class="admn-ordr-dtls-option-pill pickup">
+                                    <i class="fas fa-store"></i> Pick-up
+                                </span>
+                            <?php endif; ?>
+                        </span>
+                    </div>
+                    <?php if (($order['delivery_option'] ?? '') === 'DELIVERY' && !empty($order['delivery_address'])): ?>
+                    <div class="admn-ordr-dtls-row">
+                        <span class="admn-ordr-dtls-label">Address</span>
+                        <span class="admn-ordr-dtls-value"><?= nl2br(htmlspecialchars($order['delivery_address'])) ?></span>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment & Totals -->
+        <div class="col-lg-6">
+            <div class="admn-ordr-dtls-card admn-ordr-dtls-card-green">
+                <div class="admn-ordr-dtls-card-header">
+                    <i class="fas fa-user-circle text-warning"></i> PAYMENT & TOTALS
+                </div>
+                <div class="admn-ordr-dtls-card-body">
+                    <div class="admn-ordr-dtls-row">
+                        <span class="admn-ordr-dtls-label">Method</span>
+                        <span class="admn-ordr-dtls-value">
+                            <?php if (($order['payment_method'] ?? '') === 'GCASH'): ?>
+                                <img src="../assets/images/gcash-logo.png" alt="GCash" style="height:20px;" onerror="this.style.display='none'; this.nextSibling.style.display='inline'">
+                                <span style="display:none" class="badge bg-primary">GCash</span>
+                            <?php else: ?>
+                                <span class="admn-ordr-dtls-cash-badge"><i class="fas fa-money-bill-wave"></i> Cash</span>
+                            <?php endif; ?>
+                        </span>
+                    </div>
+                    <div class="admn-ordr-dtls-row">
+                        <span class="admn-ordr-dtls-label">Status</span>
+                        <span class="admn-ordr-dtls-value">
+                            <?php
+                            $ps = $payment_status ?? 'PENDING';
+                            $psClass = match($ps) {
+                                'FULL'    => 'admn-ordr-dtls-pay-full',
+                                'PARTIAL' => 'admn-ordr-dtls-pay-partial',
+                                default   => 'admn-ordr-dtls-pay-pending',
+                            };
+                            $psLabel = match($ps) {
+                                'FULL'    => 'Fully Paid',
+                                'PARTIAL' => '⚠ Partial Payment',
+                                default   => 'Pending',
+                            };
+                            ?>
+                            <span class="admn-ordr-dtls-pay-badge <?= $psClass ?>"><?= $psLabel ?></span>
+                        </span>
+                    </div>
+
+                    <hr class="admn-ordr-dtls-divider-line">
+
+                    <div class="admn-ordr-dtls-row admn-ordr-dtls-total-row">
+                        <span class="admn-ordr-dtls-label">Grand Total</span>
+                        <span class="admn-ordr-dtls-total-amount">₱<?= number_format($total_price, 2) ?></span>
+                    </div>
+                    <?php if ($amount_paid > 0): ?>
+                    <div class="admn-ordr-dtls-row">
+                        <span class="admn-ordr-dtls-label">Downpayment</span>
+                        <span class="admn-ordr-dtls-downpayment">- ₱<?= number_format($amount_paid, 2) ?></span>
+                    </div>
+                    <hr class="admn-ordr-dtls-divider-line">
+                    <?php endif; ?>
+                    <div class="admn-ordr-dtls-row admn-ordr-dtls-balance-row">
+                        <span class="admn-ordr-dtls-balance-label">Balance Due</span>
+                        <span class="admn-ordr-dtls-balance-amount">₱<?= number_format($balance_due, 2) ?></span>
+                    </div>
+
+                    <?php if (!empty($order['payment_proof'])): ?>
+                    <div class="d-flex gap-2 mt-3 flex-wrap">
+                        <a href="../<?= htmlspecialchars($order['payment_proof']) ?>" target="_blank"
+                           class="admn-ordr-dtls-proof-btn">
+                            <i class="fas fa-eye"></i> View Proof of Payment
+                        </a>
+                        <a href="../<?= htmlspecialchars($order['payment_proof']) ?>" download
+                           class="admn-ordr-dtls-download-link">
+                            <i class="fas fa-download"></i> Download Proof of Payment
+                        </a>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details Table -->
+    <div class="admn-ordr-dtls-items-wrap">
+        <div class="admn-ordr-dtls-items-header">
+            <i class="fas fa-cubes text-warning"></i> ORDER DETAILS
+        </div>
+
+        <!-- Table header -->
+        <div class="admn-ordr-dtls-table-head">
+            <div class="admn-ordr-dtls-col-item">ITEM DETAILS</div>
+            <div class="admn-ordr-dtls-col-type">TYPE</div>
+            <div class="admn-ordr-dtls-col-qty">QUANTITY</div>
+            <div class="admn-ordr-dtls-col-sub">SUBTOTAL</div>
+        </div>
+
+        <?php if (empty($order['items'])): ?>
+            <div class="p-4 text-center text-muted">No items found for this order.</div>
+        <?php else: ?>
+            <?php foreach ($order['items'] as $item):
+                $frameCategory = $item['frame_category'] ?? null;
+                $serviceType   = $item['service_type']   ?? null;
+                $isReadyMade   = $frameCategory === 'READY_MADE';
+                $isCustom      = $frameCategory === 'CUSTOM';
+                $hasPrint      = $serviceType === 'FRAME&PRINT';
+                $isPrintOnly   = empty($item['r_product_id']) && empty($item['c_product_id']);
+
+                // Item name + badge config
+                if ($isPrintOnly) {
+                    $itemName   = 'Printing Service';
+                    $itemIcon   = 'fas fa-print';
+                    $itemColor  = 'admn-ordr-dtls-item-print';
+                    $badgeClass = 'admn-ordr-dtls-badge-print';
+                    $badgeLabel = '<i class="fas fa-print"></i> Print Only';
+                } elseif ($isReadyMade && $hasPrint) {
+                    $itemName   = htmlspecialchars($item['ready_name'] ?? 'Ready-made Frame') . ' + Print';
+                    $itemIcon   = 'fas fa-images';
+                    $itemColor  = 'admn-ordr-dtls-item-readymade';
+                    $badgeClass = 'admn-ordr-dtls-badge-frameprint';
+                    $badgeLabel = '<i class="fas fa-border-all"></i> Frame & Print';
+                } elseif ($isReadyMade) {
+                    $itemName   = htmlspecialchars($item['ready_name'] ?? 'Ready-made Frame');
+                    $itemIcon   = 'fas fa-border-all';
+                    $itemColor  = 'admn-ordr-dtls-item-readymade';
+                    $badgeClass = 'admn-ordr-dtls-badge-readymade';
+                    $badgeLabel = '<i class="fas fa-tag"></i> Ready-made';
+                } elseif ($isCustom && $hasPrint) {
+                    $itemName   = 'Custom Frame + Print';
+                    $itemIcon   = 'fas fa-pencil-ruler';
+                    $itemColor  = 'admn-ordr-dtls-item-custom';
+                    $badgeClass = 'admn-ordr-dtls-badge-frameprint';
+                    $badgeLabel = '<i class="fas fa-border-all"></i> Frame & Print';
+                } else {
+                    $itemName   = 'Custom Frame';
+                    $itemIcon   = 'fas fa-pencil-ruler';
+                    $itemColor  = 'admn-ordr-dtls-item-custom';
+                    $badgeClass = 'admn-ordr-dtls-badge-custom';
+                    $badgeLabel = '<i class="fas fa-magic"></i> Custom';
+                }
+
+                // Compute total_inch for frame size display
+                $frameWidth  = $isReadyMade ? ($item['width'] ?? null)        : ($item['custom_width'] ?? null);
+                $frameHeight = $isReadyMade ? ($item['height'] ?? null)       : ($item['custom_height'] ?? null);
+                $frameTotalInch = ($frameWidth && $frameHeight) ? ($frameWidth + $frameHeight) * 2 : null;
+            ?>
+            <div class="admn-ordr-dtls-item-row">
+                <!-- Item header: name / badge / qty / subtotal -->
+                <div class="admn-ordr-dtls-item-top">
+                    <div class="admn-ordr-dtls-col-item">
+                        <span class="admn-ordr-dtls-item-bullet">•</span>
+                        <span class="admn-ordr-dtls-item-name <?= $itemColor ?>">
+                            <i class="<?= $itemIcon ?>"></i> <?= $itemName ?>
+                        </span>
+                    </div>
+                    <div class="admn-ordr-dtls-col-type">
+                        <span class="admn-ordr-dtls-type-badge <?= $badgeClass ?>"><?= $badgeLabel ?></span>
+                    </div>
+                    <div class="admn-ordr-dtls-col-qty">x<?= $item['quantity'] ?? 1 ?></div>
+                    <div class="admn-ordr-dtls-col-sub">₱<?= number_format($item['sub_total'] ?? 0, 2) ?></div>
+                </div>
+
+                <!-- Specs -->
+                <div class="admn-ordr-dtls-specs-grid">
+
+                    <?php if ($isPrintOnly): ?>
+                        <!-- PRINT ONLY specs -->
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Paper Size</span>
+                            <span><?= $item['print_width'] ?? '—' ?>" × <?= $item['print_height'] ?? '—' ?>" (<?= $item['print_total_inch'] ?? '—' ?> total inches)</span>
+                        </div>
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Paper Type (Print)</span>
+                            <span><?= htmlspecialchars($item['paper_name'] ?? '—') ?></span>
+                        </div>
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Pricing</span>
+                            <span>Print | ₱<?= number_format($item['print_sub_total'] ?? 0, 2) ?></span>
+                        </div>
+
+                    <?php elseif ($isReadyMade): ?>
+                        <!-- READY-MADE specs -->
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Frame Size</span>
+                            <span><?= $frameWidth ?>" × <?= $frameHeight ?>"<?= $frameTotalInch ? ' (' . $frameTotalInch . ' total inches)' : '' ?></span>
+                        </div>
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Design</span>
+                            <span><?= htmlspecialchars($item['design_name'] ?? '—') ?></span>
+                        </div>
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Color</span>
+                            <span><?= htmlspecialchars($item['color_name'] ?? '—') ?></span>
+                        </div>
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Frame Type</span>
+                            <span><?= htmlspecialchars($item['type_name'] ?? '—') ?></span>
+                        </div>
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Mount</span>
+                            <span><?= htmlspecialchars($item['mount_name'] ?? '—') ?></span>
+                        </div>
+                        <?php if ($hasPrint): ?>
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Paper Size</span>
+                            <span><?= $item['print_width'] ?? '—' ?>" × <?= $item['print_height'] ?? '—' ?>" (<?= $item['print_total_inch'] ?? '—' ?> total inches)</span>
+                        </div>
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Paper Type (Print)</span>
+                            <span><?= htmlspecialchars($item['paper_name'] ?? '—') ?></span>
+                        </div>
+                        <?php endif; ?>
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Pricing</span>
+                            <span>
+                                Frame | ₱<?= number_format($item['product_price'] ?? $item['base_price'] ?? 0, 2) ?><br>
+                                Mount | ₱<?= number_format($item['mount_extra'] ?? 0, 2) ?>
+                                <?php if ($hasPrint): ?>
+                                    <br>Print | ₱<?= number_format($item['print_sub_total'] ?? 0, 2) ?>
+                                <?php endif; ?>
+                            </span>
+                        </div>
+
+                    <?php else: ?>
+                        <!-- CUSTOM FRAME specs -->
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Frame Size</span>
+                            <span><?= $frameWidth ?>" × <?= $frameHeight ?>"<?= $frameTotalInch ? ' (' . $frameTotalInch . ' total inches)' : '' ?></span>
+                        </div>
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Design</span>
+                            <span><?= htmlspecialchars($item['design_name'] ?? '—') ?></span>
+                        </div>
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Color</span>
+                            <span><?= htmlspecialchars($item['color_name'] ?? '—') ?></span>
+                        </div>
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Frame Type</span>
+                            <span><?= htmlspecialchars($item['type_name'] ?? '—') ?></span>
+                        </div>
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Mount</span>
+                            <span><?= htmlspecialchars($item['mount_name'] ?? '—') ?></span>
+                        </div>
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Matboard</span>
+                            <span><?= htmlspecialchars($item['matboard_color_name'] ?? 'None') ?></span>
+                        </div>
+                        <?php if ($hasPrint): ?>
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Paper Size</span>
+                            <span><?= $item['print_width'] ?? '—' ?>" × <?= $item['print_height'] ?? '—' ?>" (<?= $item['print_total_inch'] ?? '—' ?> total inches)</span>
+                        </div>
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Paper Type (Print)</span>
+                            <span><?= htmlspecialchars($item['paper_name'] ?? '—') ?></span>
+                        </div>
+                        <?php endif; ?>
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Pricing</span>
+                            <span>
+                                Frame | ₱<?= number_format($item['calculated_price'] ?? $item['base_price'] ?? 0, 2) ?><br>
+                                Matboard | ₱<?= number_format($item['matboard_base_price'] ?? 0, 2) ?><br>
+                                Mount | ₱<?= number_format($item['mount_extra'] ?? 0, 2) ?>
+                                <?php if ($hasPrint): ?>
+                                    <br>Print | ₱<?= number_format($item['print_sub_total'] ?? 0, 2) ?>
+                                <?php endif; ?>
+                            </span>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Download Customer Image button (for items with print) -->
+                    <?php if ($hasPrint || $isPrintOnly): ?>
+                        <?php if (!empty($item['image_path'])): ?>
+                        <div class="mt-3">
+                            <a href="../<?= htmlspecialchars($item['image_path']) ?>" download
+                               class="admn-ordr-dtls-img-download-btn">
+                                <i class="fas fa-download"></i> Download Customer Image
+                            </a>
+                        </div>
+                        <?php endif; ?>
+                    <?php endif; ?>
+
+                </div>
+            </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+
+        <!-- Grand Total Footer -->
+        <div class="admn-ordr-dtls-grand-total">
+            <span>GRAND TOTAL:</span>
+            <span class="admn-ordr-dtls-grand-amount">₱<?= number_format($total_price, 2) ?></span>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

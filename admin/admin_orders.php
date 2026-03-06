@@ -1,407 +1,251 @@
 <?php
-// admin_orders.php
+// admin/admin_orders.php
 session_start();
 include __DIR__ . '/../config/db_connect.php';
+require_once __DIR__ . '/../classes/Order/OrderService.php';
 
-// Security Check
-if (!isset($_SESSION['user_id']) || strtoupper($_SESSION['role']) !== 'ADMIN') {
-    header("Location: login.php");
+if (!isset($_SESSION['user_id']) || strtoupper($_SESSION['role'] ?? '') !== 'ADMIN') {
+    header("Location: ../login.php");
     exit();
 }
 
-// Map numeric delivery_status to readable names (based on your table comment)
-$status_names = [
-    0 => 'Pending',
-    1 => 'Processing',
-    2 => 'Ready for Pickup',
-    3 => 'To be Delivered',
-    4 => 'Completed',
-    5 => 'Rejected',
-    6 => 'Cancelled'
+$service = new OrderService($conn);
+
+$active_tab = strtoupper($_GET['status'] ?? 'PENDING');
+$valid_tabs = ['PENDING','PROCESSING','READY_FOR_PICKUP','FOR_DELIVERY','COMPLETED','REJECTED','CANCELLED'];
+if (!in_array($active_tab, $valid_tabs)) $active_tab = 'PENDING';
+
+$filters = [
+    'date'       => $_GET['date']       ?? null,
+    'filterDate' => $_GET['filterDate'] ?? null,
 ];
 
-// Fetch counts using delivery_status
-$counts = array_fill_keys(array_values($status_names), 0);
+$summary = $service->getDashboardSummary();
 
-$count_sql = "SELECT order_status, COUNT(*) as total FROM tbl_orders GROUP BY order_status";
-$count_result = $conn->query($count_sql);
-
-if ($count_result) {
-    while ($row = $count_result->fetch_assoc()) {
-        $status_code = $row['order_status'];
-        if (isset($status_names[$status_code])) {
-            $counts[$status_names[$status_code]] = $row['total'];
-        }
-    }
+// Get counts per tab for the badges
+$tab_counts = [];
+foreach ($valid_tabs as $tab) {
+    $tab_counts[$tab] = count($service->getOrdersForStatus($tab));
 }
 
-// Tab logic – map tab names back to numeric codes
-$active_tab = isset($_GET['status']) ? $_GET['status'] : 'new_orders';
+$orders = $service->getOrdersForStatus($active_tab, $filters);
 
-$status_map = [
-    'new_orders'     => 0,
-    'processing'     => 1,
-    'ready_pickup'   => 2,
-    'delivery'       => 3,
-    'sold'           => 4,
-    'rejected'       => 5,
-    'cancelled'      => 6
+$tab_labels = [
+    'PENDING'          => 'New Orders',
+    'PROCESSING'       => 'Processing',
+    'READY_FOR_PICKUP' => 'Ready for Pick-up',
+    'FOR_DELIVERY'     => 'For Delivery',
+    'COMPLETED'        => 'Sold',
+    'REJECTED'         => 'Rejected',
+    'CANCELLED'        => 'Cancelled',
 ];
-
-$selected_status = $status_map[$active_tab] ?? 0; // Default to Pending (0)
-
-$where_clause = "o.order_status = $selected_status";
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Orders - RGA Frames</title>
-
+    <title>Orders - RGA Frames Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="/rga_frames/assets/css/style.css">
-
-     <style>
-        :root {
-            --color-green: #A7C957;
-            --color-gold:  #B89655;
-            --color-brown: #795338;
-            --bg-light:    #f8f9fa;
-            --text-dark:   #333;
-            --text-grey:   #666;
-            --color-danger: #dc3545;
-        }
-
-        body {
-            font-family: 'Inter', 'Segoe UI', sans-serif;
-            background-color: var(--bg-light);
-            color: var(--text-dark);
-            padding-top: 80px;
-        }
-
-        @media (max-width: 991px) {
-            body { padding-top: 140px; }
-        }
-
-        @media (max-width: 576px) {
-            body { padding-top: 130px; }
-        }
-
-        .container { max-width: 1300px; margin: 0 auto; padding: 1rem; }
-
-        .page-title {
-            font-size: 2.1rem;
-            font-weight: 800;
-            color: var(--color-brown);
-            margin-bottom: 0.3rem;
-        }
-
-        .page-subtitle {
-            color: var(--text-grey);
-            font-size: 1rem;
-        }
-
-        .orders-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            overflow: hidden;
-            border-top: 4px solid var(--color-gold);
-        }
-
-        .tabs-header {
-            display: flex;
-            overflow-x: auto;
-            border-bottom: 1px solid #eee;
-            padding: 0 1rem;
-            background: #faf9f6;
-        }
-
-        .tab-link {
-            padding: 1rem 1.4rem;
-            color: var(--text-grey);
-            font-weight: 600;
-            font-size: 0.95rem;
-            text-decoration: none;
-            white-space: nowrap;
-            position: relative;
-            transition: color 0.2s;
-        }
-
-        .tab-link:hover { color: var(--color-gold); }
-
-        .tab-link.active {
-            color: var(--color-gold);
-            font-weight: 700;
-        }
-
-        .tab-link.active::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: var(--color-gold);
-        }
-
-        .tab-count {
-            background: #e0e0e0;
-            color: #555;
-            border-radius: 12px;
-            padding: 0.25rem 0.6rem;
-            font-size: 0.8rem;
-            margin-left: 0.5rem;
-        }
-
-        .tab-link.active .tab-count {
-            background: var(--color-gold);
-            color: white;
-        }
-
-        .search-container {
-            padding: 1.2rem;
-            border-bottom: 1px solid #eee;
-        }
-
-        .search-box {
-            position: relative;
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 0.9rem 1rem 0.9rem 2.8rem;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            background: #f9f9f9;
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #aaa;
-        }
-
-        .order-item {
-            border-bottom: 1px solid #eee;
-            padding: 1.5rem 1.2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .order-info {
-            flex: 1;
-            min-width: 250px;
-        }
-
-        .order-finance {
-            min-width: 180px;
-            text-align: right;
-        }
-
-        .order-actions {
-            min-width: 220px;
-            text-align: right;
-        }
-
-        .finance-info {
-            font-size: 0.95rem;
-            color: #555;
-            margin: 0.3rem 0;
-        }
-
-        .balance-text {
-            color: var(--color-danger);
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-
-        .status-badge {
-            font-size: 0.85rem;
-            padding: 0.4rem 0.9rem;
-            border-radius: 20px;
-            font-weight: 600;
-            margin-top: 0.5rem;
-            display: inline-block;
-        }
-
-        .st-cancelled { background: #f3f4f6; color: #666; }
-        .st-rejected  { background: #efebe9; color: var(--color-brown); border: 1px solid var(--color-brown); }
-
-        .btn-action {
-            padding: 0.6rem 1.2rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin: 0.3rem;
-            transition: opacity 0.2s;
-        }
-
-        .btn-action:hover { opacity: 0.9; }
-
-        .btn-accept { background: var(--color-green); color: white; }
-        .btn-reject  { background: var(--color-danger); color: white; }
-        .btn-done    { background: var(--color-gold); color: white; }
-        .btn-finish  { background: var(--color-gold); color: white; }
-
-        .empty-state {
-            padding: 5rem 1rem;
-            text-align: center;
-            color: #aaa;
-        }
-
-        .empty-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            color: var(--color-gold);
-            opacity: 0.4;
-        }
-    </style>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 
-    <?php include __DIR__ . '/../includes/admin_header.php'; ?>
+<?php include __DIR__ . '/../includes/admin_header.php'; ?>
 
-    <div class="container mt-4">
-        <!-- Messages -->
-        <?php
-        if (isset($_SESSION['success'])) {
-            echo '<div class="alert alert-success alert-dismissible fade show" role="alert">
-                    ' . htmlspecialchars($_SESSION['success']) . '
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                  </div>';
-            unset($_SESSION['success']);
-        }
-        if (isset($_SESSION['error'])) {
-            echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    ' . htmlspecialchars($_SESSION['error']) . '
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                  </div>';
-            unset($_SESSION['error']);
-        }
-        ?>
+<div class="container-fluid px-4 admn-ordr-page">
 
-        <h1 class="page-title">Orders Dashboard</h1>
-        <p class="page-subtitle">View and manage all customer orders</p>
+    <h2 class="admn-ordr-title mb-0">Orders Dashboard</h2>
+    <p class="admn-ordr-subtitle mb-4">Manage and track all customer frame orders</p>
 
-        <div class="orders-card">
-            <!-- Tabs - updated to match your numeric status codes -->
-            <div class="tabs-header">
-                <a href="?status=new_orders"    class="tab-link <?php echo $active_tab === 'new_orders' ? 'active' : ''; ?>">
-                    New Orders <span class="tab-count"><?php echo $counts['Pending']; ?></span>
-                </a>
-                <a href="?status=processing"    class="tab-link <?php echo $active_tab === 'processing' ? 'active' : ''; ?>">
-                    Processing <span class="tab-count"><?php echo $counts['Processing']; ?></span>
-                </a>
-                <a href="?status=ready_pickup"  class="tab-link <?php echo $active_tab === 'ready_pickup' ? 'active' : ''; ?>">
-                    Pickup <span class="tab-count"><?php echo $counts['Ready for Pickup']; ?></span>
-                </a>
-                <a href="?status=delivery"      class="tab-link <?php echo $active_tab === 'delivery' ? 'active' : ''; ?>">
-                    To Deliver <span class="tab-count"><?php echo $counts['To be Delivered']; ?></span>
-                </a>
-                <a href="?status=sold"          class="tab-link <?php echo $active_tab === 'sold' ? 'active' : ''; ?>">
-                    Sold <span class="tab-count"><?php echo $counts['Completed']; ?></span>
-                </a>
-                <a href="?status=rejected"      class="tab-link <?php echo $active_tab === 'rejected' ? 'active' : ''; ?>">
-                    Rejected <span class="tab-count"><?php echo $counts['Rejected']; ?></span>
-                </a>
-                <a href="?status=cancelled"     class="tab-link <?php echo $active_tab === 'cancelled' ? 'active' : ''; ?>">
-                    Cancelled <span class="tab-count"><?php echo $counts['Cancelled']; ?></span>
-                </a>
-            </div>
-
-            <!-- Search -->
-            <div class="search-container">
-                <div class="search-box">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" placeholder="Search orders by ID, name or phone...">
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="admn-ordr-summary-card admn-ordr-summary-new">
+                <div class="card-body">
+                    <p class="admn-ordr-summary-label mb-1">New Orders</p>
+                    <div class="admn-ordr-summary-number"><?= $summary['new_orders'] ?? 0 ?></div>
+                    <p class="admn-ordr-summary-sub">Awaiting Action</p>
                 </div>
             </div>
-
-            <!-- Orders List -->
-            <div class="orders-content p-3">
-                <?php
-                $sql = "SELECT o.*, c.first_name, c.last_name 
-                        FROM tbl_orders o 
-                        JOIN tbl_customer c ON o.customer_id = c.customer_id 
-                        ORDER BY o.created_at DESC";
-
-                $result = $conn->query($sql);
-
-                if ($result && $result->num_rows > 0) {
-                    while ($row = $result->fetch_assoc()) {
-                        $grand_total  = $row['total_price'] ?? 0; // your column is total_price
-                        $downpayment  = $row['downpayment_amount'] ?? 0; // assuming you have this column
-                        $balance      = $grand_total - $downpayment;
-                        $payment_badge = ($balance <= 0) 
-                            ? '<span class="badge bg-success">Fully Paid</span>' 
-                            : '<span class="badge bg-warning">Partial Payment</span>';
-
-                        // Map numeric delivery_status to name
-                        $current_status = $status_names[$row['order_status']] ?? 'Unknown';
-                        ?>
-                        <div class="order-item border-bottom py-4">
-                            <div class="order-info flex-grow-1">
-                                <strong style="font-size: 1.25rem; color: var(--color-brown);">
-                                    Order #<?php echo $row['order_id']; ?>
-                                </strong>
-                                <span class="ms-2 text-muted">
-                                    | <?php echo $row['first_name'] . ' ' . $row['last_name']; ?>
-                                </span>
-                                <br>
-                                <small class="text-muted">
-                                    <i class="fas fa-truck me-1" style="color:var(--color-gold);"></i> 
-                                    <?php echo $row['delivery_option'] ?? 'N/A'; ?> 
-                                    • 
-                                    <i class="fas fa-credit-card me-1" style="color:var(--color-gold);"></i> 
-                                    <?php echo $row['payment_method'] ?? 'N/A'; ?>
-                                </small>
-                                <div class="mt-2">
-                                    <span class="status-badge" style="background: #e9ecef; color: #495057;">
-                                        <?php echo $current_status; ?>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="order-finance text-end">
-                                <div>Total: ₱<?php echo number_format($grand_total, 2); ?></div>
-                                <div>Down: ₱<?php echo number_format($downpayment, 2); ?></div>
-                                <div class="balance-text fw-bold">Balance: ₱<?php echo number_format($balance, 2); ?></div>
-                                <?php echo $payment_badge; ?>
-                            </div>
-
-                            <div class="order-actions text-end mt-3 mt-md-0">
-                                <a href="admin_order_details.php?id=<?php echo $row['order_id']; ?>" class="btn btn-sm btn-outline-secondary me-2">
-                                    <i class="fas fa-eye"></i> Details
-                                </a>
-
-                                <!-- Add your action buttons here (accept, reject, etc.) based on $row['delivery_status'] -->
-                            </div>
-                        </div>
-                        <?php
-                    }
-                } else {
-                    echo '<div class="empty-state text-center py-5">
-                            <i class="fas fa-box-open fa-4x mb-3" style="color: var(--color-gold); opacity: 0.5;"></i>
-                            <p class="lead text-muted">No orders found in this category.</p>
-                          </div>';
-                }
-                $conn->close();
-                ?>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="admn-ordr-summary-card admn-ordr-summary-completed">
+                <div class="card-body">
+                    <p class="admn-ordr-summary-label mb-1">Completed Today</p>
+                    <div class="admn-ordr-summary-number"><?= $summary['completed_today'] ?? 0 ?></div>
+                    <p class="admn-ordr-summary-sub">Revenue today</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="admn-ordr-summary-card admn-ordr-summary-progress">
+                <div class="card-body">
+                    <p class="admn-ordr-summary-label mb-1">In Progress</p>
+                    <div class="admn-ordr-summary-number"><?= $summary['in_progress'] ?? 0 ?></div>
+                    <p class="admn-ordr-summary-sub">Processing / Delivery</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="admn-ordr-summary-card admn-ordr-summary-issues">
+                <div class="card-body">
+                    <p class="admn-ordr-summary-label mb-1">Issues</p>
+                    <div class="admn-ordr-summary-number"><?= $summary['issues'] ?? 0 ?></div>
+                    <p class="admn-ordr-summary-sub">Rejected / Cancelled</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Tabs + Orders List -->
+    <div class="admn-ordr-tabs-wrap">
+        <ul class="nav admn-ordr-tabs" id="orderTabs">
+            <?php foreach ($tab_labels as $status => $label): 
+                $count = $tab_counts[$status] ?? 0;
+            ?>
+            <li class="nav-item">
+                <a class="nav-link admn-ordr-tab <?= $active_tab === $status ? 'active' : '' ?>"
+                   href="?status=<?= $status ?>">
+                    <?= $label ?>
+                    <?php if ($count > 0): ?>
+                        <span class="admn-ordr-tab-count"><?= $count ?></span>
+                    <?php endif; ?>
+                </a>
+            </li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+
+    <div class="admn-ordr-list-wrap">
+
+        <!-- Search & Filter Bar -->
+        <div class="admn-ordr-search-bar">
+            <div class="input-group admn-ordr-search">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" id="admn-ordr-search-input" class="form-control"
+                       placeholder="Search by Order ID, Ref No., Customer Name or Phone...">
+            </div>
+
+            <?php if (!empty($filters['filterDate'])): ?>
+                <span class="admn-ordr-filter-badge">
+                    <i class="fas fa-calendar-day"></i>
+                    <?= date('M d, Y', strtotime($filters['filterDate'])) ?>
+                    <a href="?status=<?= $active_tab ?>">×</a>
+                </span>
+            <?php endif; ?>
+
+            <button class="admn-ordr-filter-btn" data-bs-toggle="modal" data-bs-target="#filterModal">
+                <i class="fas fa-sliders-h"></i> Filters
+            </button>
+        </div>
+
+        <!-- Orders List -->
+        <?php if (empty($orders)): ?>
+            <div class="admn-ordr-empty">
+                <i class="fas fa-inbox"></i>
+                <h5 class="fw-bold text-muted">No orders found in this category.</h5>
+                <p class="small">Orders placed by customers will appear here.</p>
+            </div>
+        <?php else: ?>
+            <div id="admn-ordr-list">
+            <?php foreach ($orders as $order):
+                $st  = strtolower($order['order_status']);
+                $stLabel = match($order['order_status']) {
+                    'PENDING'          => 'Pending',
+                    'PROCESSING'       => 'Processing',
+                    'READY_FOR_PICKUP' => 'Ready for Pick-up',
+                    'FOR_DELIVERY'     => 'For Delivery',
+                    'COMPLETED'        => 'Completed',
+                    'REJECTED'         => 'Rejected',
+                    'CANCELLED'        => 'Cancelled',
+                    default            => $order['order_status'],
+                };
+            ?>
+            <div class="admn-ordr-card" data-search="<?= strtolower(
+                $order['order_id'] . ' ' .
+                ($order['order_reference_no'] ?? '') . ' ' .
+                ($order['first_name'] ?? '') . ' ' .
+                ($order['last_name'] ?? '') . ' ' .
+                ($order['phone_number'] ?? '')
+            ) ?>">
+                <div class="admn-ordr-card-left">
+                    <!-- Order ID + Ref + Status -->
+                    <div class="admn-ordr-id-row">
+                        <span class="admn-ordr-id">Order #<?= $order['order_id'] ?></span>
+                        <span class="admn-ordr-ref-pill"><?= htmlspecialchars($order['order_reference_no'] ?? '—') ?></span>
+                        <span class="admn-ordr-status-pill admn-ordr-status-<?= $st ?>"><?= $stLabel ?></span>
+                    </div>
+
+                    <!-- Customer Name -->
+                    <div class="admn-ordr-customer-name">
+                        <i class="fas fa-user"></i>
+                        <?= htmlspecialchars($order['first_name'] . ' ' . $order['last_name']) ?>
+                    </div>
+
+                    <!-- Phone + Email -->
+                    <div class="admn-ordr-contact-row">
+                        <span><i class="fas fa-phone"></i><?= htmlspecialchars($order['phone_number'] ?? '—') ?></span>
+                        <span><i class="fas fa-envelope"></i><?= htmlspecialchars($order['email'] ?? '—') ?></span>
+                    </div>
+
+                    <!-- Date -->
+                    <div class="admn-ordr-date-row">
+                        <i class="fas fa-clock"></i>
+                        Placed <?= date('M d, Y | g:i A', strtotime($order['created_at'])) ?>
+                    </div>
+                </div>
+
+                <div class="admn-ordr-card-right">
+                    <a href="admin_order_details.php?id=<?= $order['order_id'] ?>"
+                       class="admn-ordr-view-btn">
+                        <i class="fas fa-eye"></i> View Details
+                    </a>
+                </div>
+            </div>
+            <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<!-- Filter Modal -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Filter Orders</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="admn-ordr-filter-form">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Specific Date</label>
+                        <input type="date" class="form-control" id="filterDate" name="filterDate"
+                               value="<?= htmlspecialchars($filters['filterDate'] ?? '') ?>">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Status</label>
+                        <select class="form-select" name="status">
+                            <option value="">All Statuses</option>
+                            <?php foreach ($tab_labels as $val => $lbl): ?>
+                                <option value="<?= $val ?>" <?= $active_tab === $val ? 'selected' : '' ?>><?= $lbl ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-dark" id="admn-ordr-apply-filter">Apply Filters</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../assets/js/admin_orders.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
