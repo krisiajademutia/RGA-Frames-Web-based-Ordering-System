@@ -4077,8 +4077,6 @@ body {
 }
 /*=====
     100% { filter: blur(5px); }}
-    100% { filter: blur(5px); }
-}
 /*=======
    ORDERS DASHBOARD — FULL REDESIGN
    ========================================= */
@@ -4910,6 +4908,16 @@ body {
     .admn-ordr-dtls-col-qty   { display: none; }
     .admn-ordr-dtls-id-number { font-size: 2rem; }
     .admn-ordr-dtls-stepper-wrap { padding: 1rem; }
+
+}
+/* =========================================
+   CUSTOM FRAME SHOP PAGE — csc- prefix
+   ========================================= */
+
+.csc-page {
+    background: #ffffff;
+    padding-top: 80px;
+    min-height: 100vh;
 }
 
 /* --- CUSTOMER SIDE: READY MADE FRAMES */
@@ -5052,3 +5060,10 @@ body {
 /* Status Indicators [cite: 168, 204] */
 .status-in-stock { background: #d1e7dd; color: #0f5132; padding: 3px 10px; border-radius: 5px; font-size: 0.75rem; font-weight: 700; }
 .status-out-of-stock { background: #f8d7da; color: #842029; padding: 3px 10px; border-radius: 5px; font-size: 0.75rem; font-weight: 700; }
+@media (max-width: 767px) {
+    .csc-page { padding-top: 70px; }
+    .csc-design-grid { grid-template-columns: repeat(2, 1fr); }
+    .csc-color-grid  { grid-template-columns: repeat(2, 1fr); }
+    .csc-service-grid { grid-template-columns: 1fr; }
+    .csc-title { font-size: 1.6rem; }
+}
