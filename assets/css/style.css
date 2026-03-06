@@ -803,7 +803,61 @@ html {
 .idx-bg-white {
     background-color: #fafafa;
 }
+/* Carousel Dots Menu */
+.card-dots-menu {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
 
+.card-dots-menu .btn {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    line-height: 30px;
+    border: none;
+    background: rgba(0,0,0,0.5);
+    color: white;
+}
+
+/* Image Upload Preview Overlay */
+.preview-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 10px;
+    background: rgba(238, 238, 238, 0.95);
+    overflow-y: auto;
+    border-radius: 12px;
+    z-index: 2;
+    pointer-events: none; /* Allows click to pass through to the zone */
+}
+.preview-overlay:empty {
+    display: none;
+}
+
+.preview-thumb {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #ADADAD;
+}
+
+.upload-content {
+    position: relative;
+    z-index: 1;
+}
+
+.object-fit-cover {
+    object-fit: cover;
+}
 /*post frame screen*/
   .post-admin-container {
     width: 1258px;
@@ -888,6 +942,7 @@ html {
     grid-template-columns: 535px 535px;
     gap: 25px 48px;
     padding: 40px 60px;
+    margin-bottom: 30px;
 }
 
 .post-label {
@@ -910,6 +965,7 @@ html {
 }
 
 .post-size-box {
+    margin-right:5px;
     width: 245px !important;
 }
 
@@ -925,6 +981,7 @@ html {
     justify-content: center;
     align-items: center;
     cursor: pointer;
+    overflow: visible !important;
 }
 
 .post-btn-submit {
@@ -990,10 +1047,12 @@ html {
 .posted-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 20px;
+    grid-auto-rows: min-content; 
+    gap: 30px 20px;
     padding: 40px 60px;
     overflow-y: auto;
     flex-grow: 1;
+    align-items: start;
 }
 
 .posted-grid::-webkit-scrollbar {
@@ -1022,7 +1081,7 @@ html {
     transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
-    height: fit-content;
+    height: 100%; 
 }
 
 .posted-image-box {
@@ -1087,7 +1146,6 @@ html {
     cursor: pointer;
 }
 
-/* Styling for the Trash/Delete button in the card */
 .posted-delete-btn {
     background: #fff0f0;
     border: 1px solid #d9534f33;
@@ -1116,7 +1174,6 @@ html {
     box-shadow: 0 15px 50px rgba(0,0,0,0.15) !important;
 }
 
-/* Modal Header - Matching your .post-card-header */
 .custom-post-modal .modal-header {
     padding: 20px 35px;
     border-bottom: 1.5px solid #ADADAD;
@@ -1127,11 +1184,10 @@ html {
     font-family: var(--font-secondary);
     font-size: 14px;
     font-weight: 600;
-    color: #004030; /* Your Forest Dark */
+    color: #004030; 
     text-transform: uppercase;
 }
 
-/* Modal Body Styling */
 .custom-post-modal .modal-body {
     padding: 40px 30px;
 }
@@ -1176,7 +1232,6 @@ html {
 
 /* --- Modal Button Styling --- */
 
-/* Cancel Button - Matching your .post-btn-clear */
 .modal-btn-cancel {
     width: 140px;
     height: 44px;
@@ -3373,8 +3428,7 @@ body {
 
 /* 2. Main Wrapper - FIXES THE HEADER OVERLAP */
 .admn-dshbrd-wrapper {
-    max-width: 1050px; /* Constrains width to match Figma proportions */
-    /* 130px top margin pushes it out from under your fixed header */
+    max-width: 1050px;
     margin: 130px auto 60px auto; 
     padding: 0 20px;
     width: 100%;
@@ -3384,8 +3438,8 @@ body {
 .admn-dshbrd-top-section {
     display: flex;
     justify-content: space-between;
-    align-items: center; /* Centers the Welcome text with the entire right block */
-    margin-bottom: 50px; /* Matches Figma's large gap before bottom cards */
+    align-items: center; 
+    margin-bottom: 50px;
     gap: 30px;
     flex-wrap: wrap; 
 }
@@ -3395,7 +3449,7 @@ body {
 }
 
 .admn-dshbrd-title {
-    font-size: 34px; /* Big and bold like Figma */
+    font-size: 34px;
     font-weight: 700;
     color: #1A1A1A;
     margin: 0 0 12px 0;
@@ -3407,7 +3461,7 @@ body {
     color: #555;
     line-height: 1.6;
     margin: 0;
-    max-width: 400px; /* Stops text from stretching too far */
+    max-width: 400px;
 }
 
 /* 4. Earnings Side & Daily Sales Button */
@@ -3415,12 +3469,12 @@ body {
     display: flex;
     flex-direction: column;
     align-items: flex-end; 
-    gap: 15px; /* Spacing between button and card */
+    gap: 15px;
 }
 
 .admn-dshbrd-btn-daily-sales {
     background: transparent;
-    border: 1px solid #333; /* Darker border from Figma */
+    border: 1px solid #333;
     padding: 8px 16px;
     border-radius: 6px;
     font-family: 'Inter', sans-serif;
@@ -3441,17 +3495,17 @@ body {
 /* 5. Stat Cards Base (Matches Figma styling exactly) */
 .admn-dshbrd-stat-card {
     background: #FFFFFF;
-    border-radius: 16px; /* Smooth rounded corners */
-    padding: 30px 35px; /* Thick padding inside cards */
+    border-radius: 16px;
+    padding: 30px 35px; 
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border: 1px solid #EAEAEA; /* Crisp outline, no heavy shadows */
+    border: 1px solid #EAEAEA; 
     width: 100%;
 }
 
 .admn-dshbrd-total-earnings-card {
-    width: 420px; /* Wider card specifically for top right */
+    width: 420px; 
 }
 
 /* 6. Bottom Section (3 Cards Grid) */
@@ -4016,8 +4070,8 @@ body {
 
 @keyframes blur-in {
     0% { filter: blur(0px); }
-    100% { filter: blur(5px); }
-=======
+    100% { filter: blur(5px); }}
+/*=======
    ORDERS DASHBOARD — FULL REDESIGN
    Matching Figma exactly
    ========================================= */
@@ -4849,5 +4903,5 @@ body {
     .admn-ordr-dtls-col-qty   { display: none; }
     .admn-ordr-dtls-id-number { font-size: 2rem; }
     .admn-ordr-dtls-stepper-wrap { padding: 1rem; }
->>>>>>> Stashed changes
+
 }
