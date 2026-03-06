@@ -24,7 +24,7 @@ $posted_frames = $frameService->getAllFrames();
                 
                 <div class="filter-dropdown-wrapper">
                     <select name="size" class="compact-filter-select">
-                        <option value="" selected>Size  ∨</option>
+                        <option value="" selected>Size</option>
                         <option value="4x6">4x6</option>
                         <option value="5x7">5x7</option>
                         <option value="8x10">8x10</option>
@@ -40,7 +40,7 @@ $posted_frames = $frameService->getAllFrames();
 
     <div class="posted-main-container shadow-sm">
         <div class="posted-header-bar">
-            <span>AVAILABLE READY-MADE FRAMES</span>
+            <span>ALL READY-MADE FRAMES</span>
             <span class="posted-badge"><?= count($posted_frames) ?> items found</span>
         </div>
 
