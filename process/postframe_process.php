@@ -9,25 +9,39 @@ require_once '../classes/Frames/FrameService.php';
 $repository = new \Classes\Frames\Repository\ReadyMadeFrameRepository($conn);
 $frameService = new \Classes\Frames\FrameService($repository);
 
-// DELETE
+// DELETE ACTION - Matches JS: ?action=delete&id=
 if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
     $id = (int)$_GET['id'];
-    $product = $frameService->getFrameById($id);
-    if ($product && !empty($product['image_name'])) {
-        @unlink("../uploads/" . $product['image_name']);
-    }
-    if ($frameService->deleteFrame($id)) {
-        $_SESSION['post_success'] = "Product deleted!";
+    
+    try {
+        // 1. Get image names from DB to delete physical files from /uploads/
+        $stmt = $conn->prepare("SELECT image_name FROM tbl_ready_made_product_images WHERE r_product_id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $images = [];
+        while ($img = $result->fetch_assoc()) {
+            $images[] = $img['image_name'];
+        }
+
+        // 2. Perform DB deletion
+        if ($frameService->deleteFrame($id)) {
+            foreach ($images as $imgName) {
+                if (!empty($imgName)) {
+                    @unlink("../uploads/" . $imgName);
+                }
+            }
+            $_SESSION['post_success'] = "Product deleted successfully!";
+        }
+    } catch (mysqli_sql_exception $e) {
+        $_SESSION['post_error'] = "Cannot delete: This product is linked to existing records.";
     }
     header("Location: ../admin/admin_post_frames.php?view=posted");
     exit();
 }
 
-// ADD
+// ADD PRODUCT ACTION
 if (isset($_POST['add_product'])) {
-    $imageName = time() . "_" . $_FILES['image']['name'];
-    move_uploaded_file($_FILES['image']['tmp_name'], "../uploads/" . $imageName);
-
     $data = [
         'product_name'    => $_POST['product_name'],
         'frame_type_id'   => $_POST['frame_type_id'],
@@ -36,18 +50,28 @@ if (isset($_POST['add_product'])) {
         'width'           => $_POST['width'],
         'height'          => $_POST['height'],
         'product_price'   => $_POST['product_price'],
-        'stock_quantity'  => $_POST['stock_quantity'],
-        'image_name'      => $imageName
+        'stock_quantity'  => $_POST['stock_quantity']
     ];
 
-    if ($frameService->createFrame($data)) {
-        $_SESSION['post_success'] = "Frame posted!";
+    $productId = $frameService->createFrame($data);
+
+    if ($productId) {
+        if (!empty($_FILES['images']['name'][0])) {
+            foreach ($_FILES['images']['tmp_name'] as $key => $tmp_name) {
+                $imageName = time() . "_" . $_FILES['images']['name'][$key];
+                $isPrimary = ($key === 0) ? 1 : 0;
+                if (move_uploaded_file($tmp_name, "../uploads/" . $imageName)) {
+                    $frameService->addFrameImage($productId, $imageName, $isPrimary);
+                }
+            }
+        }
+        $_SESSION['post_success'] = "Frame posted successfully!";
     }
     header("Location: ../admin/admin_post_frames.php?view=posted");
     exit();
 }
 
-// UPDATE
+// UPDATE PRODUCT ACTION
 if (isset($_POST['update_product'])) {
     $id = (int)$_POST['r_product_id'];
     $data = [
@@ -61,14 +85,16 @@ if (isset($_POST['update_product'])) {
         'stock_quantity'  => $_POST['stock_quantity']
     ];
 
-    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-        $imageName = time() . "_" . $_FILES['image']['name'];
-        move_uploaded_file($_FILES['image']['tmp_name'], "../uploads/" . $imageName);
-        $data['image_name'] = $imageName;
-    }
-
     if ($frameService->updateFrame($id, $data)) {
-        $_SESSION['post_success'] = "Frame updated!";
+        if (!empty($_FILES['images']['name'][0])) {
+            foreach ($_FILES['images']['tmp_name'] as $key => $tmp_name) {
+                $imageName = time() . "_" . $_FILES['images']['name'][$key];
+                if (move_uploaded_file($tmp_name, "../uploads/" . $imageName)) {
+                    $frameService->addFrameImage($id, $imageName, 0);
+                }
+            }
+        }
+        $_SESSION['post_success'] = "Frame updated successfully!";
     }
     header("Location: ../admin/admin_post_frames.php?view=posted");
     exit();

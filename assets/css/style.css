@@ -803,7 +803,61 @@ html {
 .idx-bg-white {
     background-color: #fafafa;
 }
+/* Carousel Dots Menu */
+.card-dots-menu {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
 
+.card-dots-menu .btn {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    line-height: 30px;
+    border: none;
+    background: rgba(0,0,0,0.5);
+    color: white;
+}
+
+/* Image Upload Preview Overlay */
+.preview-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 10px;
+    background: rgba(238, 238, 238, 0.95);
+    overflow-y: auto;
+    border-radius: 12px;
+    z-index: 2;
+    pointer-events: none; /* Allows click to pass through to the zone */
+}
+.preview-overlay:empty {
+    display: none;
+}
+
+.preview-thumb {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #ADADAD;
+}
+
+.upload-content {
+    position: relative;
+    z-index: 1;
+}
+
+.object-fit-cover {
+    object-fit: cover;
+}
 /*post frame screen*/
   .post-admin-container {
     width: 1258px;
@@ -888,6 +942,7 @@ html {
     grid-template-columns: 535px 535px;
     gap: 25px 48px;
     padding: 40px 60px;
+    margin-bottom: 30px;
 }
 
 .post-label {
@@ -910,6 +965,7 @@ html {
 }
 
 .post-size-box {
+    margin-right:5px;
     width: 245px !important;
 }
 
@@ -925,6 +981,7 @@ html {
     justify-content: center;
     align-items: center;
     cursor: pointer;
+    overflow: visible !important;
 }
 
 .post-btn-submit {
@@ -990,10 +1047,12 @@ html {
 .posted-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 20px;
+    grid-auto-rows: min-content; 
+    gap: 30px 20px;
     padding: 40px 60px;
     overflow-y: auto;
     flex-grow: 1;
+    align-items: start;
 }
 
 .posted-grid::-webkit-scrollbar {
@@ -1022,7 +1081,7 @@ html {
     transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
-    height: fit-content;
+    height: 100%; 
 }
 
 .posted-image-box {
@@ -1087,7 +1146,6 @@ html {
     cursor: pointer;
 }
 
-/* Styling for the Trash/Delete button in the card */
 .posted-delete-btn {
     background: #fff0f0;
     border: 1px solid #d9534f33;
@@ -1116,7 +1174,6 @@ html {
     box-shadow: 0 15px 50px rgba(0,0,0,0.15) !important;
 }
 
-/* Modal Header - Matching your .post-card-header */
 .custom-post-modal .modal-header {
     padding: 20px 35px;
     border-bottom: 1.5px solid #ADADAD;
@@ -1127,11 +1184,10 @@ html {
     font-family: var(--font-secondary);
     font-size: 14px;
     font-weight: 600;
-    color: #004030; /* Your Forest Dark */
+    color: #004030; 
     text-transform: uppercase;
 }
 
-/* Modal Body Styling */
 .custom-post-modal .modal-body {
     padding: 40px 30px;
 }
@@ -1176,7 +1232,6 @@ html {
 
 /* --- Modal Button Styling --- */
 
-/* Cancel Button - Matching your .post-btn-clear */
 .modal-btn-cancel {
     width: 140px;
     height: 44px;
@@ -1548,16 +1603,16 @@ html {
     top: 0;
     left: 0;
     right: 0;
-    background: rgba(255, 255, 255, 0.98);
+    background-color: var(--forest-dark);
     backdrop-filter: blur(10px);
     min-height: 70px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 1.5rem;
-    box-shadow: 0 2px 15px rgba(15, 71, 58, 0.1);
+    box-shadow: 0 2px 15px rgba(15, 7, 58, 0.1);
     z-index: 2000;
-    border-bottom: 3px solid var(--cream-dark);
+    border-bottom: 3px solid rgb(31, 63, 43);
     transition: all 0.3s ease;
 }
 
@@ -1601,7 +1656,7 @@ html {
     font-size: 1.3rem;
     font-weight: 800;
     font-family: var(--font-primary);
-    color: var(--forest-dark);
+    color: white;
     line-height: 1;
 }
 
@@ -1689,8 +1744,8 @@ html {
     font-weight: 600;
     text-decoration: none;
     font-family: var(--font-primary);
-    color: var(--forest-dark);
-    background: var(--cream-light);
+    color: white;
+    /* background: var(--forest-muted); */
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
@@ -1713,10 +1768,11 @@ html {
 }
 
 .gst-hdr-nav-link:hover {
-    background: var(--forest-dark);
+    background: var(--forest-muted);
     color: white !important;
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(15, 71, 58, 0.2);
+
 }
 
 .gst-hdr-nav-link i {
@@ -1725,18 +1781,19 @@ html {
 
 .gst-hdr-btn-login {
     background: transparent;
-    border: 2px solid var(--forest-dark);
+    border: 2px solid white;
 }
 
 .gst-hdr-btn-login:hover {
-    background: var(--forest-dark);
+    background: var(--forest-muted);
     border-color: var(--forest-dark);
     color: white !important;
+    /* border: 2px solid white; */
 }
 
 .gst-hdr-btn-register {
-    background: var(--forest-dark);
-    color: white !important;
+    background: white;
+    color: var(--forest-dark) !important;
     border: 2px solid var(--forest-dark);
 }
 
@@ -2039,7 +2096,7 @@ html {
 
 .log-image-side {
     flex: 1;
-    background: url('../img/frame_index3.jpg');
+    background: url('../img/frame_index.png');
     background-size: cover;
     background-position: center;
     position: relative;
@@ -2213,7 +2270,7 @@ html {
 .reg-image-side { 
     background-size: cover; 
     background-position: center;
-    background-image: url('../img/frame_index3.jpg'); 
+    background-image: url('../img/frame_index.png'); 
 }
 
 /* =========================================
@@ -3373,8 +3430,7 @@ body {
 
 /* 2. Main Wrapper - FIXES THE HEADER OVERLAP */
 .admn-dshbrd-wrapper {
-    max-width: 1050px; /* Constrains width to match Figma proportions */
-    /* 130px top margin pushes it out from under your fixed header */
+    max-width: 1050px;
     margin: 130px auto 60px auto; 
     padding: 0 20px;
     width: 100%;
@@ -3384,8 +3440,8 @@ body {
 .admn-dshbrd-top-section {
     display: flex;
     justify-content: space-between;
-    align-items: center; /* Centers the Welcome text with the entire right block */
-    margin-bottom: 50px; /* Matches Figma's large gap before bottom cards */
+    align-items: center; 
+    margin-bottom: 50px;
     gap: 30px;
     flex-wrap: wrap; 
 }
@@ -3395,7 +3451,7 @@ body {
 }
 
 .admn-dshbrd-title {
-    font-size: 34px; /* Big and bold like Figma */
+    font-size: 34px;
     font-weight: 700;
     color: #1A1A1A;
     margin: 0 0 12px 0;
@@ -3407,7 +3463,7 @@ body {
     color: #555;
     line-height: 1.6;
     margin: 0;
-    max-width: 400px; /* Stops text from stretching too far */
+    max-width: 400px;
 }
 
 /* 4. Earnings Side & Daily Sales Button */
@@ -3415,12 +3471,12 @@ body {
     display: flex;
     flex-direction: column;
     align-items: flex-end; 
-    gap: 15px; /* Spacing between button and card */
+    gap: 15px;
 }
 
 .admn-dshbrd-btn-daily-sales {
     background: transparent;
-    border: 1px solid #333; /* Darker border from Figma */
+    border: 1px solid #333;
     padding: 8px 16px;
     border-radius: 6px;
     font-family: 'Inter', sans-serif;
@@ -3441,17 +3497,17 @@ body {
 /* 5. Stat Cards Base (Matches Figma styling exactly) */
 .admn-dshbrd-stat-card {
     background: #FFFFFF;
-    border-radius: 16px; /* Smooth rounded corners */
-    padding: 30px 35px; /* Thick padding inside cards */
+    border-radius: 16px;
+    padding: 30px 35px; 
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border: 1px solid #EAEAEA; /* Crisp outline, no heavy shadows */
+    border: 1px solid #EAEAEA; 
     width: 100%;
 }
 
 .admn-dshbrd-total-earnings-card {
-    width: 420px; /* Wider card specifically for top right */
+    width: 420px; 
 }
 
 /* 6. Bottom Section (3 Cards Grid) */
@@ -3743,7 +3799,7 @@ body {
     }
 }
 /* =========================================
-<<<<<<< Updated upstream
+
    10. PRINTING SERVICES STYLES (ps-)
    ========================================= */
 
@@ -4020,6 +4076,10 @@ body {
     }
 }
 /*=====
+    100% { filter: blur(5px); }}
+    100% { filter: blur(5px); }
+}
+/*=======
    ORDERS DASHBOARD — FULL REDESIGN
    ========================================= */
 
@@ -4850,161 +4910,145 @@ body {
     .admn-ordr-dtls-col-qty   { display: none; }
     .admn-ordr-dtls-id-number { font-size: 2rem; }
     .admn-ordr-dtls-stepper-wrap { padding: 1rem; }
-
-}
-/* --- READY-MADE SHOP: ADMIN SYNC & COMPACT FILTER --- */
-
-/* 1. Layout Container Sync */
-.post-admin-container {
-    margin-top: 120px;
-    padding-bottom: 60px;
-    font-family: 'Inter', sans-serif;
 }
 
-/* 2. Compact Search & Filter Pill */
-.shop-search-filter-group {
-    max-width: 500px;
+/* --- CUSTOMER SIDE: READY MADE FRAMES */
+
+.shop-client-viewport {
+    margin-top: 130px;
+    padding-bottom: 70px;
+}
+
+.shop-search-filter-bundle {
+    max-width: 520px;
     width: 100%;
 }
 
-.search-filter-pill {
+.search-filter-pill-wrapper {
     display: flex;
     align-items: center;
     background: #ffffff;
-    border: 1px solid #e0e0e0;
-    border-radius: 50px;
-    padding: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    transition: border-color 0.3s ease;
+    border: 1px solid #dee2e6;
+    border-radius: 40px;
+    padding: 5px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.04);
 }
 
-.search-filter-pill:focus-within {
-    border-color: var(--forest-dark);
-}
-
-.search-input-field {
+.client-search-field {
     flex-grow: 1;
     border: none;
     background: transparent;
-    padding: 8px 18px;
-    font-size: 0.9rem;
+    padding: 10px 20px;
+    font-size: 0.95rem;
     outline: none !important;
-    color: #333;
 }
 
-.filter-dropdown-wrapper {
-    border-left: 1px solid #eee;
-    padding: 0 12px;
-    display: flex;
-    align-items: center;
+.inline-filter-component {
+    border-left: 1px solid #efefef;
+    padding: 0 15px;
 }
 
-.compact-filter-select {
+.client-size-select {
     border: none;
     background: transparent;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     font-weight: 700;
-    color: #666;
+    color: #555;
     cursor: pointer;
     outline: none !important;
-    appearance: none; /* Removes default arrow for cleaner look */
-    padding-right: 5px;
 }
 
-.search-action-btn {
+.client-search-trigger {
     background: var(--forest-dark);
-    color: #ffffff;
+    color: #fff;
     border: none;
-    border-radius: 50px;
-    padding: 8px 20px;
-    font-size: 0.9rem;
-    transition: transform 0.2s, opacity 0.3s;
+    border-radius: 40px;
+    padding: 10px 22px;
+    transition: background 0.3s;
 }
 
-.search-action-btn:hover {
-    opacity: 0.9;
-    transform: scale(1.02);
+.client-inventory-shell {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #f0f0f0;
 }
 
-/* 3. Grid & Card Design Parity */
-.posted-main-container {
-    background: #ffffff;
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.posted-header-bar {
-    background: #f8f9fa;
-    padding: 15px 25px;
-    border-bottom: 1px solid #eee;
+.inventory-status-ribbon {
+    background: #fcfcfc;
+    padding: 18px 25px;
+    border-bottom: 1px solid #f1f1f1;
     font-weight: 800;
     color: var(--forest-dark);
-    font-size: 0.85rem;
-    letter-spacing: 0.5px;
+    display: flex;
+    justify-content: space-between;
 }
 
-.posted-badge {
+.inventory-count-pill {
     background: var(--forest-muted);
     color: #fff;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.7rem;
+    padding: 4px 14px;
+    border-radius: 15px;
+    font-size: 0.75rem;
 }
 
-.posted-grid {
+.client-product-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 25px;
+    gap: 30px;
 }
 
-.posted-card-item {
-    background: #fff;
-    border-radius: 15px;
+.product-display-card {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #f1f1f1;
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.posted-card-item:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1) !important;
+.product-display-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.08);
 }
 
-.posted-image-box {
-    height: 220px;
+.product-visual-box {
+    height: 230px;
     position: relative;
-    overflow: hidden;
 }
 
-.posted-image-box img {
+.product-visual-box img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.posted-info {
-    padding: 20px;
-}
-
-.posted-item-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin-bottom: 5px;
-    color: #333;
-}
-
-.posted-price-text {
-    font-size: 1.2rem;
+.stock-alert-tag {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: #ffc107;
+    color: #000;
     font-weight: 800;
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+
+.product-price-display {
+    font-size: 1.25rem;
+    font-weight: 900;
     color: var(--forest-dark);
 }
 
-/* 4. Synced Pagination */
-.custom-post-pagination .page-link {
-    padding: 10px 18px;
+.client-cart-btn {
+    background: var(--forest-dark);
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 50px;
     font-weight: 700;
-    transition: 0.3s;
+    font-size: 0.85rem;
 }
 
-.custom-post-pagination .page-item.active .page-link {
-    box-shadow: 0 4px 10px rgba(15, 71, 58, 0.2);
-}
+/* Status Indicators [cite: 168, 204] */
+.status-in-stock { background: #d1e7dd; color: #0f5132; padding: 3px 10px; border-radius: 5px; font-size: 0.75rem; font-weight: 700; }
+.status-out-of-stock { background: #f8d7da; color: #842029; padding: 3px 10px; border-radius: 5px; font-size: 0.75rem; font-weight: 700; }

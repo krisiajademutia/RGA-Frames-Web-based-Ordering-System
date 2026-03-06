@@ -15,8 +15,17 @@ $colors  = $conn->query("SELECT frame_color_id, color_name FROM tbl_frame_colors
 
 $view = $_GET['view'] ?? 'post';
 $edit_data = null;
+$edit_images = [];
+
 if ($view == 'edit' && isset($_GET['id'])) {
-    $edit_data = $frameService->getFrameById((int)$_GET['id']);
+    $product_id = (int)$_GET['id'];
+    $edit_data = $frameService->getFrameById($product_id);
+    
+    // Fetch all images for this product for the edit view
+    $img_stmt = $conn->prepare("SELECT image_name, is_primary FROM tbl_ready_made_product_images WHERE r_product_id = ? ORDER BY is_primary DESC");
+    $img_stmt->bind_param("i", $product_id);
+    $img_stmt->execute();
+    $edit_images = $img_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
 $posted_frames = $frameService->getAllFrames();
@@ -37,9 +46,21 @@ $posted_frames = $frameService->getAllFrames();
 
 <div class="post-admin-container">
     <?php if(isset($_SESSION['post_success'])): ?>
-        <div class="alert alert-success alert-dismissible fade show"><?= $_SESSION['post_success']; unset($_SESSION['post_success']); ?></div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fa-solid fa-circle-check me-2"></i>
+        <?= $_SESSION['post_success']; unset($_SESSION['post_success']); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
     <?php endif; ?>
 
+    <?php if(isset($_SESSION['post_error'])): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fa-solid fa-circle-exclamation me-2"></i>
+        <?= $_SESSION['post_error']; unset($_SESSION['post_error']); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <?php endif; ?>
+    
     <div class="post-header-wrapper">
         <div>
             <h1 class="fw-bold m-0" style="font-size: 26px;">Post Frames</h1>
@@ -65,9 +86,41 @@ $posted_frames = $frameService->getAllFrames();
         </div>
         <div class="posted-grid">
             <?php if(!empty($posted_frames)): ?>
-                <?php foreach($posted_frames as $row): ?>
+                <?php foreach($posted_frames as $row): 
+                    // FETCHING MULTIPLE PHOTOS FOR THE GRID VIEW
+                    $p_id = $row['r_product_id'];
+                    $img_res = $conn->query("SELECT image_name FROM tbl_ready_made_product_images WHERE r_product_id = $p_id ORDER BY is_primary DESC");
+                    $product_images = $img_res->fetch_all(MYSQLI_ASSOC);
+                ?>
                     <div class="posted-card-item">
-                        <div class="posted-image-box"><img src="/rga_frames/uploads/<?= $row['image_name'] ?>" alt="Product"></div>
+                        <div class="posted-image-box position-relative">
+                            <div id="carousel-<?= $p_id ?>" class="carousel slide h-100" data-bs-ride="false">
+                                <div class="carousel-inner h-100">
+                                    <?php if(!empty($product_images)): ?>
+                                        <?php foreach($product_images as $index => $img): ?>
+                                            <div class="carousel-item h-100 <?= $index === 0 ? 'active' : '' ?>">
+                                                <img src="/rga_frames/uploads/<?= $img['image_name'] ?>" class="d-block w-100 h-100 object-fit-cover" alt="Product">
+                                            </div>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <div class="carousel-item active h-100">
+                                            <div class="d-flex align-items-center justify-content-center h-100 bg-light text-muted">No Image</div>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                                <?php if(count($product_images) > 1): ?>
+                                    <div class="card-dots-menu dropdown">
+                                        <button class="btn btn-dark btn-sm rounded-circle opacity-75" data-bs-toggle="dropdown" style="position: absolute; top: 10px; right: 10px; z-index: 5;">
+                                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                            <li><button class="dropdown-item" onclick="bootstrap.Carousel.getOrCreateInstance('#carousel-<?= $p_id ?>').prev()"><i class="fa-solid fa-chevron-left me-2"></i> Previous Image</button></li>
+                                            <li><button class="dropdown-item" onclick="bootstrap.Carousel.getOrCreateInstance('#carousel-<?= $p_id ?>').next()"><i class="fa-solid fa-chevron-right me-2"></i> Next Image</button></li>
+                                        </ul>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
                         <div class="posted-info">
                             <h4 class="posted-item-title"><?= htmlspecialchars($row['product_name']) ?></h4>
                             <p class="posted-item-meta m-0"><?= $row['width'] ?>x<?= $row['height'] ?>"</p>
@@ -148,11 +201,18 @@ $posted_frames = $frameService->getAllFrames();
                     <input type="number" name="stock_quantity" class="post-input" value="<?= $edit_data['quantity'] ?>" required>
                 </div>
                 <div class="post-upload-container">
-                    <label class="post-label">UPDATE PHOTO</label>
-                    <div class="post-upload-zone" onclick="document.getElementById('post_img_input').click();">
-                        <input type="file" name="image" id="post_img_input" style="display:none;" onchange="handlePostFileChange(this)">
-                        <i class="fa-solid fa-images"></i>
-                        <p class="m-0" id="post_img_text">Click to replace photo</p>
+                    <label class="post-label">ADD PHOTOS (Replaces current)</label>
+                    <div class="post-upload-zone position-relative" onclick="document.getElementById('post_img_input').click();">
+                        <input type="file" name="images[]" id="post_img_input" style="display:none;" multiple onchange="handleMultipleFilePreview(this)">
+                        <div id="image_preview_container" class="preview-overlay">
+                            <?php foreach($edit_images as $img): ?>
+                                <img src="/rga_frames/uploads/<?= $img['image_name'] ?>" class="preview-thumb">
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="upload-content text-center">
+                            <i class="fa-solid fa-images"></i>
+                            <p class="m-0" id="post_img_text">Click to update photos</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -219,16 +279,19 @@ $posted_frames = $frameService->getAllFrames();
                     <input type="number" name="stock_quantity" class="post-input" required>
                 </div>
                 <div class="post-upload-container">
-                    <label class="post-label">PRODUCT PHOTO <span class="text-danger">*</span></label>
-                    <div class="post-upload-zone" onclick="document.getElementById('post_img_input').click();">
-                        <input type="file" name="image" id="post_img_input" style="display:none;" required onchange="handlePostFileChange(this)">
-                        <i class="fa-solid fa-images"></i>
-                        <p class="m-0" id="post_img_text">Click to upload photo</p>
+                    <label class="post-label">PRODUCT PHOTOS <span class="text-danger">*</span></label>
+                    <div class="post-upload-zone position-relative" onclick="document.getElementById('post_img_input').click();">
+                        <input type="file" name="images[]" id="post_img_input" style="display:none;" required multiple onchange="handleMultipleFilePreview(this)">
+                        <div id="image_preview_container" class="preview-overlay"></div>
+                        <div class="upload-content text-center">
+                            <i class="fa-solid fa-images"></i>
+                            <p class="m-0" id="post_img_text">Click to upload photos</p>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="d-flex justify-content-center gap-3 mb-3">
-                <button type="reset" class="post-btn-clear">Clear</button>
+                <button type="reset" class="post-btn-clear" onclick="document.getElementById('image_preview_container').innerHTML = ''">Clear</button>
                 <button type="submit" name="add_product" class="post-btn-submit">Post Frame</button>
             </div>
         </form>
@@ -239,24 +302,52 @@ $posted_frames = $frameService->getAllFrames();
 <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content custom-post-modal shadow">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Deletion</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+            <div class="modal-header border-0 pb-0"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body text-center">
-                <div class="modal-icon-box"><i class="fa-solid fa-trash-can"></i></div>
-                <p class="modal-text-muted">Are you sure you want to delete this product?</p>
-                <h5 id="deleteProductName" class="modal-product-name m-0"></h5>
+                <div class="modal-icon-box mx-auto mb-3" style="width:60px; height:60px; border-radius:50%; background:#fff0f0; color:#d9534f; display:flex; align-items:center; justify-content:center; font-size:24px;"><i class="fa-solid fa-trash-can"></i></div>
+                <p class="text-muted mb-1">Are you sure you want to delete this product?</p>
+                <h5 id="deleteProductName" class="fw-bold mb-4"></h5>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="modal-btn-cancel" data-bs-dismiss="modal">Cancel</button>
-                <a id="confirmDeleteLink" href="#" class="modal-btn-delete">Delete Product</a>
+            <div class="modal-footer border-0 justify-content-center pb-4">
+                <button type="button" class="btn border-secondary px-4" data-bs-dismiss="modal" style="border-radius:10px;">Cancel</button>
+                <a id="confirmDeleteLink" href="#" class="btn btn-danger px-4" style="border-radius:10px; background:#d9534f;">Delete Product</a>
             </div>
         </div>
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Inline JS to handle preview and basic functions without changing UI
+function handleMultipleFilePreview(input) {
+    const container = document.getElementById('image_preview_container');
+    container.innerHTML = '';
+    if (input.files) {
+        Array.from(input.files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'preview-thumb';
+                img.style.width = '60px';
+                img.style.height = '60px';
+                img.style.objectFit = 'cover';
+                img.style.borderRadius = '5px';
+                img.style.margin = '2px';
+                container.appendChild(img);
+            }
+            reader.readAsDataURL(file);
+        });
+    }
+}
+
+function confirmDelete(id, name) {
+    document.getElementById('deleteProductName').textContent = name;
+    document.getElementById('confirmDeleteLink').href = '/rga_frames/process/postframe_process.php?delete_id=' + id;
+    new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
+}
+</script>
 <script src="/rga_frames/assets/js/post_script.js"></script>
 </body>
 </html>

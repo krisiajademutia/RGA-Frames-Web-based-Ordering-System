@@ -22,6 +22,10 @@ class FrameService {
         return $this->repository->create($data);
     }
 
+    public function addFrameImage(int $productId, string $fileName, int $isPrimary = 0) {
+        return $this->repository->addImage($productId, $fileName, $isPrimary);
+    }
+
     public function updateFrame(int $id, array $data) {
         return $this->repository->update($id, $data);
     }
