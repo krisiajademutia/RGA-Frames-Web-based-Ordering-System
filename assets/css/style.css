@@ -2096,7 +2096,7 @@ html {
 
 .log-image-side {
     flex: 1;
-    background: url('../img/frame_index3.jpg');
+    background: url('../img/frame_index.png');
     background-size: cover;
     background-position: center;
     position: relative;
@@ -2270,7 +2270,7 @@ html {
 .reg-image-side { 
     background-size: cover; 
     background-position: center;
-    background-image: url('../img/frame_index3.jpg'); 
+    background-image: url('../img/frame_index.png'); 
 }
 
 /* =========================================
