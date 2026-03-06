@@ -1,35 +1,54 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+require_once __DIR__ . '/../config/db_connect.php'; 
+
+// Path leads from 'process/' up to root, then into 'classes/Option/Repository/'
+$repoDir = __DIR__ . '/../classes/Option/Repository/';
+
+// 1. Load the Interface FIRST
+$interfacePath = $repoDir . 'OptionRepositoryInterface.php';
+
+if (!file_exists($interfacePath)) {
+    // Debugging helper to see where PHP is actually looking
+    die("<b>Path Error:</b> Cannot find interface at: " . realpath(__DIR__ . '/../') . "/classes/Option/Repository/OptionRepositoryInterface.php");
 }
 
-// Correct path: From /process/ to /config/
-$conn_file = __DIR__ . '/../config/db_connect.php';
+require_once $interfacePath;
 
-if (!file_exists($conn_file)) {
-    die("Fatal Error: db_connect.php not found at " . $conn_file);
+// 2. Load all concrete Repositories using glob
+foreach (glob($repoDir . "*.php") as $filename) { 
+    require_once $filename; 
 }
 
-include $conn_file;
+// 3. Load the Service
+require_once __DIR__ . '/../classes/Option/OptionService.php';
 
-// Tab logic
-$active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'frame_types';
-$tab_label = str_replace('_', ' ', $active_tab);
+$active_tab = $_GET['tab'] ?? 'frame_types';
 
-// Table Mapping
-$table_map = [
-    'frame_types'     => 'tbl_frame_types',
-    'frame_designs'   => 'tbl_frame_designs',
-    'frame_colors'    => 'tbl_frame_colors',
-    'frame_sizes'     => 'tbl_frame_sizes',
-    'matboard_colors' => 'tbl_matboard_colors',
-    'mount_types'     => 'tbl_mount_type',
-    'paper_types'     => 'tbl_paper_type'
+$tabs = [
+    'frame_types'     => ['label' => 'Frame Type', 'suffix' => 'Type'],
+    'frame_designs'   => ['label' => 'Frame Design', 'suffix' => 'Design'],
+    'frame_colors'    => ['label' => 'Frame Color', 'suffix' => 'Color'],
+    'frame_sizes'     => ['label' => 'Frame Size', 'suffix' => 'Size'],
+    'matboard_colors' => ['label' => 'Matboard Color', 'suffix' => 'Color'],
+    'mount_types'     => ['label' => 'Mount Type', 'suffix' => 'Type'],
+    'paper_types'     => ['label' => 'Paper Type', 'suffix' => 'Type']
 ];
 
-$table = $table_map[$active_tab] ?? 'tbl_frame_types';
+if (!isset($tabs[$active_tab])) { $active_tab = 'frame_types'; }
 
-// Fetch Results
-$res = $conn->query("SELECT * FROM $table ORDER BY 1 DESC");
-$count = ($res) ? $res->num_rows : 0;
-$suffix = str_replace('frame ', '', str_replace('_', ' ', $active_tab));
+$tab_label = $tabs[$active_tab]['label'];
+$suffix    = $tabs[$active_tab]['suffix'];
+
+$service = new OptionService();
+
+// Register Repositories
+$service->registerRepository('frame_types', new FrameTypeRepository($conn));
+$service->registerRepository('frame_designs', new FrameDesignRepository($conn));
+$service->registerRepository('frame_colors', new FrameColorRepository($conn));
+$service->registerRepository('frame_sizes', new FrameSizeRepository($conn));
+$service->registerRepository('matboard_colors', new MatboardColorRepository($conn));
+$service->registerRepository('mount_types', new MountTypeRepository($conn));
+$service->registerRepository('paper_types', new PaperTypeRepository($conn));
+
+$res = $service->fetchOptions($active_tab);
+$count = $res ? $res->num_rows : 0;

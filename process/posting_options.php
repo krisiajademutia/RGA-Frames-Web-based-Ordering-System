@@ -1,97 +1,53 @@
 <?php
 session_start();
-// Path to reach config from the /process/ folder
-include __DIR__ . '/../config/db_connect.php'; 
+require_once __DIR__ . '/../config/db_connect.php';
+$repoDir = __DIR__ . '/../classes/Option/Repository/';
+
+require_once $repoDir . 'OptionRepositoryInterface.php';
+
+foreach (glob($repoDir . "*.php") as $filename) { 
+    require_once $filename; 
+}
+require_once __DIR__ . '/../classes/Option/OptionService.php';
+
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_option'])) {
     $active_tab = $_GET['tab'] ?? 'frame_types';
-    $status = (isset($_POST['is_active']) && $_POST['is_active'] == '1') ? 1 : 0;
-    $success = false;
+    
+    // Ensure the path is correct relative to the process folder
+    $upload_dir = "../uploads/"; 
+    
+    // Prepare Data
+    $data = $_POST;
+    // Ensure status is handled correctly for the DB
+    $data['is_active'] = (isset($_POST['is_active']) && $_POST['is_active'] == '1') ? 1 : 0;
 
-    // Define upload directory relative to this script
-    $upload_dir = "../../uploads/";
-    if (!is_dir($upload_dir)) {
-        mkdir($upload_dir, 0777, true);
+    // Dependency Injection & Service Setup
+    $service = new OptionService();
+    
+    // Registering repositories with the database connection
+    // Passing $upload_dir only to repositories that handle file uploads
+    $service->registerRepository('frame_types', new FrameTypeRepository($conn, $upload_dir));
+    $service->registerRepository('frame_designs', new FrameDesignRepository($conn));
+    $service->registerRepository('frame_colors', new FrameColorRepository($conn, $upload_dir));
+    $service->registerRepository('frame_sizes', new FrameSizeRepository($conn));
+    $service->registerRepository('matboard_colors', new MatboardColorRepository($conn, $upload_dir));
+    $service->registerRepository('mount_types', new MountTypeRepository($conn));
+    $service->registerRepository('paper_types', new PaperTypeRepository($conn));
+
+    /**
+     * DEBUG/FIX: We pass $_POST and $_FILES to the service.
+     * The service will then delegate these to the specific repository's create() method.
+     */
+    $success = $service->addOption($active_tab, $data, $_FILES);
+
+    // Redirect back to the admin page with status
+    if ($success) {
+        header("Location: ../admin/admin_custom_frame_options.php?tab=$active_tab&success=1");
+    } else {
+        // If it fails, we pass an error flag. 
+        // Ensure your FrameColorRepository is looking for $_FILES['color_image']
+        header("Location: ../admin/admin_custom_frame_options.php?tab=$active_tab&error=1");
     }
-
-    // 1. Frame Types (tbl_frame_types)
-    if ($active_tab == 'frame_types') {
-        $name = $_POST['type_name'];
-        $price = (double)$_POST['type_price'];
-        $stmt = $conn->prepare("INSERT INTO tbl_frame_types (type_name, type_price, is_active) VALUES (?, ?, ?)");
-        $stmt->bind_param("sdi", $name, $price, $status);
-        $success = $stmt->execute();
-
-    // 2. Frame Designs (tbl_frame_designs)
-    } elseif ($active_tab == 'frame_designs') {
-        $name = $_POST['design_name'];
-        $price = (double)$_POST['price'];
-        $stmt = $conn->prepare("INSERT INTO tbl_frame_designs (design_name, price, is_active) VALUES (?, ?, ?)");
-        $stmt->bind_param("sdi", $name, $price, $status);
-        $success = $stmt->execute();
-
-    // 3. Frame Colors (tbl_frame_colors)
-    } elseif ($active_tab == 'frame_colors') {
-        $name = $_POST['color_name'];
-        $img = $_FILES['color_image']['name'];
-        $target = $upload_dir . basename($img);
-        
-        if (move_uploaded_file($_FILES['color_image']['tmp_name'], $target)) {
-            $stmt = $conn->prepare("INSERT INTO tbl_frame_colors (color_name, color_image, is_active) VALUES (?, ?, ?)");
-            $stmt->bind_param("ssi", $name, $img, $status);
-            $success = $stmt->execute();
-        }
-
-    // 4. Frame Sizes (tbl_frame_sizes)
-    } elseif ($active_tab == 'frame_sizes') {
-        $width = (double)$_POST['width'];
-        $height = (double)$_POST['height'];
-        $total = (double)$_POST['total_inches'];
-        $price = (double)$_POST['base_price'];
-        $dim = $width . "x" . $height;
-
-        $stmt = $conn->prepare("INSERT INTO tbl_frame_sizes (dimension, width_inch, height_inch, total_inch, price, is_active) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sddddi", $dim, $width, $height, $total, $price, $status);
-        $success = $stmt->execute();
-
-    // 5. Matboard Colors (tbl_matboard_colors)
-    } elseif ($active_tab == 'matboard_colors') {
-        $name = $_POST['matboard_color_name'];
-        $img = $_FILES['matboard_image']['name'];
-        $target = $upload_dir . basename($img);
-
-        move_uploaded_file($_FILES['matboard_image']['tmp_name'], $target);
-        // SQL uses base_price for matboards
-        $stmt = $conn->prepare("INSERT INTO tbl_matboard_colors (matboard_color_name, image_name, is_active) VALUES (?, ?, ?)");
-        $stmt->bind_param("ssi", $name, $img, $status);
-        $success = $stmt->execute();
-
-    // 6. Mount Types (tbl_mount_type)
-    } elseif ($active_tab == 'mount_types') {
-        $name = $_POST['generic_name'];
-        $fee = (double)$_POST['generic_price'];
-        
-        $stmt = $conn->prepare("INSERT INTO tbl_mount_type (mount_name, additional_fee, is_active) VALUES (?, ?, ?)");
-        $stmt->bind_param("sdi", $name, $fee, $status);
-        $success = $stmt->execute();
-
-    // 7. Paper Types (tbl_paper_type)
-    } elseif ($active_tab == 'paper_types') {
-        $name = $_POST['generic_name'];
-        $logic = strtoupper($_POST['pricing_logic']); // FIXED or CALCULATED
-        $width = (double)$_POST['width'];
-        $height = (double)$_POST['height'];
-        $total = (double)$_POST['total_inches'];
-        $price = (double)$_POST['generic_price'];
-        $dim = $width . "x" . $height;
-
-        $stmt = $conn->prepare("INSERT INTO tbl_paper_type (paper_name, pricing_logic, dimension, width_inch, height_inch, total_inch, price, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssddddi", $name, $logic, $dim, $width, $height, $total, $price, $status);
-        $success = $stmt->execute();
-    }
-
-    // Redirect
-    $status_param = $success ? "success=1" : "error=1";
-    header("Location: ../admin/admin_custom_frame_options.php?tab=$active_tab&$status_param");
     exit();
 }
