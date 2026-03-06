@@ -1603,16 +1603,16 @@ html {
     top: 0;
     left: 0;
     right: 0;
-    background: rgba(255, 255, 255, 0.98);
+    background-color: var(--forest-dark);
     backdrop-filter: blur(10px);
     min-height: 70px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 1.5rem;
-    box-shadow: 0 2px 15px rgba(15, 71, 58, 0.1);
+    box-shadow: 0 2px 15px rgba(15, 7, 58, 0.1);
     z-index: 2000;
-    border-bottom: 3px solid var(--cream-dark);
+    border-bottom: 3px solid rgb(31, 63, 43);
     transition: all 0.3s ease;
 }
 
@@ -1656,7 +1656,7 @@ html {
     font-size: 1.3rem;
     font-weight: 800;
     font-family: var(--font-primary);
-    color: var(--forest-dark);
+    color: white;
     line-height: 1;
 }
 
@@ -1744,8 +1744,8 @@ html {
     font-weight: 600;
     text-decoration: none;
     font-family: var(--font-primary);
-    color: var(--forest-dark);
-    background: var(--cream-light);
+    color: white;
+    /* background: var(--forest-muted); */
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
@@ -1768,10 +1768,11 @@ html {
 }
 
 .gst-hdr-nav-link:hover {
-    background: var(--forest-dark);
+    background: var(--forest-muted);
     color: white !important;
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(15, 71, 58, 0.2);
+
 }
 
 .gst-hdr-nav-link i {
@@ -1780,18 +1781,19 @@ html {
 
 .gst-hdr-btn-login {
     background: transparent;
-    border: 2px solid var(--forest-dark);
+    border: 2px solid white;
 }
 
 .gst-hdr-btn-login:hover {
-    background: var(--forest-dark);
+    background: var(--forest-muted);
     border-color: var(--forest-dark);
     color: white !important;
+    /* border: 2px solid white; */
 }
 
 .gst-hdr-btn-register {
-    background: var(--forest-dark);
-    color: white !important;
+    background: white;
+    color: var(--forest-dark) !important;
     border: 2px solid var(--forest-dark);
 }
 
@@ -3797,7 +3799,7 @@ body {
     }
 }
 /* =========================================
-<<<<<<< Updated upstream
+
    10. PRINTING SERVICES STYLES (ps-)
    ========================================= */
 
@@ -4071,6 +4073,8 @@ body {
 @keyframes blur-in {
     0% { filter: blur(0px); }
     100% { filter: blur(5px); }}
+    100% { filter: blur(5px); }
+}
 /*=======
    ORDERS DASHBOARD — FULL REDESIGN
    Matching Figma exactly
@@ -4903,5 +4907,6 @@ body {
     .admn-ordr-dtls-col-qty   { display: none; }
     .admn-ordr-dtls-id-number { font-size: 2rem; }
     .admn-ordr-dtls-stepper-wrap { padding: 1rem; }
+
 
 }
