@@ -3743,7 +3743,7 @@ body {
     }
 }
 /* =========================================
-<<<<<<< Updated upstream
+
    10. PRINTING SERVICES STYLES (ps-)
    ========================================= */
 
@@ -4017,7 +4017,8 @@ body {
 @keyframes blur-in {
     0% { filter: blur(0px); }
     100% { filter: blur(5px); }
-=======
+}
+/*=======
    ORDERS DASHBOARD — FULL REDESIGN
    Matching Figma exactly
    ========================================= */
@@ -4849,5 +4850,4 @@ body {
     .admn-ordr-dtls-col-qty   { display: none; }
     .admn-ordr-dtls-id-number { font-size: 2rem; }
     .admn-ordr-dtls-stepper-wrap { padding: 1rem; }
->>>>>>> Stashed changes
 }
