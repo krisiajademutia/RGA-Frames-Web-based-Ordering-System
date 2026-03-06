@@ -14,6 +14,7 @@ $email = $_SESSION['reset_email'];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify OTP - RGA Frames</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body class="votp-body">
@@ -22,6 +23,10 @@ $email = $_SESSION['reset_email'];
     <div class="votp-page-wrapper">
         <div class="votp-form-container">
             <div class="text-center mb-5">
+                <div class="votp-icon-container">
+                    <i class="fas fa-envelope-open-text"></i>
+                </div>
+
                 <h2 class="votp-title">Verify Your Email</h2>
                 <p class="votp-subtitle">We sent a 6-digit code to<br><strong><?php echo htmlspecialchars($email); ?></strong></p>
             </div>
@@ -57,7 +62,6 @@ $email = $_SESSION['reset_email'];
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="assets/js/otp-handler.js"></script>
     
     <script>

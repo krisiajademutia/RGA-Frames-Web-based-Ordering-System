@@ -30,11 +30,11 @@ unset($_SESSION['errors'], $_SESSION['old_username']);
                 <div class="log-form-wrapper">
 
                     <div class="log-welcome-section">
-                        <div class="log-icon-badge">
+                        <!-- <div class="log-icon-badge">
                             <i class="fas fa-box-open"></i>
-                        </div>
+                        </div> -->
                         <h1 class="log-title">Welcome Back!</h1>
-                        <p class="log-subtitle">Log in with your username to manage your custom frame selections.</p>
+                        <p class="log-subtitle">Log in to access order history, view frame designs, and manage custom frame selections.</p>
                     </div>
 
                     <form action="process/login_process.php" method="POST" novalidate class="log-form">

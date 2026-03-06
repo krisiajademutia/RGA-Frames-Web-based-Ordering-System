@@ -31,7 +31,6 @@ if ($current_user_id > 0) {
     $stmt->close();
 }
 
-// Determine current page to highlight the active nav item
 $current_page = basename($_SERVER['PHP_SELF']);
 ?>
 
@@ -40,47 +39,53 @@ $current_page = basename($_SERVER['PHP_SELF']);
 <link rel="stylesheet" href="../assets/css/style.css">
 
 <header class="cust-hdr-container">
-   <div class="cust-hdr-left">
-    <a href="customer_dashboard.php" style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem; position: relative;">
-        <div class="cust-hdr-logo" style="position: relative; width: 50px; height: 50px;">
-            <img 
-                src="../assets/img/rga_logo2.jpg" 
-                alt="RGA Frames and Photo Studio Logo" 
-                style="width: 100%; height: 100%; object-fit: contain; display: block; border-radius: 8px;"
-            >
-            <div style="position: absolute; inset: 0; border-radius: 50%; pointer-events: none;"></div>
-        </div>
-        <div class="cust-hdr-brand">
-            <h1>RGA Frames</h1>
-        </div>
-    </a>
-</div>
 
-    <nav class="cust-hdr-nav">
-        <a href="customer_dashboard.php" class="cust-hdr-nav-link <?php echo ($current_page == 'customer_dashboard.php') ? 'cust-hdr-active' : ''; ?>">
+    <!-- LEFT: BRAND -->
+    <div class="cust-hdr-left">
+        <a href="customer_dashboard.php" class="cust-hdr-brand-link">
+            <div class="cust-hdr-logo">
+                <img src="../assets/img/rga_logo.png" alt="RGA Frames Logo">
+            </div>
+            <div class="cust-hdr-brand">
+                <h1>RGA Frames</h1>
+            </div>
+        </a>
+    </div>
+
+    <!-- DESKTOP NAV -->
+    <nav class="cust-hdr-nav d-none d-lg-flex">
+
+        <a href="customer_dashboard.php"
+           class="cust-hdr-nav-link <?php echo ($current_page == 'customer_dashboard.php') ? 'cust-hdr-active' : ''; ?>">
             <i class="fas fa-home"></i> Home
         </a>
-        
+
         <div class="dropdown">
-            <a class="cust-hdr-nav-link dropdown-toggle <?php echo (strpos($current_page, 'customer_shop') !== false) ? 'cust-hdr-active' : ''; ?>" href="#" id="custHdrBrowseDrop" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <a class="cust-hdr-nav-link dropdown-toggle <?php echo (strpos($current_page, 'customer_shop') !== false) ? 'cust-hdr-active' : ''; ?>"
+               href="#" id="custHdrBrowseDrop" role="button" data-bs-toggle="dropdown">
                 <i class="fas fa-shopping-bag"></i> Browse
             </a>
-            <ul class="dropdown-menu cust-hdr-dropdown-menu" aria-labelledby="custHdrBrowseDrop">
+
+            <ul class="dropdown-menu cust-hdr-dropdown-menu">
                 <li><a class="dropdown-item" href="customer_shop_readymade.php">Ready-Made</a></li>
                 <li><a class="dropdown-item" href="customer_shop_custom.php">Custom Frames</a></li>
                 <li><a class="dropdown-item" href="customer_shop_printing.php">Printing Services</a></li>
             </ul>
         </div>
 
-        <a href="customer_orders.php" class="cust-hdr-nav-link <?php echo ($current_page == 'customer_orders.php') ? 'cust-hdr-active' : ''; ?>">
+        <a href="customer_orders.php"
+           class="cust-hdr-nav-link <?php echo ($current_page == 'customer_orders.php') ? 'cust-hdr-active' : ''; ?>">
             <i class="fas fa-list-alt"></i> My Orders
         </a>
+
     </nav>
 
-    <div class="cust-hdr-right">
+    <!-- RIGHT ACTIONS -->
+    <div class="cust-hdr-right-actions">
+
         <a href="customer_cart.php" class="cust-hdr-icon-btn">
             <i class="fas fa-shopping-cart"></i>
-            <?php if (isset($cart_count) && $cart_count > 0): ?>
+            <?php if ($cart_count > 0): ?>
                 <span class="cust-hdr-badge"><?php echo $cart_count; ?></span>
             <?php endif; ?>
         </a>
@@ -92,12 +97,12 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <?php endif; ?>
         </a>
 
-        <div class="dropdown cust-hdr-user-area">
-            <a class="cust-hdr-dropdown-toggle dropdown-toggle" href="#" id="custHdrUserDrop" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fas fa-user-circle"></i>
-                <?php echo $display_name; ?>
+        <div class="dropdown cust-hdr-user-area d-none d-lg-block">
+            <a class="cust-hdr-dropdown-toggle dropdown-toggle" href="#" id="custHdrUserDrop" data-bs-toggle="dropdown">
+                <i class="fas fa-user-circle"></i> <?php echo $display_name; ?>
             </a>
-            <ul class="dropdown-menu dropdown-menu-end cust-hdr-dropdown-menu" aria-labelledby="custHdrUserDrop">
+
+            <ul class="dropdown-menu dropdown-menu-end cust-hdr-dropdown-menu">
                 <li>
                     <a class="dropdown-item cust-hdr-logout-item" href="../logout.php">
                         <i class="fas fa-sign-out-alt me-2"></i> Log out
@@ -105,9 +110,78 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 </li>
             </ul>
         </div>
+
+        <!-- HAMBURGER BUTTON -->
+        <button class="cust-mobile-menu-toggle d-lg-none" id="custMenuToggle">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
     </div>
+
 </header>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" 
-        crossorigin="anonymous"></script>
+<!-- MOBILE OVERLAY -->
+<div class="cust-mobile-overlay" id="custMobileOverlay"></div>
+
+<!-- MOBILE SIDEBAR MENU -->
+<div class="cust-mobile-menu" id="custMobileMenu">
+
+    <nav class="cust-hdr-nav-mobile">
+
+        <a href="customer_dashboard.php" class="cust-hdr-nav-link">
+            <i class="fas fa-home"></i> Home
+        </a>
+
+        <a href="customer_shop_readymade.php" class="cust-hdr-nav-link">
+            Ready-Made Frames
+        </a>
+
+        <a href="customer_shop_custom.php" class="cust-hdr-nav-link">
+            Custom Frames
+        </a>
+
+        <a href="customer_shop_printing.php" class="cust-hdr-nav-link">
+            Printing Services
+        </a>
+
+        <a href="customer_orders.php" class="cust-hdr-nav-link">
+            <i class="fas fa-list-alt"></i> My Orders
+        </a>
+
+        <a href="customer_cart.php" class="cust-hdr-nav-link">
+            <i class="fas fa-shopping-cart"></i> Cart
+        </a>
+
+        <a href="customer_notifications.php" class="cust-hdr-nav-link">
+            <i class="fas fa-bell"></i> Notifications
+        </a>
+
+        <a href="../logout.php" class="cust-hdr-nav-link text-danger">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+
+    </nav>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+const toggle = document.getElementById("custMenuToggle");
+const menu = document.getElementById("custMobileMenu");
+const overlay = document.getElementById("custMobileOverlay");
+
+toggle.addEventListener("click", () => {
+    menu.classList.toggle("active");
+    overlay.classList.toggle("active");
+});
+
+overlay.addEventListener("click", () => {
+    menu.classList.remove("active");
+    overlay.classList.remove("active");
+});
+
+</script>

@@ -6,8 +6,11 @@
     <div class="gst-hdr-left">
         <a href="index.php" class="gst-hdr-brand-link">
             <div class="gst-hdr-logo">
-                <i class="fas fa-box-open"></i>
-            </div>
+            <img 
+                src="assets/img/rga_logo.png" 
+                alt="RGA Frames and Photo Studio Logo"
+            >
+        </div>
             <div class="gst-hdr-brand">
                 <h1>RGA Frames</h1>
                 <p>Custom Framing & Printing</p>

@@ -22,7 +22,7 @@ if (!isset($_SESSION['reset_verified']) || $_SESSION['reset_verified'] !== true)
     <div class="vpsw-page-wrapper">
         <div class="vpsw-form-container">
             <div class="text-center mb-4">
-                <div class="vpsw-icon-box">
+                <div class="vpsw-icon-container">
                     <i class="fas fa-lock"></i>
                 </div>
                 <h2 class="vpsw-title">Set New Password</h2>

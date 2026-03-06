@@ -18,9 +18,10 @@
         <div class="idx-hdr-left">
             <a href="index.php" style="text-decoration: none; display: flex; align-items: center; gap: 0.3rem;">
                 <div class="idx-hdr-logo">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#ffff" viewBox="2 2 20 20">
-                        <path d="M3 16c0 .34.18.67.47.85l8 5a1.01 1.01 0 0 0 1.06 0l8-5c.29-.18.47-.5.47-.85V8c0-.34-.18-.67-.47-.85l-8-5c-.32-.2-.74-.2-1.06 0l-8 5c-.29.18-.47.5-.47.85zm2-6.53 6 3.6v6.13l-6-3.75zm8 9.73v-6.13l6-3.6v5.98zM12 4.18l5.84 3.65-5.84 3.5-5.84-3.5z"></path>
-                    </svg>
+                     <img 
+                        src="assets/img/rga_logo.png" 
+                        alt="RGA Frames and Photo Studio Logo"
+                    >
                 </div>
                 <div class="idx-hdr-brand">
                     <h1>RGA Frames</h1>

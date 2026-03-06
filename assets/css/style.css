@@ -179,23 +179,27 @@ html {
 }
 
 .idx-hdr-logo {
-    /* Based on your previous dimensions */
-    width: 32px; 
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.3s ease;
-}
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid gold;
+    }
+
+    .idx-hdr-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
 
 .idx-hdr-logo img {
     width: 100%;
     height: auto;
     display: block;
-}
-
-.idx-hdr-logo:hover {
-    transform: rotate(-5deg) scale(1.05);
 }
 
 .idx-hdr-brand h1 {
@@ -1576,21 +1580,20 @@ html {
 }
 
 .gst-hdr-logo {
-    width: 40px;
-    height: 40px;
-    background: var(--forest-dark);
-    color: white;
-    border-radius: 10px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
-    transition: all 0.3s ease;
+    border: 2px solid gold;
 }
 
-.gst-hdr-brand-link:hover .gst-hdr-logo {
-    transform: rotate(-5deg) scale(1.05);
-    background: var(--forest-muted);
+ .gst-hdr-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .gst-hdr-brand h1 {
@@ -1608,6 +1611,7 @@ html {
     color: var(--forest-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    font-family: var(--font-primary);
     font-weight: 600;
 }
 
@@ -1740,7 +1744,48 @@ html {
     background: var(--forest-muted);
     border-color: var(--forest-muted);
 }
+ /* Mobile Navigation Styles */
+@media (max-width: 768px) {
+    .gst-mobile-menu-toggle {
+        display: flex; /* Show the hamburger button */
+    }
 
+    .gst-hdr-nav {
+        position: fixed;
+        top: 0;
+        right: -100%; /* Hide it off-screen to the right */
+        width: 280px;
+        height: 100vh;
+        background: white;
+        flex-direction: column; /* Stack the links vertically */
+        padding: 80px 20px 20px 20px;
+        gap: 1rem;
+        transition: right 0.4s ease-in-out;
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+        z-index: 2000;
+        align-items: stretch; /* Make buttons full width */
+    }
+
+    .gst-hdr-nav.active {
+        right: 0; /* Slide it in when active */
+    }
+
+    .gst-mobile-overlay.active {
+        display: block; /* Show the dark background blur */
+        opacity: 1;
+    }
+
+    .gst-hdr-divider {
+        width: 100%;
+        height: 1px;
+        margin: 10px 0;
+    }
+
+    .gst-hdr-nav-link {
+        justify-content: flex-start; /* Align icon and text to the left */
+        width: 100%;
+    }
+}
 /* =========================================
    5. LOGIN PAGE STYLES (log-)
    ========================================= */
@@ -1941,7 +1986,7 @@ html {
 .log-btn-submit {
     width: 100%;
     height: 54px;
-    background: linear-gradient(135deg, var(--forest-dark), var(--forest-muted));
+    background-color: var(--forest-dark);
     color: white;
     border: none;
     border-radius: 12px;
@@ -1959,8 +2004,8 @@ html {
 }
 
 .log-btn-submit:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(15, 71, 58, 0.3);
+    background-color: var(--forest-muted);
+    transform: translateY(-1px);
 }
 
 .log-btn-submit:active {
@@ -1969,10 +2014,6 @@ html {
 
 .log-btn-submit i {
     transition: transform 0.3s ease;
-}
-
-.log-btn-submit:hover i {
-    transform: translateX(5px);
 }
 
 .log-footer-text {
@@ -1998,7 +2039,7 @@ html {
 
 .log-image-side {
     flex: 1;
-    background: url('../img/frame_index.jpeg');
+    background: url('../img/frame_index3.jpg');
     background-size: cover;
     background-position: center;
     position: relative;
@@ -2090,6 +2131,7 @@ html {
 
 .reg-title { 
     font-family: var(--font-primary);
+    text-align: center;
     font-size: 2rem; 
     font-weight: 700; 
     color: var(--text-black);
@@ -2099,6 +2141,8 @@ html {
     font-size: 0.95rem;
     color: #555;
     line-height: 1.5;
+    text-align: center;
+    padding: 10px;
 }
 
 .reg-label {
@@ -2169,7 +2213,7 @@ html {
 .reg-image-side { 
     background-size: cover; 
     background-position: center;
-    background-image: url('../img/frame_index.jpeg'); 
+    background-image: url('../img/frame_index3.jpg'); 
 }
 
 /* =========================================
@@ -2180,10 +2224,41 @@ html {
     background-color: #FFFFFF;
 }
 
+.fgt-page-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 90vh; 
+    margin-top:70px;
+}
+
 .fgt-form-container {
     max-width: 420px;
     width: 100%;
     padding: 20px;
+}
+
+.fgt-icon-container {
+    background-color: var(--forest-dark);
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 25px;
+    border-radius: 12px; 
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.fgt-icon-container i {
+    color: var(--forest-muted); 
+    font-size: 30px;
+}
+
+.fgt-title {
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--text-black);
 }
 
 .fgt-title {
@@ -2279,12 +2354,30 @@ html {
     justify-content: center;
     align-items: center;
     min-height: 90vh; 
-    padding: 140px 20px 60px 20px;
+    margin-top:70px;
 }
 
 .votp-form-container {
     max-width: 480px;
     width: 100%;
+}
+
+.votp-icon-container {
+    background-color:#fff;
+    border: 2px solid  var(--forest-dark) ;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 25px;
+    border-radius: 12px; 
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.votp-icon-container i {
+    color: var(--forest-dark); 
+    font-size: 30px;
 }
 
 .votp-title {
@@ -2376,7 +2469,7 @@ html {
     justify-content: center;
     align-items: center;
     min-height: 85vh;
-    padding: 140px 20px 60px 20px;
+    margin-top:70px;
 }
 
 .vpsw-form-container { 
@@ -2384,15 +2477,24 @@ html {
     width: 100%; 
 }
 
-.vpsw-icon-box {
-    font-size: 2.5rem;
-    color: var(--forest-dark);
-    margin-bottom: 15px;
-    display: inline-block;
+.vpsw-icon-container {
+    background-color: #fff;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 25px;
+    border-radius: 12px; 
     border: 2px solid var(--forest-dark);
-    padding: 10px 20px;
-    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
+
+.vpsw-icon-container i {
+    color: var(--forest-dark); 
+    font-size: 30px;
+}
+
 
 .vpsw-title { 
     font-size: 2rem; 
@@ -2732,173 +2834,234 @@ html {
         color: #bd2130 !important;
         font-weight: 600;
     }
+
+    
 }
 /* =========================================
-   CUSTOMER HEADER STYLES (cust-hdr-)
+   CUSTOMER HEADER STYLES
    ========================================= */
 
-/* =========================================
-   CUSTOMER HEADER STYLES (cust-hdr-)
-   ========================================= */
+:root {
+    --hdr-bg: #044B39;
+    --hdr-accent: #0B7056;
+    --danger-red: #dc3545;
+}
 
+/* --- 1. Layout & Header Container --- */
 .cust-hdr-container {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    background: #044B39; /* Dark forest green */
-    height: 76px; /* Standardized Height (changed from min-height: 70px) */
-    padding: 0 2rem; /* Standardized Padding */
-    box-sizing: border-box; /* Prevents stretching */
+    background: var(--hdr-bg);
+    height: 76px;
+    padding: 0 1.5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); 
-    z-index: 1100;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1100; /* Stays below the mobile sidebar */
 }
 
-/* --- Left Side: Logo --- */
-.cust-hdr-left {
+/* --- 2. Branding --- */
+.cust-hdr-brand-link {
+    text-decoration: none;
     display: flex;
     align-items: center;
-    gap: 0.8rem; /* Added gap to match Admin */
+    gap: 0.8rem;
 }
 
-/* Ensure SVG matches perfectly */
 .cust-hdr-logo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid gold;
+    background: white;
+    overflow: hidden;
 }
 
-.cust-hdr-logo svg {
-    width: 28px !important;
-    height: 28px !important;
-    display: block;
+.cust-hdr-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .cust-hdr-brand h1 {
-    font-family: var(--font-primary); /* 'Inter' */
     font-size: 20px;
     font-weight: 700;
     color: white;
     margin: 0;
 }
 
-/* --- Center: Navigation --- */
+/* --- 3. Desktop Navigation --- */
+.cust-hdr-left,
+.cust-hdr-nav,
+.cust-hdr-right-actions {
+    display: flex;
+    align-items: center;
+}
+
 .cust-hdr-nav {
-    display: flex;
     gap: 0.5rem;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%); /* Perfectly centers the nav */
 }
 
-.cust-hdr-nav-link {
+.cust-hdr-nav-link,
+.cust-hdr-dropdown-toggle {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    font-family: var(--font-primary);
+    gap: 0.3rem;
+    padding: 0.5rem 0.8rem;
     text-decoration: none;
+    font-weight: 600;
     color: rgba(255, 255, 255, 0.8);
-    transition: 0.2s ease;
+    transition: 0.2s;
 }
 
-.cust-hdr-nav-link:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+.cust-hdr-nav-link:hover,
+.cust-hdr-active,
+.cust-hdr-user-area .cust-hdr-dropdown-toggle:hover {
+    background: var(--hdr-accent);
+    color: white !important;
+    border-radius: 8px;
 }
 
-/* Active State (The Green Pill) */
-.cust-hdr-nav-link.cust-hdr-active {
-    background: #0B7056; 
-    color: white;
+/* --- 4. User Dropdown & Logout (Full Box Red) --- */
+.cust-hdr-dropdown-menu {
+    padding: 0; /* Removes gap so hover fills the box */
+    overflow: hidden;
 }
 
-/* --- Right Side: Icons & Profile --- */
-.cust-hdr-right {
+.cust-hdr-logout-item {
+    color: var(--danger-red) !important;
+    padding: 10px 15px; /* Adjust padding to match other items */
+    display: block;
+    width: 100%;
+}
+
+.cust-hdr-logout-item:hover {
+    background-color: var(--danger-red) !important;
+    color: white !important;
+    border-radius: 0; /* Keeps it a full rectangle box */
+}
+
+/* --- 5. Mobile Menu & Sidebar (THE CLICK FIX) --- */
+.cust-mobile-menu {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 280px;
+    height: 100vh;
+    background: white;
+    z-index: 1500; /* HIGHER than overlay */
+    transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 80px 0 20px 0; /* Top padding for the header height */
+}
+
+.cust-mobile-menu.active {
+    right: 0;
+}
+
+.cust-mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    visibility: hidden;
+    opacity: 0;
+    z-index: 1400; /* LOWER than sidebar */
+    transition: 0.3s;
+}
+
+.cust-mobile-overlay.active {
+    visibility: visible;
+    opacity: 1;
+}
+
+.cust-hdr-nav-mobile {
     display: flex;
-    align-items: center;
-    gap: 1.5rem;
+    flex-direction: column;
 }
 
+/* Make mobile links full-width for clicking */
+.cust-hdr-nav-mobile .cust-hdr-nav-link {
+    color: #333;
+    padding: 15px 25px;
+    width: 100%;
+    border-bottom: 1px solid #eee;
+}
+
+/* Mobile Logout Red Hover */
+.cust-hdr-nav-mobile .cust-hdr-nav-link.text-danger:hover {
+    background-color: var(--danger-red) !important;
+    color: white !important;
+}
+
+/* --- 6. Icons & Toggles --- */
 .cust-hdr-icon-btn {
     color: white;
     font-size: 1.2rem;
     position: relative;
     text-decoration: none;
-    transition: color 0.3s;
-}
-
-.cust-hdr-icon-btn:hover {
-    color: #ddd;
+    padding: 0 5px;
 }
 
 .cust-hdr-badge {
-    font-size: 0.65rem;
-    padding: 0.2em 0.5em;
-    background-color: #dc3545;
-    color: white;
-    border-radius: 50%;
     position: absolute;
-    top: -6px;
-    right: -8px;
-    font-weight: 700;
+    top: -8px;
+    right: -5px;
+    background: var(--danger-red);
+    color: white;
+    font-size: 0.65rem;
+    padding: 2px 5px;
+    border-radius: 50%;
 }
 
-.cust-hdr-user-area {
-    display: flex;
-    align-items: center;
-}
-
-.cust-hdr-dropdown-toggle {
-    background: transparent;
-    font-family: var(--font-primary);
+.cust-mobile-menu-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
     border: none;
-    color: white !important;
-    font-weight: 500;
-    text-decoration: none;
-    display: flex;
+    padding: 5px;
+}
+
+.cust-mobile-menu-toggle span {
+    width: 25px;
+    height: 3px;
+    background: white;
+    transition: 0.3s;
+}
+
+/* Hamburger lines */
+.cust-mobile-menu-toggle {
+    display: none; /* default hidden on desktop */
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    gap: 0.5rem;
-}
-
-.cust-hdr-dropdown-toggle i {
-    font-size: 1.3rem;
-    color: #0B7056; /* Slight accent on the user icon */
-}
-
-/* --- Dropdown Menus --- */
-.cust-hdr-dropdown-menu {
-    border-radius: 8px;
+    gap: 5px;
+    background: none;
     border: none;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-    margin-top: 10px !important;
+    cursor: pointer;
+    padding: 5px;
 }
 
-.cust-hdr-logout-item {
-    font-weight: 600 !important;
-    color: #dc3545 !important;
+.cust-mobile-menu-toggle span {
+    width: 25px;
+    height: 3px;
+    background: white;
+    transition: 0.3s;
 }
 
-.cust-hdr-logout-item:hover {
-    background-color: #fff5f5 !important;
-}
-.cust-hdr-logo {
-    width: 100px;
-    height: 100px;
-    border-radius: 100%;
-    overflow: hidden;
-    /* border: 3px solid #ffd700; optional */
-}
-.cust-hdr-logo img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+/* Show hamburger only on screens <= 992px */
+@media (max-width: 992px) {
+    .cust-mobile-menu-toggle {
+        display: flex;
+    }
+
+    .cust-hdr-nav,
+    .cust-hdr-user-area {
+        display: none;
+    }
+    
 }
 
 /* =========================================
@@ -2951,13 +3114,7 @@ html {
     .idx-hdr-container.scrolled {
         min-height: 55px;
     }
-
-    .idx-hdr-logo {
-        width: 35px;
-        height: 35px;
-        font-size: 1rem;
-    }
-
+    
     .idx-hdr-brand h1 {
         font-size: 1.1rem;
     }
@@ -3089,11 +3246,6 @@ html {
         min-height: 60px;
     }
 
-    .gst-hdr-logo {
-        width: 35px;
-        height: 35px;
-        font-size: 1rem;
-    }
 
     .gst-hdr-brand h1 {
         font-size: 1.1rem;
@@ -3200,6 +3352,7 @@ html {
         height: 50px;
         font-size: 0.95rem;
     }
+    
 }
 /* ========================================================
    FIGMA-PERFECT ADMIN DASHBOARD CSS
@@ -3588,4 +3741,279 @@ body {
     .log-form-side {
         padding: 1.5rem 1rem;
     }
+}
+/* =========================================
+   10. PRINTING SERVICES STYLES (ps-)
+   ========================================= */
+
+/* --- 1. Layout & Base --- */
+.ps-body {
+    background-color: #fcfcfc;
+}
+
+.ps-page-wrapper {
+    padding-top: 80px; 
+    min-height: calc(100vh - 200px); 
+}
+
+.ps-main-title {
+    color: var(--forest-dark);
+    font-weight: 700;
+    font-size: 2.2rem;
+    margin-bottom: 5px;
+}
+
+.ps-main-subtitle {
+    color: #555;
+    font-size: 1rem;
+}
+
+/* --- 2. Card Architecture --- */
+.ps-card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.ps-card-header {
+    background-color: var(--forest-muted);
+    color: #fff;
+    padding: 10px 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.ps-card-body {
+    padding: 25px 35px;
+}
+
+/* --- 3. Upload Area & Initial State --- */
+.ps-upload-area {
+    border: 2px dashed #D1D5DB;
+    border-radius: 15px;
+    padding: 50px 20px;
+    text-align: center;
+    background-color: #F8F9FA;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.ps-upload-area:hover {
+    background-color: #F1F3F5;
+}
+
+.ps-upload-icon {
+    font-size: 2.5rem;
+    color: #9CA3AF;
+    margin-bottom: 12px;
+}
+
+.ps-upload-text {
+    font-weight: 600;
+    color: #4B5563;
+    margin-bottom: 2px;
+}
+
+.ps-upload-hint {
+    font-size: 0.7rem;
+    color: #9CA3AF;
+}
+
+.ps-file-input {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 10;
+}
+
+/* --- 4. Image Preview & Isolated Blur --- */
+.ps-preview-wrapper {
+    position: relative;
+    width: 100%;
+    height: 300px; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0f0f0; 
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+.ps-image-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Forced contain as requested */
+    transition: filter 0.3s ease;
+}
+
+.ps-blurred {
+    filter: blur(5px) brightness(0.8);
+}
+
+.ps-preview-instruction-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    background: rgba(0, 0, 0, 0.2); 
+    border-radius: 8px;
+    z-index: 2;
+    pointer-events: none; 
+}
+
+.ps-preview-instruction-overlay i {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.ps-preview-instruction-overlay span {
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    background: rgba(15, 71, 58, 0.8); 
+    padding: 5px 15px;
+    border-radius: 20px;
+}
+
+/* --- 5. Selection Controls & Quantity --- */
+.ps-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #0F473A;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.ps-select {
+    border-radius: 25px;
+    padding: 10px 20px;
+    border: 1.5px solid #D1D5DB;
+    font-size: 0.9rem;
+    color: #444;
+}
+
+.ps-quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ps-qty-btn {
+    background: #fff;
+    border: 1.5px solid #D1D5DB;
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: #555;
+    transition: 0.3s ease;
+    cursor: pointer;
+}
+
+.ps-qty-btn:hover {
+    background-color: var(--forest-dark) !important; 
+    border-color: #0F473A !important;
+    color: #FFFFFF !important;
+}
+
+.ps-qty-input {
+    width: 50px;
+    height: 32px;
+    text-align: center;
+    border: 1.5px solid #D1D5DB;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+/* --- 6. Total Bar & Cart Button --- */
+.ps-total-container {
+    background-color: #E9ECEF;
+    padding: 15px 40px;
+    border-radius: 12px;
+}
+
+.ps-total-label {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.ps-total-amount {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #0F473A;
+}
+
+.ps-btn-cart {
+    background-color: transparent;
+    border: 2px solid var(--forest-dark); 
+    color: var(--forest-dark); 
+    padding: 10px 25px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.ps-btn-cart i {
+    color: var(--forest-dark);
+    margin-right: 8px;
+}
+
+.ps-btn-cart:hover {
+    background-color: #0F473A !important;
+    color: #FFFFFF !important;
+    border-color: #0F473A !important;
+}
+
+.ps-btn-cart:hover i {
+    color: #FFFFFF;
+}
+
+/* --- 7. Footer Section --- */
+.ps-footer {
+    background-color: #051A15;
+    padding: 60px 0;
+    color: #fff;
+    margin-top: 50px;
+}
+
+.ps-footer-quote {
+    font-weight: 600;
+    font-size: 2rem;
+}
+
+.ps-footer-divider {
+    width: 80%;
+    margin: 30px auto;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    opacity: 1;
+}
+
+.ps-footer-brand {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+.ps-blurred-animated {
+    animation: blur-in 2s ease-out forwards;
+}
+
+@keyframes blur-in {
+    0% { filter: blur(0px); }
+    100% { filter: blur(5px); }
 }

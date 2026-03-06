@@ -17,11 +17,15 @@ unset($_SESSION['error']);
 <body class="fgt-body">
     <?php include 'includes/guest_header.php'; ?>
 
-    <div class="container d-flex justify-content-center align-items-center vh-100">
+   <div class="fgt-page-wrapper">
         <div class="fgt-form-container">
             <div class="text-center mb-4">
+                <div class="fgt-icon-container">
+                    <i class="fas fa-fingerprint"></i>
+                </div>
+
                 <h2 class="fgt-title">Forgot Password?</h2>
-                <p class="fgt-subtitle">Enter your email and we'll send you a code.</p>
+                <p class="fgt-subtitle">Enter your email address to receive a verification code for password reset.</p>
             </div>
 
             <form method="POST" action="process/forgot_password_process.php">
