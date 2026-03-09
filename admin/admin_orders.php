@@ -67,7 +67,7 @@ $tab_labels = [
                 <div class="card-body">
                     <p class="admn-ordr-summary-label mb-1">New Orders</p>
                     <div class="admn-ordr-summary-number"><?= $summary['new_orders'] ?? 0 ?></div>
-                    <p class="admn-ordr-summary-sub">Awaiting Action</p>
+                    <p class="admn-ordr-summary-sub">Pending</p>
                 </div>
             </div>
         </div>
@@ -76,7 +76,7 @@ $tab_labels = [
                 <div class="card-body">
                     <p class="admn-ordr-summary-label mb-1">Completed Today</p>
                     <div class="admn-ordr-summary-number"><?= $summary['completed_today'] ?? 0 ?></div>
-                    <p class="admn-ordr-summary-sub">Revenue today</p>
+                    <p class="admn-ordr-summary-sub">Orders completed</p>
                 </div>
             </div>
         </div>
