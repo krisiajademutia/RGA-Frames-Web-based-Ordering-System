@@ -5613,3 +5613,139 @@ body {
 #csc-lightbox-close:hover {
     background: #f3f4f6;
 }
+
+/* --- READY-MADE SHOP & MODAL UI --- */
+:root {
+    --forest-dark: #004236;
+    --forest-light: rgba(0, 66, 54, 0.05);
+    --border-gray: #eee;
+}
+
+/* Modal Content Styling */
+.custom-modal-content {
+    border-radius: 24px !important;
+    overflow: hidden;
+    border: none;
+}
+
+.modal-product-title {
+    color: var(--forest-dark);
+    font-weight: 700;
+    margin-top: 15px;
+}
+
+/* Product Specification Rows */
+.spec-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-gray);
+    font-size: 14px;
+}
+
+.spec-label { color: #666; }
+.spec-value { font-weight: 500; }
+
+/* Customization Sections */
+.section-label {
+    font-weight: 700;
+    color: var(--forest-dark);
+    font-size: 14px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.tile-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.option-tile {
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 10px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.option-tile.active {
+    border-color: var(--forest-dark);
+    background: var(--forest-light);
+}
+
+.option-tile strong { display: block; font-size: 13px; color: #333; }
+.option-tile span { font-size: 11px; color: #777; }
+
+/* Color Swatches */
+.swatch-group {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.swatch-item {
+    width: 40px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #eee;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.swatch-item.active {
+    border: 2px solid var(--forest-dark);
+}
+
+/* Quantity Control */
+.qty-container {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    width: fit-content;
+    overflow: hidden;
+}
+
+.qty-btn {
+    border: none;
+    background: none;
+    padding: 5px 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.qty-input-field {
+    border: none;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    width: 50px;
+    text-align: center;
+    font-weight: bold;
+    background: #fff;
+}
+
+/* Action Buttons */
+.btn-buy-now {
+    background: var(--forest-dark);
+    color: white;
+    border-radius: 8px;
+    font-weight: 700;
+    padding: 12px;
+    border: none;
+    flex: 1;
+}
+
+.btn-add-cart {
+    background: white;
+    color: var(--forest-dark);
+    border: 1.5px solid var(--forest-dark);
+    border-radius: 8px;
+    font-weight: 700;
+    padding: 12px;
+    flex: 1;
+}
