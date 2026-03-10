@@ -1,13 +1,6 @@
 <?php
-/**
- * admin_custom_frame_options.php
- * * Powered by: 
- * - OptionService
- * - Individual Repositories (FrameType, FrameDesign, etc.)
- */
 require_once __DIR__ . '/../process/fetch_options.php';
 
-// Success/Error handling for UI feedback
 $status = $_GET['success'] ?? null;
 $error_msg = $_GET['error'] ?? null;
 ?>
@@ -57,7 +50,7 @@ $error_msg = $_GET['error'] ?? null;
         </div>
     <?php elseif($status === '0' || $error_msg): ?>
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            Failed to add option. Please ensure all required fields and images are provided.
+            Failed to add option.
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <?php endif; ?>
@@ -72,19 +65,31 @@ $error_msg = $_GET['error'] ?? null;
                         <label class="opt-label">Type Name <span>*</span></label>
                         <input type="text" name="type_name" class="opt-input" required placeholder="e.g. Standard">
                     </div>
+                    <div style="grid-row: span 2;">
+                        <label class="opt-label"><?= strtoupper($tab_label) ?> PHOTO <span>*</span></label>
+                        <div class="opt-upload-zone">
+                            <input type="file" name="type_image" required>
+                            <i data-lucide="image"></i>
+                            <span>Click to upload <?= strtolower($tab_label) ?> image</span>
+                        </div>
+                    </div>
                     <div>
                         <label class="opt-label">Price (₱) <span>*</span></label>
                         <input type="number" step="0.01" name="type_price" class="opt-input" required>
-                    </div>
-                    <div class="opt-upload-zone" style="grid-column: span 2; width: 100%;">
-                        <label class="opt-label">Type Preview Image <span>*</span></label>
-                        <input type="file" name="type_image" class="form-control" required>
                     </div>
 
                 <?php elseif($active_tab == 'frame_designs'): ?>
                     <div>
                         <label class="opt-label">Design Name <span>*</span></label>
                         <input type="text" name="design_name" class="opt-input" required>
+                    </div>
+                    <div style="grid-row: span 2;">
+                        <label class="opt-label"><?= strtoupper($tab_label) ?> PHOTO <span>*</span></label>
+                        <div class="opt-upload-zone">
+                            <input type="file" name="design_image" required>
+                            <i data-lucide="image"></i>
+                            <span>Click to upload <?= strtolower($tab_label) ?> image</span>
+                        </div>
                     </div>
                     <div>
                         <label class="opt-label">Price (₱) <span>*</span></label>
@@ -96,118 +101,69 @@ $error_msg = $_GET['error'] ?? null;
                         <label class="opt-label">Color Name <span>*</span></label>
                         <input type="text" name="color_name" class="opt-input" required>
                     </div>
-                    <div class="opt-upload-zone" style="grid-column: span 1; width: 100%;">
-                        <label class="opt-label">Color Texture <span>*</span></label>
-                        <input type="file" name="color_image" class="form-control" required>
+                    <div>
+                        <label class="opt-label"><?= strtoupper($tab_label) ?> PHOTO <span>*</span></label>
+                        <div class="opt-upload-zone">
+                            <input type="file" name="color_image" required>
+                            <i data-lucide="palette"></i>
+                            <span>Click to upload <?= strtolower($tab_label) ?> image</span>
+                        </div>
                     </div>
 
                 <?php elseif($active_tab == 'frame_sizes'): ?>
                     <div>
                         <label class="opt-label">Width (Inches) <span>*</span></label>
-                        <input type="number" step="0.01" name="width" class="opt-input" required placeholder="e.g. 16">
-                    </div>
-                    <div>
-                        <label class="opt-label">Height (Inches) <span>*</span></label>
-                        <input type="number" step="0.01" name="height" class="opt-input" required placeholder="e.g. 20">
-                    </div>
-                    <div>
-                        <label class="opt-label">Total Inches <span>*</span></label>
-                        <input type="number" step="0.01" name="total_inches" class="opt-input" required placeholder="e.g. 72">
-                    </div>
-                    <div>
-                        <label class="opt-label">Base Price (₱) <span>*</span></label>
-                        <input type="number" step="0.01" name="base_price" class="opt-input" required placeholder="0.00">
-                    </div>
-
-                <?php elseif($active_tab == 'matboard_colors'): ?>
-                    <div>
-                        <label class="opt-label">Color Name <span>*</span></label>
-                        <input type="text" name="matboard_color_name" class="opt-input" required placeholder="e.g. Cream White">
-                    </div>
-                    <div>
-                        <label class="opt-label">Status</label>
-                        <select name="is_active" class="opt-input" style="width: 100%;">
-                            <option value="1">Active - visible to customers</option>
-                            <option value="0">Inactive</option>
-                        </select>
-                    </div>
-                    <div class="opt-upload-zone" style="grid-column: span 2; width: 100%; border: 2px dashed #ccc; padding: 20px; text-align: center;">
-                        <input type="file" name="matboard_image" required style="display: none;" id="matboard_upload">
-                        <label for="matboard_upload" style="cursor: pointer;">
-                            <i data-lucide="image" style="margin-bottom: 10px;"></i><br>
-                            <span style="font-weight: 600;">Click to upload product photo</span><br>
-                            <span style="font-size: 12px; color: #6B7280;">PNG or JPG | Max of 3MB</span>
-                        </label>
-                    </div>
-
-                <?php elseif($active_tab == 'mount_types'): ?>
-                    <div>
-                        <label class="opt-label">Mount Type <span>*</span></label>
-                        <input type="text" name="generic_name" class="opt-input" required placeholder="e.g. Hanging">
-                    </div>
-                    <div>
-                        <label class="opt-label">Additional Fee (₱) <span>*</span></label>
-                        <input type="number" step="0.01" name="generic_price" class="opt-input" required placeholder="0.00">
-                    </div>
-                    <div>
-                        <label class="opt-label">Status</label>
-                        <select name="is_active" class="opt-input" style="width: 100%;">
-                            <option value="1">Active</option>
-                            <option value="0">Inactive</option>
-                        </select>
-                    </div>
-
-                <?php elseif($active_tab == 'paper_types'): ?>
-                    <div>
-                        <label class="opt-label">Paper Name <span>*</span></label>
-                        <input type="text" name="generic_name" class="opt-input" required placeholder="e.g. Glossy">
+                        <input type="number" step="0.01" name="width" class="opt-input" required>
                     </div>
                     <div>
                         <label class="opt-label">Height (Inches) <span>*</span></label>
                         <input type="number" step="0.01" name="height" class="opt-input" required>
                     </div>
                     <div>
-                        <label class="opt-label">Width (Inches) <span>*</span></label>
-                        <input type="number" step="0.01" name="width" class="opt-input" required>
-                    </div>
-                    <div>
-                        <label class="opt-label">Pricing Logic</label>
-                        <select name="pricing_logic" class="opt-input">
-                            <option value="fixed">Fixed Rate</option>
-                            <option value="per_inch">Per Inch</option>
-                        </select>
-                    </div>
-                    <div>
                         <label class="opt-label">Total Inches <span>*</span></label>
                         <input type="number" step="0.01" name="total_inches" class="opt-input" required>
                     </div>
                     <div>
-                        <label class="opt-label">Price (₱) <span>*</span></label>
-                        <input type="number" step="0.01" name="generic_price" class="opt-input" required>
+                        <label class="opt-label">Base Price (₱) <span>*</span></label>
+                        <input type="number" step="0.01" name="base_price" class="opt-input" required>
                     </div>
 
-                <?php else: ?>
+                <?php elseif($active_tab == 'matboard_colors'): ?>
                     <div>
-                        <label class="opt-label">Name <span>*</span></label>
+                        <label class="opt-label">Color Name <span>*</span></label>
+                        <input type="text" name="matboard_color_name" class="opt-input" required>
+                    </div>
+                    <div>
+                        <label class="opt-label"><?= strtoupper($tab_label) ?> PHOTO <span>*</span></label>
+                        <div class="opt-upload-zone">
+                            <input type="file" name="matboard_image" required>
+                            <i data-lucide="image"></i>
+                            <span>Click to upload <?= strtolower($tab_label) ?> image</span>
+                        </div>
+                    </div>
+
+                <?php elseif($active_tab == 'mount_types'): ?>
+                    <div>
+                        <label class="opt-label">Mount Type <span>*</span></label>
                         <input type="text" name="generic_name" class="opt-input" required>
                     </div>
                     <div>
                         <label class="opt-label">Additional Fee (₱) <span>*</span></label>
                         <input type="number" step="0.01" name="generic_price" class="opt-input" required>
                     </div>
+
+                <?php elseif($active_tab == 'paper_types'): ?>
+                    <div>
+                        <label class="opt-label">Paper Name <span>*</span></label>
+                        <input type="text" name="generic_name" class="opt-input" required>
+                    </div>
+                    <div>
+                        <label class="opt-label">Price (₱) <span>*</span></label>
+                        <input type="number" step="0.01" name="generic_price" class="opt-input" required>
+                    </div>
                 <?php endif; ?>
 
-                <?php if($active_tab !== 'matboard_colors' && $active_tab !== 'mount_types'): ?>
-                <div style="grid-column: span 2;">
-                    <label class="opt-label">Status</label>
-                    <select name="is_active" class="opt-input" style="width: 100%;">
-                        <option value="1">Active - visible to customers</option>
-                        <option value="0">Inactive</option>
-                    </select>
-                </div>
-                <?php endif; ?>
-
-                <div style="grid-column: span 2; display: flex; justify-content: center; gap: 15px; margin-top: 10px;">
+                <div style="grid-column: span 2; display: flex; justify-content: center; gap: 15px; margin-top: 20px;">
                     <button type="reset" class="opt-btn-clear">Clear</button>
                     <button type="submit" name="add_option" class="opt-btn-submit">Add <?= ucwords($suffix ?? 'Option') ?></button>
                 </div>
@@ -224,17 +180,14 @@ $error_msg = $_GET['error'] ?? null;
         <div class="opted-list-wrapper">
             <?php if ($res && $res->num_rows > 0): ?>
                 <?php while($row = $res->fetch_assoc()): 
-                    // Safely check for a name from any table
                     $title = $row['type_name'] ?? $row['design_name'] ?? $row['color_name'] ?? 
                              $row['matboard_color_name'] ?? $row['mount_name'] ?? $row['paper_name'] ?? 
                              $row['generic_name'] ?? null;
 
-                    // If it's a size, width/height are the title
                     if ($title === null && isset($row['width'], $row['height'])) {
                         $title = $row['width'] . '" x ' . $row['height'] . '"';
                     }
 
-                    // Safely check for price from any table
                     $price = $row['type_price'] ?? $row['price'] ?? $row['additional_fee'] ?? 
                              $row['base_price'] ?? $row['generic_price'] ?? 0;
                 ?>
@@ -244,9 +197,6 @@ $error_msg = $_GET['error'] ?? null;
                         <p class="opted-item-sub">Price: ₱<?= number_format($price, 2) ?></p>
                     </div>
                     <div class="opted-actions">
-                        <span class="status-pill <?= $row['is_active'] ? 'active' : 'inactive' ?>">
-                            <?= $row['is_active'] ? 'Active' : 'Inactive' ?>
-                        </span>
                         <button class="action-icon-btn opt-btn-edit" title="Edit"><i data-lucide="pencil" size="16"></i></button>
                         <button class="action-icon-btn opt-btn-delete" title="Delete"><i data-lucide="trash-2" size="16"></i></button>
                     </div>
@@ -262,7 +212,6 @@ $error_msg = $_GET['error'] ?? null;
     </div>
 </div>
 
-<script src="../assets/js/custom_options_script.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     lucide.createIcons();
