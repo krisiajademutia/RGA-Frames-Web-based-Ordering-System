@@ -117,10 +117,17 @@ $presetLabels = ['4×6"','5×7"','8×10"','8×12"','11×14"','12×16"','16×20"'
                             <?php foreach ($frameDesigns as $fd): ?>
                                 <label class="csc-design-card" data-value="<?= $fd['frame_design_id'] ?>" data-price="<?= $fd['price'] ?>">
                                     <input type="radio" name="frame_design" value="<?= $fd['frame_design_id'] ?>" hidden>
-                                    <?php if ($fd['image_name']): ?>
-                                        <img src="../assets/img/<?= htmlspecialchars($fd['image_name']) ?>"
-                                             alt="<?= htmlspecialchars($fd['design_name']) ?>"
-                                             class="csc-design-img">
+                                    <?php if (!empty($fd['primary_image'])): ?>
+                                        <div class="csc-design-img-wrap">
+                                            <img src="../assets/img/<?= htmlspecialchars($fd['primary_image']) ?>"
+                                                 alt="<?= htmlspecialchars($fd['design_name']) ?>"
+                                                 class="csc-design-img">
+                                            <button type="button" class="csc-design-zoom-btn"
+                                                data-img="../assets/img/<?= htmlspecialchars($fd['primary_image']) ?>"
+                                                data-name="<?= htmlspecialchars($fd['design_name']) ?>">
+                                                <i class="fas fa-magnifying-glass-plus"></i>
+                                            </button>
+                                        </div>
                                     <?php else: ?>
                                         <div class="csc-design-placeholder">
                                             <i class="fas fa-image"></i>
@@ -129,6 +136,16 @@ $presetLabels = ['4×6"','5×7"','8×10"','8×12"','11×14"','12×16"','16×20"'
                                     <div class="csc-design-name"><?= htmlspecialchars($fd['design_name']) ?></div>
                                 </label>
                             <?php endforeach; ?>
+                        </div>
+
+                        <!-- Lightbox Modal -->
+                        <div id="csc-lightbox" style="display:none;">
+                            <div id="csc-lightbox-backdrop"></div>
+                            <div id="csc-lightbox-content">
+                                <button id="csc-lightbox-close"><i class="fas fa-xmark"></i></button>
+                                <img id="csc-lightbox-img" src="" alt="">
+                                <div id="csc-lightbox-name"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -279,41 +296,41 @@ $presetLabels = ['4×6"','5×7"','8×10"','8×12"','11×14"','12×16"','16×20"'
                 <div class="csc-summary-wrap">
                     <div class="csc-summary-header">ORDER SUMMARY</div>
                     <div class="csc-summary-body">
-                        <div class="csc-summary-row">
+                        <div class="csc-summary-row" id="sum-service-row" style="display:none;">
                             <span>Service</span>
-                            <span id="sum-service" class="csc-summary-val">Frame only</span>
+                            <span id="sum-service" class="csc-summary-val"></span>
                         </div>
-                        <div class="csc-summary-row">
+                        <div class="csc-summary-row" id="sum-frame-type-row" style="display:none;">
                             <span>Frame Type</span>
-                            <span id="sum-frame-type" class="csc-summary-muted">not selected</span>
+                            <span id="sum-frame-type" class="csc-summary-val"></span>
                         </div>
-                        <div class="csc-summary-row">
+                        <div class="csc-summary-row" id="sum-design-row" style="display:none;">
                             <span>Design</span>
-                            <span id="sum-design" class="csc-summary-muted">not selected</span>
+                            <span id="sum-design" class="csc-summary-val"></span>
                         </div>
-                        <div class="csc-summary-row">
+                        <div class="csc-summary-row" id="sum-color-row" style="display:none;">
                             <span>Color</span>
-                            <span id="sum-color" class="csc-summary-muted">not selected</span>
+                            <span id="sum-color" class="csc-summary-val"></span>
                         </div>
-                        <div class="csc-summary-row">
+                        <div class="csc-summary-row" id="sum-size-row" style="display:none;">
                             <span>Size</span>
-                            <span id="sum-size" class="csc-summary-val">Other</span>
+                            <span id="sum-size" class="csc-summary-val"></span>
                         </div>
-                        <div class="csc-summary-row">
+                        <div class="csc-summary-row" id="sum-matboard-row" style="display:none;">
                             <span>Mat-board</span>
-                            <span id="sum-matboard" class="csc-summary-muted">not selected</span>
+                            <span id="sum-matboard" class="csc-summary-val"></span>
                         </div>
-                        <div class="csc-summary-row">
+                        <div class="csc-summary-row" id="sum-mount-row" style="display:none;">
                             <span>Mount</span>
-                            <span id="sum-mount" class="csc-summary-muted">not selected</span>
+                            <span id="sum-mount" class="csc-summary-val"></span>
                         </div>
                         <div class="csc-summary-row" id="sum-image-row" style="display:none;">
                             <span>Image</span>
-                            <span id="sum-image" class="csc-summary-muted">not uploaded</span>
+                            <span id="sum-image" class="csc-summary-val"></span>
                         </div>
                         <div class="csc-summary-row" id="sum-paper-row" style="display:none;">
                             <span>Paper</span>
-                            <span id="sum-paper" class="csc-summary-muted">not selected</span>
+                            <span id="sum-paper" class="csc-summary-val"></span>
                         </div>
 
                         <!-- Quantity -->

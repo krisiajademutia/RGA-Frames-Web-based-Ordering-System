@@ -16,7 +16,14 @@ class CustomFrameRepository {
     }
 
     public function getActiveFrameDesigns(): array {
-        $r = $this->conn->query("SELECT * FROM tbl_frame_designs WHERE is_active=1 ORDER BY design_name");
+        $r = $this->conn->query("
+            SELECT fd.*, fdi.image_name AS primary_image
+            FROM tbl_frame_designs fd
+            LEFT JOIN tbl_frame_design_images fdi
+                ON fd.frame_design_id = fdi.frame_design_id AND fdi.is_primary = 1
+            WHERE fd.is_active = 1
+            ORDER BY fd.design_name
+        ");
         return $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
     }
 
