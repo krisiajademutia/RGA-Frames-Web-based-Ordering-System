@@ -25,6 +25,35 @@ class CustomFrameService {
         ];
     }
 
+    // ── Tiered size price (width+height → find matching tier) ──
+    private function calcTieredSizePrice(float $w, float $h): float {
+        $totalInch = $w + $h;
+
+        // Fetch all active sizes ordered by total_inch ASC
+        $sizes = $this->repo->getActiveFrameSizes();
+
+        // If exact match exists, return its price
+        foreach ($sizes as $s) {
+            if ((float)$s['total_inch'] == $totalInch) {
+                return (float)$s['price'];
+            }
+        }
+
+        // Find the next tier UP (first size whose total_inch >= our total)
+        foreach ($sizes as $s) {
+            if ((float)$s['total_inch'] >= $totalInch) {
+                return (float)$s['price'];
+            }
+        }
+
+        // If larger than all tiers, use the largest tier price
+        if (!empty($sizes)) {
+            return (float)end($sizes)['price'];
+        }
+
+        return 0.0;
+    }
+
     // ── Server-side price calculation ────────────────────
     public function calculatePrice(array $data): array {
         $basePrice  = 0.0;
@@ -42,32 +71,32 @@ class CustomFrameService {
             $basePrice += $fd ? (float)$fd['price'] : 0;
         }
 
-        // Frame size price
+        // Frame size price — tiered logic
         $customWidth  = (float)($data['custom_width']  ?? 0);
         $customHeight = (float)($data['custom_height'] ?? 0);
 
         if (!empty($data['frame_size_id']) && $data['frame_size_id'] !== 'OTHER') {
+            // Preset size — get its dimensions then run through tier
             $fs = $this->repo->getFrameSizeById((int)$data['frame_size_id']);
             if ($fs) {
-                $basePrice    += (float)$fs['price'];
-                $customWidth   = (float)$fs['width_inch'];
-                $customHeight  = (float)$fs['height_inch'];
+                $customWidth  = (float)$fs['width_inch'];
+                $customHeight = (float)$fs['height_inch'];
             }
-        } elseif ($customWidth > 0 && $customHeight > 0) {
-            // Calculated: perimeter × rate per inch
-            $totalInch  = ($customWidth + $customHeight) * 2;
-            $basePrice += $totalInch * 10; // ₱10 per inch — adjust as needed
         }
 
-        // Primary matboard
-        if (!empty($data['primary_matboard_id']) && (int)$data['primary_matboard_id'] > 0) {
-            $mc = $this->repo->getMatboardById((int)$data['primary_matboard_id']);
-            $extraPrice += $mc ? (float)$mc['base_price'] : 0;
+        // Both preset and custom sizes go through the same tier logic
+        if ($customWidth > 0 && $customHeight > 0) {
+            $basePrice += $this->calcTieredSizePrice($customWidth, $customHeight);
         }
 
-        // Secondary matboard
-        if (!empty($data['secondary_matboard_id']) && (int)$data['secondary_matboard_id'] > 0) {
-            $mc2 = $this->repo->getMatboardById((int)$data['secondary_matboard_id']);
+        // Matboard — only charge when BOTH primary AND secondary are selected (not None/0)
+        $primaryId   = (int)($data['primary_matboard_id']   ?? 0);
+        $secondaryId = (int)($data['secondary_matboard_id'] ?? 0);
+
+        if ($primaryId > 0 && $secondaryId > 0) {
+            $mc1 = $this->repo->getMatboardById($primaryId);
+            $mc2 = $this->repo->getMatboardById($secondaryId);
+            $extraPrice += $mc1 ? (float)$mc1['base_price'] : 0;
             $extraPrice += $mc2 ? (float)$mc2['base_price'] : 0;
         }
 
