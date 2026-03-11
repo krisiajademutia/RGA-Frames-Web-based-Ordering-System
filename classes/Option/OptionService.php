@@ -13,4 +13,12 @@ class OptionService {
     public function fetchOptions($key) {
         return isset($this->repositories[$key]) ? $this->repositories[$key]->getAll() : null;
     }
+
+    public function updateOption($key, int $id, array $data, array $files = []): bool {
+        return isset($this->repositories[$key]) ? $this->repositories[$key]->update($id, $data, $files) : false;
+    }
+
+    public function deleteOption($key, int $id): bool {
+        return isset($this->repositories[$key]) ? $this->repositories[$key]->delete($id) : false;
+    }
 }

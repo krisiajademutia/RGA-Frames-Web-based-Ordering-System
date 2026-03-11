@@ -889,6 +889,7 @@ html {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    cursor: pointer;
 }
 
 .post-dropdown-menu {
@@ -896,13 +897,12 @@ html {
     position: absolute;
     right: 0;
     top: 100%;
-    background-color: #489883;
     min-width: 220px;
     box-shadow: 0px 8px 24px rgba(0,0,0,0.15);
     z-index: 1100;
     border-radius: 8px;
     overflow: hidden;
-    border: 1px solid #d1dbd9;
+    margin-top: 5px;
 }
 
 .post-dropdown:hover .post-dropdown-menu {
@@ -913,8 +913,23 @@ html {
     padding: 12px 16px;
     text-decoration: none;
     display: block;
-    font-size: 13px;
-    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    transition: filter 0.2s;
+}
+
+.post-dropdown-menu a:nth-child(odd) {
+    background-color: #A3D2CA !important;
+    color: #063a32 !important;
+}
+
+.post-dropdown-menu a:nth-child(even) {
+    background-color: #559688 !important;
+    color: white !important;
+}
+
+.post-dropdown-menu a:hover {
+    filter: brightness(90%);
 }
 
 .post-card {
@@ -1506,54 +1521,71 @@ html {
 }
 
 .opted-row-item {
-    width: 973px;
-    height: 83px;
-    background: #EEEEEE;
-    border: 1px solid #ADADAD;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    padding: 0 25px;
-    justify-content: space-between;
+width: 973px;
+min-height: 83px;
+background: #EEEEEE;
+border: 1px solid #ADADAD;
+border-radius: 12px;
+display: flex;
+flex-direction: column;
+overflow: hidden;
+}
+
+/* inner row that holds text + buttons */
+.opted-row-inner {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 0 25px;
+height: 83px;
+width: 100%;
 }
 
 .opted-item-main {
-    display: flex;
-    flex-direction: column;
+display: flex;
+flex-direction: column;
 }
 
 .opted-item-name {
-    font-size: 16px;
-    font-weight: 700;
-    color: #004030;
-    margin: 0;
+font-size: 16px;
+font-weight: 700;
+color: #004030;
+margin: 0;
 }
 
 .opted-item-sub {
-    font-size: 12px;
-    color: #6B7280;
-    margin: 2px 0 0 0;
+font-size: 12px;
+color: #6B7280;
+margin: 2px 0 0 0;
 }
 
 .opted-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+display: flex;
+align-items: center;
+gap: 12px;
 }
 
-.action-icon-btn { 
-    width: 36px; 
-    height: 36px; 
-    border-radius: 8px; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    border: none; 
-    cursor: pointer; 
+.action-icon-btn {
+width: 36px;
+height: 36px;
+border-radius: 8px;
+display: flex;
+align-items: center;
+justify-content: center;
+border: none;
+cursor: pointer;
 }
 
-.opt-btn-edit { background: #A7F3D0; color: #059669; }
-.opt-btn-delete { background: #FECACA; color: #DC2626; }
+.opt-btn-edit {
+background: #A7F3D0;
+color: #059669;
+}
+
+.opt-btn-delete {
+background: #FECACA;
+color: #DC2626;
+}
+
 /* =========================================
    4. GUEST HEADER STYLES (gst-)
    ========================================= */
@@ -4032,11 +4064,10 @@ body {
 
 @keyframes blur-in {
     0% { filter: blur(0px); }
-    100% { filter: blur(5px); }}
+    100% { filter: blur(5px); }
+}
 
-/*=====
-    100% { filter: blur(5px); }}
-/*=======
+/* =========================================
    ORDERS DASHBOARD — FULL REDESIGN
    ========================================= */
 
@@ -6166,4 +6197,140 @@ body {
 @media (max-width: 480px) {
     .admn-ordr-dtls-proof-thumb { width: 64px; height: 64px; }
     .admn-ordr-dtls-proof-amount { font-size: 0.95rem; }
+}
+
+/* --- READY-MADE SHOP & MODAL UI --- */
+:root {
+    --forest-dark: #004236;
+    --forest-light: rgba(0, 66, 54, 0.05);
+    --border-gray: #eee;
+}
+
+/* Modal Content Styling */
+.custom-modal-content {
+    border-radius: 24px !important;
+    overflow: hidden;
+    border: none;
+}
+
+.modal-product-title {
+    color: var(--forest-dark);
+    font-weight: 700;
+    margin-top: 15px;
+}
+
+/* Product Specification Rows */
+.spec-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-gray);
+    font-size: 14px;
+}
+
+.spec-label { color: #666; }
+.spec-value { font-weight: 500; }
+
+/* Customization Sections */
+.section-label {
+    font-weight: 700;
+    color: var(--forest-dark);
+    font-size: 14px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.tile-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.option-tile {
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 10px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.option-tile.active {
+    border-color: var(--forest-dark);
+    background: var(--forest-light);
+}
+
+.option-tile strong { display: block; font-size: 13px; color: #333; }
+.option-tile span { font-size: 11px; color: #777; }
+
+/* Color Swatches */
+.swatch-group {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.swatch-item {
+    width: 40px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #eee;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.swatch-item.active {
+    border: 2px solid var(--forest-dark);
+}
+
+/* Quantity Control */
+.qty-container {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    width: fit-content;
+    overflow: hidden;
+}
+
+.qty-btn {
+    border: none;
+    background: none;
+    padding: 5px 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.qty-input-field {
+    border: none;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    width: 50px;
+    text-align: center;
+    font-weight: bold;
+    background: #fff;
+}
+
+/* Action Buttons */
+.btn-buy-now {
+    background: var(--forest-dark);
+    color: white;
+    border-radius: 8px;
+    font-weight: 700;
+    padding: 12px;
+    border: none;
+    flex: 1;
+}
+
+.btn-add-cart {
+    background: white;
+    color: var(--forest-dark);
+    border: 1.5px solid var(--forest-dark);
+    border-radius: 8px;
+    font-weight: 700;
+    padding: 12px;
+    flex: 1;
 }
