@@ -90,7 +90,6 @@ require_once '../process/fetch_dashboard.php';
     // If you have a footer, include it here. Otherwise, the closing tags below handle it.
     // include_once '../includes/admin_footer.php'; 
     ?>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+       
 </body>
 </html>

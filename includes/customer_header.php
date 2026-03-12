@@ -104,6 +104,13 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
             <ul class="dropdown-menu dropdown-menu-end cust-hdr-dropdown-menu">
                 <li>
+                    <a class="dropdown-item cust-hdr-profile-item" href="../customer/customer_profile.php">
+                        <i class="fas fa-user me-2"></i> Profile
+                    </a>
+                </li>
+                <li>
+                    <hr class="dropdown-divider"> </li>
+                <li>
                     <a class="dropdown-item cust-hdr-logout-item" href="../logout.php">
                         <i class="fas fa-sign-out-alt me-2"></i> Log out
                     </a>
@@ -129,6 +136,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
 <div class="cust-mobile-menu" id="custMobileMenu">
 
     <nav class="cust-hdr-nav-mobile">
+        <a href="customer_profile.php" class="cust-hdr-nav-link">
+            <i class="fas fa-user"></i> Profile
+        </a>
 
         <a href="customer_dashboard.php" class="cust-hdr-nav-link">
             <i class="fas fa-home"></i> Home
