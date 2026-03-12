@@ -31,6 +31,14 @@ function hideRow(rowId) {
     if (row) row.style.display = 'none';
 }
 
+function setPrice(elId, amount) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.textContent = amount > 0
+        ? '₱' + amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : '';
+}
+
 // ── Radio-style selectors ────────────────────────────────
 function initSelector(cardSelector, onSelect) {
     qsa(cardSelector).forEach(card => {
@@ -73,6 +81,7 @@ initSelector('.csc-type-option', card => {
     state.frameTypePrice = parseFloat(card.dataset.price) || 0;
     state.frameTypeName  = card.querySelector('.csc-type-name').textContent.trim();
     showRow('sum-frame-type-row', 'sum-frame-type', state.frameTypeName);
+    setPrice('sum-frame-type-price', state.frameTypePrice);
     updateTotal();
 });
 
@@ -82,6 +91,7 @@ initSelector('.csc-design-card', card => {
     state.frameDesignPrice = parseFloat(card.dataset.price) || 0;
     state.frameDesignName  = card.querySelector('.csc-design-name').textContent.trim();
     showRow('sum-design-row', 'sum-design', state.frameDesignName);
+    setPrice('sum-design-price', state.frameDesignPrice);
     updateTotal();
 });
 
@@ -94,19 +104,31 @@ initSelector('.csc-color-card', card => {
 });
 
 // ── Frame Size Pills ─────────────────────────────────────
+const customSizeWrap = qs('#csc-custom-size-wrap');
+
 qsa('.csc-size-pill').forEach(pill => {
     pill.addEventListener('click', () => {
         qsa('.csc-size-pill').forEach(p => p.classList.remove('active'));
         pill.classList.add('active');
         state.frameSizeId    = pill.dataset.value;
         state.frameSizePrice = parseFloat(pill.dataset.price) || 0;
-        const w = pill.dataset.width;
-        const h = pill.dataset.height;
-        if (pill.dataset.value !== 'OTHER' && w && h) {
-            qs('#csc-width').value  = w;
-            qs('#csc-height').value = h;
-            state.frameWidth  = parseFloat(w);
-            state.frameHeight = parseFloat(h);
+
+        if (pill.dataset.value === 'OTHER') {
+            // Show custom fields, clear preset values
+            if (customSizeWrap) customSizeWrap.style.display = 'flex';
+            qs('#csc-width').value  = '';
+            qs('#csc-height').value = '';
+            state.frameWidth  = 0;
+            state.frameHeight = 0;
+        } else {
+            // Hide custom fields, use preset dimensions
+            if (customSizeWrap) customSizeWrap.style.display = 'none';
+            const w = pill.dataset.width;
+            const h = pill.dataset.height;
+            if (w && h) {
+                state.frameWidth  = parseFloat(w);
+                state.frameHeight = parseFloat(h);
+            }
         }
         updateSizeLabel();
         updateTotal();
@@ -128,10 +150,34 @@ qsa('.csc-size-pill').forEach(pill => {
     });
 });
 
+// ── Tiered size pricing (mirrors PHP calcTieredSizePrice) ──
+function getTieredSizePrice(w, h) {
+    const totalInch = w + h;
+
+    // sizeTiers is embedded from PHP — array of {total_inch, price} sorted ASC
+    if (!window.sizeTiers || window.sizeTiers.length === 0) return 0;
+
+    // Exact match
+    for (const tier of window.sizeTiers) {
+        if (parseFloat(tier.total_inch) === totalInch) return parseFloat(tier.price);
+    }
+
+    // Next tier up
+    for (const tier of window.sizeTiers) {
+        if (parseFloat(tier.total_inch) >= totalInch) return parseFloat(tier.price);
+    }
+
+    // Larger than all tiers — use highest
+    return parseFloat(window.sizeTiers[window.sizeTiers.length - 1].price);
+}
+
 function updateSizeLabel() {
     const w = state.frameWidth, h = state.frameHeight;
     if (w && h) {
         showRow('sum-size-row', 'sum-size', w + '" × ' + h + '"');
+        // Both preset and custom use same tier logic
+        const sizePrice = getTieredSizePrice(w, h);
+        setPrice('sum-size-price', sizePrice);
     } else {
         hideRow('sum-size-row');
     }
@@ -156,17 +202,22 @@ initSelector('#csc-secondary-matboard .csc-matboard-card', card => {
 });
 
 function updateMatboardSummary() {
-    const pri = state.primaryMatboard;
-    const sec = state.secondaryMatboard;
+    const pri = parseInt(state.primaryMatboard)  || 0;
+    const sec = parseInt(state.secondaryMatboard) || 0;
 
-    if (pri == 0 && sec == 0) {
+    if (pri === 0 && sec === 0) {
+        // Neither selected
         hideRow('sum-matboard-row');
-    } else if (pri != 0 && sec != 0) {
+    } else if (pri !== 0 && sec !== 0) {
+        // BOTH selected — charge both prices
+        const matTotal = state.primaryMatPrice + state.secondaryMatPrice;
         showRow('sum-matboard-row', 'sum-matboard', state.primaryMatName + ' + ' + state.secondaryMatName);
-    } else if (pri != 0) {
-        showRow('sum-matboard-row', 'sum-matboard', state.primaryMatName);
+        setPrice('sum-matboard-price', matTotal);
     } else {
-        showRow('sum-matboard-row', 'sum-matboard', state.secondaryMatName);
+        // Only one selected — show name but NO price (price only when both chosen)
+        const name = pri !== 0 ? state.primaryMatName : state.secondaryMatName;
+        showRow('sum-matboard-row', 'sum-matboard', name);
+        setPrice('sum-matboard-price', 0);
     }
 }
 
@@ -176,6 +227,7 @@ initSelector('.csc-section:last-of-type .csc-service-option', card => {
     state.mountPrice  = parseFloat(card.dataset.price) || 0;
     state.mountName   = card.querySelector('.csc-service-label').textContent.trim();
     showRow('sum-mount-row', 'sum-mount', state.mountName);
+    setPrice('sum-mount-price', state.mountPrice);
     updateTotal();
 });
 
@@ -188,6 +240,7 @@ qs('#csc-paper-type')?.addEventListener('change', function() {
     state.paperName   = opt.textContent.trim();
     if (this.value) {
         showRow('sum-paper-row', 'sum-paper', state.paperName);
+        setPrice('sum-paper-price', state.paperPrice);
     } else {
         hideRow('sum-paper-row');
     }
@@ -237,15 +290,19 @@ function updateTotal() {
     base += state.frameTypePrice;
     base += state.frameDesignPrice;
 
-    if (state.frameSizeId && state.frameSizeId !== 'OTHER') {
-        base += state.frameSizePrice;
-    } else if (state.frameWidth && state.frameHeight) {
-        const totalInch = (state.frameWidth * 2) + (state.frameHeight * 2);
-        base += totalInch * 10;
+    // Size: BOTH preset and custom go through the same tier logic
+    if (state.frameWidth && state.frameHeight) {
+        base += getTieredSizePrice(state.frameWidth, state.frameHeight);
     }
 
-    base += state.primaryMatPrice;
-    base += state.secondaryMatPrice;
+    // Matboard: only charge when BOTH primary AND secondary are selected
+    const priId = parseInt(state.primaryMatboard)  || 0;
+    const secId = parseInt(state.secondaryMatboard) || 0;
+    if (priId > 0 && secId > 0) {
+        base += state.primaryMatPrice;
+        base += state.secondaryMatPrice;
+    }
+
     base += state.mountPrice;
 
     if (state.serviceType === 'FRAME_PRINT') {
@@ -337,26 +394,59 @@ qs('#csc-add-to-cart')?.addEventListener('click', () => submitForm('add_to_cart'
 qs('#csc-buy-now')?.addEventListener('click',     () => submitForm('buy_now'));
 
 // ── Lightbox ─────────────────────────────────────────────
-document.addEventListener('click', function(e) {
-    const btn = e.target.closest('.csc-design-zoom-btn');
-    if (btn) {
-        e.preventDefault();
-        e.stopPropagation();
-        qs('#csc-lightbox-img').src   = btn.dataset.img;
-        qs('#csc-lightbox-name').textContent = btn.dataset.name;
-        qs('#csc-lightbox').style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    }
-});
+let lbImages = [];
+let lbIndex  = 0;
+
+function openLightbox(images, name, startIndex) {
+    lbImages = images;
+    lbIndex  = startIndex || 0;
+    qs('#csc-lightbox-name').textContent = name;
+    renderLightboxImage();
+    qs('#csc-lightbox').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function renderLightboxImage() {
+    qs('#csc-lightbox-img').src = lbImages[lbIndex];
+    const total = lbImages.length;
+    qs('#csc-lightbox-counter').textContent = total > 1 ? (lbIndex + 1) + ' / ' + total : '';
+    qs('#csc-lightbox-prev').classList.toggle('hidden', lbIndex === 0);
+    qs('#csc-lightbox-next').classList.toggle('hidden', lbIndex === total - 1);
+}
 
 function closeLightbox() {
     qs('#csc-lightbox').style.display = 'none';
     document.body.style.overflow = '';
+    lbImages = [];
 }
+
+// Click on design image wrap to open lightbox
+document.addEventListener('click', function(e) {
+    const wrap = e.target.closest('.csc-design-img-wrap');
+    if (wrap) {
+        e.preventDefault();
+        e.stopPropagation();
+        const images = JSON.parse(wrap.dataset.images || '[]');
+        const name   = wrap.dataset.name || '';
+        if (images.length) openLightbox(images, name, 0);
+    }
+});
+
+qs('#csc-lightbox-prev')?.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (lbIndex > 0) { lbIndex--; renderLightboxImage(); }
+});
+
+qs('#csc-lightbox-next')?.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (lbIndex < lbImages.length - 1) { lbIndex++; renderLightboxImage(); }
+});
 
 qs('#csc-lightbox-close')?.addEventListener('click', closeLightbox);
 qs('#csc-lightbox-backdrop')?.addEventListener('click', closeLightbox);
 
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft'  && lbImages.length) { if (lbIndex > 0) { lbIndex--; renderLightboxImage(); } }
+    if (e.key === 'ArrowRight' && lbImages.length) { if (lbIndex < lbImages.length - 1) { lbIndex++; renderLightboxImage(); } }
 });

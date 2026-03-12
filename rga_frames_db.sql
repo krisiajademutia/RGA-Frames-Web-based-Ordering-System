@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 06, 2026 at 02:16 AM
+-- Generation Time: Mar 11, 2026 at 11:55 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -43,7 +43,7 @@ CREATE TABLE `tbl_admin` (
 --
 
 INSERT INTO `tbl_admin` (`admin_id`, `first_name`, `last_name`, `username`, `email`, `password`, `created_at`, `last_login`) VALUES
-(1, 'Admin', 'User', 'admin', 'mutiakrisiaj@gmail.com', '$2y$10$kd9FoZ0japdSk3mzS96QmeYSUH1Pbqm/0SdIRHO57r9NoMUuMQZia', '2026-02-18 12:57:20', '2026-03-05 16:50:22'),
+(1, 'Admin', 'User', 'admin', 'mutiakrisiaj@gmail.com', '$2y$10$kd9FoZ0japdSk3mzS96QmeYSUH1Pbqm/0SdIRHO57r9NoMUuMQZia', '2026-02-18 12:57:20', '2026-03-10 18:08:26'),
 (2, 'Calise', 'Sav', 'calise', 'savvcalise@gmail.com', '$2y$10$LyY134gbnwtwvLUchKeOHesA.5lmBNfBSFQt1kF8cLnyzcDd2xiLu', '2026-03-06 01:25:46', '2026-03-06 01:26:43');
 
 -- --------------------------------------------------------
@@ -57,6 +57,13 @@ CREATE TABLE `tbl_cart` (
   `customer_id` int(11) NOT NULL,
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tbl_cart`
+--
+
+INSERT INTO `tbl_cart` (`cart_id`, `customer_id`, `created_at`) VALUES
+(1, 1, '2026-03-07 13:42:47');
 
 -- --------------------------------------------------------
 
@@ -81,7 +88,8 @@ CREATE TABLE `tbl_customer` (
 
 INSERT INTO `tbl_customer` (`customer_id`, `first_name`, `last_name`, `username`, `email`, `password`, `phone_number`, `created_at`) VALUES
 (1, 'Krisia Jade', 'Mutia', 'krisia_jade', 'mutiakrisiajade@gmail.com', '$2y$10$/8VWQYDM/meDf6GFWWkbEe.OaQj6N.LtOneEVBHysvpnWPYh8Ohla', '09306282413', '2026-02-18 01:32:41'),
-(2, 'Customer', 'Test', 'customer_101', 'customer@gmail.com', '$2y$10$aqvIYWozM8Rk0pK/7Ra6J.PeUelKWfcW8zna4vuGQN.xoH1YWy.fy', '09890987154', '2026-02-21 03:22:36');
+(2, 'Customer', 'Test', 'customer_101', 'customer@gmail.com', '$2y$10$aqvIYWozM8Rk0pK/7Ra6J.PeUelKWfcW8zna4vuGQN.xoH1YWy.fy', '09890987154', '2026-02-21 03:22:36'),
+(9, 'Trisha', 'Lleno', 'trisha', 'kreiafey@gmail.com', '$2y$10$A3keQnqhfj8iAGI.untxiu0Uz3RMx1U8x86SwH7mm4VQkrnVftqHC', '09364650128', '2026-03-06 15:37:46');
 
 -- --------------------------------------------------------
 
@@ -105,8 +113,14 @@ CREATE TABLE `tbl_custom_frame_product` (
 --
 
 INSERT INTO `tbl_custom_frame_product` (`c_product_id`, `frame_type_id`, `frame_design_id`, `frame_color_id`, `frame_size_id`, `custom_width`, `custom_height`, `calculated_price`) VALUES
-(1, 1, 1, 1, NULL, 10.00, 12.00, 800.00),
-(2, 2, 1, 2, NULL, 16.00, 20.00, 1200.00);
+(50, 1, 1, 1, NULL, 8.00, 10.00, 920.00),
+(51, 2, 2, 2, NULL, 5.00, 7.00, 1450.00),
+(52, 1, 1, 2, NULL, 11.00, 14.00, 1150.00),
+(53, 2, 2, 1, NULL, 10.00, 12.00, 1100.00),
+(60, 1, 1, 1, NULL, 5.00, 7.00, 880.00),
+(61, 2, 2, 2, NULL, 8.00, 10.00, 1270.00),
+(62, 1, 2, 1, NULL, 10.00, 12.00, 1150.00),
+(63, 2, 1, 2, NULL, 11.00, 14.00, 1600.00);
 
 -- --------------------------------------------------------
 
@@ -127,7 +141,8 @@ CREATE TABLE `tbl_frame_colors` (
 
 INSERT INTO `tbl_frame_colors` (`frame_color_id`, `color_name`, `is_active`, `color_image`) VALUES
 (1, 'Red', 1, NULL),
-(2, 'Gold', 1, NULL);
+(2, 'Gold', 1, NULL),
+(3, 'pink', 1, 'WALL.png');
 
 -- --------------------------------------------------------
 
@@ -148,7 +163,11 @@ CREATE TABLE `tbl_frame_designs` (
 
 INSERT INTO `tbl_frame_designs` (`frame_design_id`, `design_name`, `price`, `is_active`) VALUES
 (1, 'DESIGN1', 450.00, 1),
-(2, 'Design 456', 1000.00, 1);
+(2, 'Design 456', 1000.00, 1),
+(3, 'desin 777', 200.00, 1),
+(4, 'D111', 200.00, 1),
+(5, 'D112', 300.00, 1),
+(6, 'D113', 400.00, 1);
 
 -- --------------------------------------------------------
 
@@ -194,11 +213,27 @@ CREATE TABLE `tbl_frame_order_items` (
 --
 
 INSERT INTO `tbl_frame_order_items` (`item_id`, `frame_category`, `r_product_id`, `c_product_id`, `source_type`, `cart_id`, `order_id`, `service_type`, `printing_order_item_id`, `primary_matboard_id`, `secondary_matboard_id`, `mount_type_id`, `quantity`, `base_price`, `extra_price`, `sub_total`) VALUES
-(301, 'READY_MADE', 1, NULL, 'ORDER', NULL, 100, 'FRAME_ONLY', NULL, NULL, NULL, NULL, 1, 350.00, 0.00, 350.00),
-(302, 'CUSTOM', NULL, 1, 'ORDER', NULL, 101, 'FRAME_ONLY', NULL, 1, NULL, 1, 1, 800.00, 0.00, 800.00),
-(303, 'READY_MADE', 2, NULL, 'ORDER', NULL, 102, 'FRAME&PRINT', 201, NULL, NULL, NULL, 1, 550.00, 80.00, 630.00),
-(304, 'CUSTOM', NULL, 2, 'ORDER', NULL, 103, 'FRAME&PRINT', 202, 1, NULL, 2, 1, 800.00, 120.00, 920.00),
-(305, 'CUSTOM', NULL, NULL, 'ORDER', NULL, 104, 'FRAME&PRINT', 203, NULL, NULL, NULL, 1, 0.00, 120.00, 120.00);
+(600, 'READY_MADE', 1, NULL, 'ORDER', NULL, 500, 'FRAME_ONLY', NULL, NULL, NULL, NULL, 2, 350.00, 0.00, 700.00),
+(601, 'READY_MADE', 2, NULL, 'ORDER', NULL, 501, 'FRAME_ONLY', NULL, NULL, NULL, NULL, 1, 550.00, 0.00, 550.00),
+(602, 'READY_MADE', 1, NULL, 'ORDER', NULL, 502, 'FRAME_ONLY', NULL, NULL, NULL, NULL, 2, 350.00, 0.00, 700.00),
+(603, 'READY_MADE', 2, NULL, 'ORDER', NULL, 502, 'FRAME_ONLY', NULL, NULL, NULL, NULL, 1, 400.00, 0.00, 400.00),
+(604, 'READY_MADE', 1, NULL, 'ORDER', NULL, 503, 'FRAME_ONLY', NULL, NULL, NULL, NULL, 1, 350.00, 0.00, 350.00),
+(610, 'CUSTOM', NULL, 50, 'ORDER', NULL, 510, 'FRAME_ONLY', NULL, NULL, NULL, 1, 1, 920.00, 0.00, 920.00),
+(611, 'CUSTOM', NULL, 51, 'ORDER', NULL, 511, 'FRAME_ONLY', NULL, NULL, NULL, 2, 1, 1450.00, 0.00, 1450.00),
+(612, 'CUSTOM', NULL, 52, 'ORDER', NULL, 512, 'FRAME_ONLY', NULL, 1, 1, 1, 1, 1150.00, 0.00, 1150.00),
+(613, 'CUSTOM', NULL, 53, 'ORDER', NULL, 513, 'FRAME_ONLY', NULL, NULL, NULL, NULL, 1, 1100.00, 0.00, 1100.00),
+(620, 'READY_MADE', 1, NULL, 'ORDER', NULL, 520, 'FRAME&PRINT', 400, NULL, NULL, NULL, 1, 350.00, 80.00, 430.00),
+(621, 'READY_MADE', 2, NULL, 'ORDER', NULL, 521, 'FRAME&PRINT', 401, NULL, NULL, NULL, 1, 550.00, 120.00, 670.00),
+(622, 'READY_MADE', 1, NULL, 'ORDER', NULL, 522, 'FRAME&PRINT', 402, NULL, NULL, NULL, 2, 350.00, 160.00, 860.00),
+(623, 'READY_MADE', 2, NULL, 'ORDER', NULL, 523, 'FRAME&PRINT', 403, NULL, NULL, NULL, 1, 550.00, 120.00, 670.00),
+(630, 'CUSTOM', NULL, 60, 'ORDER', NULL, 530, 'FRAME&PRINT', 410, NULL, NULL, 1, 1, 880.00, 80.00, 960.00),
+(631, 'CUSTOM', NULL, 61, 'ORDER', NULL, 531, 'FRAME&PRINT', 411, 1, NULL, 2, 1, 1270.00, 120.00, 1390.00),
+(632, 'CUSTOM', NULL, 62, 'ORDER', NULL, 532, 'FRAME&PRINT', 412, NULL, NULL, 1, 1, 1150.00, 120.00, 1270.00),
+(633, 'CUSTOM', NULL, 63, 'ORDER', NULL, 533, 'FRAME&PRINT', 413, 1, 1, NULL, 2, 1600.00, 240.00, 1840.00),
+(640, 'CUSTOM', NULL, NULL, 'ORDER', NULL, 540, 'FRAME&PRINT', 420, NULL, NULL, NULL, 3, 0.00, 240.00, 240.00),
+(641, 'CUSTOM', NULL, NULL, 'ORDER', NULL, 541, 'FRAME&PRINT', 421, NULL, NULL, NULL, 2, 0.00, 240.00, 240.00),
+(642, 'CUSTOM', NULL, NULL, 'ORDER', NULL, 542, 'FRAME&PRINT', 422, NULL, NULL, NULL, 5, 0.00, 400.00, 400.00),
+(643, 'CUSTOM', NULL, NULL, 'ORDER', NULL, 543, 'FRAME&PRINT', 423, NULL, NULL, NULL, 10, 0.00, 1200.00, 1200.00);
 
 -- --------------------------------------------------------
 
@@ -221,7 +256,16 @@ CREATE TABLE `tbl_frame_sizes` (
 --
 
 INSERT INTO `tbl_frame_sizes` (`frame_size_id`, `dimension`, `width_inch`, `height_inch`, `total_inch`, `price`, `is_active`) VALUES
-(1, '10x20', 10.00, 20.00, 200.00, 180.00, 1);
+(3, '3.5x5', 3.50, 5.00, 8.50, 9.00, 0),
+(5, '4x6', 4.00, 6.00, 11.00, 10.00, 0),
+(6, '5x7', 5.00, 7.00, 12.00, 20.00, 0),
+(7, '5x8', 5.00, 8.00, 13.00, 22.00, 0),
+(8, '6x8', 6.00, 8.00, 14.00, 30.00, 0),
+(10, '5x10', 5.00, 10.00, 16.00, 38.00, 0),
+(11, '5x12', 5.00, 12.00, 17.00, 55.00, 0),
+(12, '8x10', 8.00, 10.00, 18.00, 70.00, 0),
+(13, '8x11', 8.00, 11.00, 19.00, 80.00, 0),
+(14, '8x12', 8.00, 12.00, 21.00, 90.00, 0);
 
 -- --------------------------------------------------------
 
@@ -243,7 +287,9 @@ CREATE TABLE `tbl_frame_types` (
 
 INSERT INTO `tbl_frame_types` (`frame_type_id`, `type_name`, `type_price`, `image_name`, `is_active`) VALUES
 (1, 'Wooden', 0.00, NULL, 1),
-(2, 'Metal', 0.00, NULL, 1);
+(2, 'Metal', 0.00, NULL, 1),
+(3, 'Glass', 1200.00, 'type_1772771003_69aa56bbd3e31.jpg', 1),
+(4, 'type 1', 100.00, 'type_1773106474_69af752ae6652.jpg', 0);
 
 -- --------------------------------------------------------
 
@@ -264,7 +310,10 @@ CREATE TABLE `tbl_matboard_colors` (
 --
 
 INSERT INTO `tbl_matboard_colors` (`matboard_color_id`, `matboard_color_name`, `base_price`, `image_name`, `is_active`) VALUES
-(1, 'White', 0.00, '', 1);
+(1, 'White', 0.00, '', 1),
+(2, 'Maroon', 0.00, '6d08e54c-71e6-4ea7-bbb8-c36984f185d3.jpg', 1),
+(3, 'Green', 0.00, 'Screenshot 2026-03-10 154018.png', 0),
+(4, 'Blue', 0.00, 'Screenshot 2025-10-15 124225.png', 0);
 
 -- --------------------------------------------------------
 
@@ -327,14 +376,26 @@ CREATE TABLE `tbl_orders` (
 --
 
 INSERT INTO `tbl_orders` (`order_id`, `customer_id`, `order_reference_no`, `total_price`, `payment_method`, `order_status`, `delivery_option`, `delivery_address`, `created_at`) VALUES
-(1, 1, 'TEST-TODAY-001', 2500.00, 'CASH', 'PENDING', 'PICKUP', NULL, '2026-03-03 20:54:03'),
-(2, 1, 'TEST-YESTER-001', 1800.00, 'CASH', 'PROCESSING', 'PICKUP', NULL, '2026-03-02 20:55:19'),
-(3, 1, 'TEST-OLDER-001', 3200.00, 'CASH', 'COMPLETED', 'PICKUP', NULL, '2026-02-28 20:56:25'),
-(100, 2, 'RGA-TEST-001', 350.00, 'CASH', 'PENDING', 'PICKUP', NULL, '2026-03-05 18:03:31'),
-(101, 2, 'RGA-TEST-002', 800.00, 'CASH', 'PENDING', 'PICKUP', NULL, '2026-03-05 18:03:31'),
-(102, 2, 'RGA-TEST-003', 630.00, 'GCASH', 'PENDING', 'DELIVERY', '123 Test Street, Davao City', '2026-03-05 18:03:31'),
-(103, 2, 'RGA-TEST-004', 920.00, 'GCASH', 'PENDING', 'DELIVERY', '123 Test Street, Davao City', '2026-03-05 18:03:31'),
-(104, 2, 'RGA-TEST-005', 120.00, 'CASH', 'PENDING', 'PICKUP', NULL, '2026-03-05 18:03:31');
+(500, 1, 'RGA-2026-0500', 700.00, 'CASH', 'PENDING', 'PICKUP', NULL, '2026-03-10 09:00:00'),
+(501, 1, 'RGA-2026-0501', 550.00, 'CASH', 'PROCESSING', 'PICKUP', NULL, '2026-03-09 10:30:00'),
+(502, 2, 'RGA-2026-0502', 1100.00, 'GCASH', 'READY_FOR_PICKUP', 'PICKUP', NULL, '2026-03-08 14:00:00'),
+(503, 2, 'RGA-2026-0503', 350.00, 'CASH', 'COMPLETED', 'DELIVERY', '456 Obrero St, Davao City', '2026-03-05 08:00:00'),
+(510, 1, 'RGA-2026-0510', 920.00, 'CASH', 'PENDING', 'PICKUP', NULL, '2026-03-10 10:00:00'),
+(511, 2, 'RGA-2026-0511', 1450.00, 'GCASH', 'PROCESSING', 'PICKUP', NULL, '2026-03-09 11:00:00'),
+(512, 1, 'RGA-2026-0512', 1150.00, 'CASH', 'READY_FOR_PICKUP', 'PICKUP', NULL, '2026-03-08 09:00:00'),
+(513, 2, 'RGA-2026-0513', 1100.00, 'GCASH', 'COMPLETED', 'DELIVERY', '789 Pichon St, Davao City', '2026-03-04 08:00:00'),
+(520, 1, 'RGA-2026-0520', 430.00, 'CASH', 'PENDING', 'PICKUP', NULL, '2026-03-10 11:00:00'),
+(521, 2, 'RGA-2026-0521', 670.00, 'GCASH', 'PROCESSING', 'DELIVERY', '123 Ilustre St, Davao City', '2026-03-09 12:00:00'),
+(522, 1, 'RGA-2026-0522', 860.00, 'CASH', 'READY_FOR_PICKUP', 'PICKUP', NULL, '2026-03-07 10:00:00'),
+(523, 2, 'RGA-2026-0523', 670.00, 'GCASH', 'COMPLETED', 'PICKUP', NULL, '2026-03-03 08:00:00'),
+(530, 1, 'RGA-2026-0530', 960.00, 'CASH', 'PENDING', 'PICKUP', NULL, '2026-03-10 13:00:00'),
+(531, 2, 'RGA-2026-0531', 1390.00, 'GCASH', 'PROCESSING', 'DELIVERY', '321 Bonifacio St, Davao City', '2026-03-09 14:00:00'),
+(532, 1, 'RGA-2026-0532', 1270.00, 'CASH', 'READY_FOR_PICKUP', 'PICKUP', NULL, '2026-03-07 11:00:00'),
+(533, 2, 'RGA-2026-0533', 1840.00, 'GCASH', 'COMPLETED', 'DELIVERY', '654 Quirino Ave, Davao City', '2026-03-02 08:00:00'),
+(540, 1, 'RGA-2026-0540', 240.00, 'CASH', 'PENDING', 'PICKUP', NULL, '2026-03-10 14:00:00'),
+(541, 2, 'RGA-2026-0541', 240.00, 'GCASH', 'PROCESSING', 'PICKUP', NULL, '2026-03-09 15:00:00'),
+(542, 1, 'RGA-2026-0542', 400.00, 'CASH', 'READY_FOR_PICKUP', 'PICKUP', NULL, '2026-03-06 10:00:00'),
+(543, 2, 'RGA-2026-0543', 1200.00, 'GCASH', 'COMPLETED', 'DELIVERY', '999 Claveria St, Davao City', '2026-03-01 08:00:00');
 
 -- --------------------------------------------------------
 
@@ -384,7 +445,8 @@ CREATE TABLE `tbl_paper_type` (
 INSERT INTO `tbl_paper_type` (`paper_type_id`, `paper_name`, `pricing_logic`, `dimension`, `width_inch`, `height_inch`, `total_inch`, `price`, `is_active`) VALUES
 (1, 'Glossy', 'FIXED', '5x7', 5.00, 7.00, 12.00, 80.00, 1),
 (2, 'Matte', 'FIXED', '8x10', 8.00, 10.00, 18.00, 120.00, 1),
-(3, 'Canvas', 'CALCULATED', NULL, NULL, NULL, NULL, 0.00, 1);
+(3, 'Canvas', 'CALCULATED', NULL, NULL, NULL, NULL, 0.00, 1),
+(4, 'canvas', 'FIXED', '20x30', 20.00, 30.00, 60.00, 1200.00, 1);
 
 -- --------------------------------------------------------
 
@@ -395,9 +457,8 @@ INSERT INTO `tbl_paper_type` (`paper_type_id`, `paper_name`, `pricing_logic`, `d
 CREATE TABLE `tbl_payment` (
   `payment_id` int(11) NOT NULL,
   `order_id` int(11) NOT NULL,
-  `amount` decimal(10,2) NOT NULL,
+  `total_amount` decimal(10,2) DEFAULT NULL,
   `payment_status` enum('PENDING','PARTIAL','FULL') DEFAULT NULL,
-  `payment_proof` varchar(255) DEFAULT NULL,
   `date_paid` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -405,9 +466,30 @@ CREATE TABLE `tbl_payment` (
 -- Dumping data for table `tbl_payment`
 --
 
-INSERT INTO `tbl_payment` (`payment_id`, `order_id`, `amount`, `payment_status`, `payment_proof`, `date_paid`) VALUES
-(401, 102, 630.00, 'FULL', NULL, '2026-03-05 18:03:31'),
-(402, 103, 500.00, 'PARTIAL', 'uploads/gcash_test.jpg', '2026-03-05 18:03:31');
+INSERT INTO `tbl_payment` (`payment_id`, `order_id`, `total_amount`, `payment_status`, `date_paid`) VALUES
+(700, 503, 350.00, 'FULL', '2026-03-05 09:00:00'),
+(701, 513, 1100.00, 'FULL', '2026-03-04 10:00:00'),
+(702, 521, 335.00, 'PARTIAL', '2026-03-09 13:00:00'),
+(703, 523, 670.00, 'FULL', '2026-03-03 09:00:00'),
+(704, 531, 700.00, 'PARTIAL', '2026-03-09 15:00:00'),
+(705, 533, 1840.00, 'FULL', '2026-03-02 10:00:00'),
+(706, 541, 120.00, 'PARTIAL', '2026-03-09 16:00:00'),
+(707, 543, 1200.00, 'FULL', '2026-03-01 09:00:00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_payment_proof_uploads`
+--
+
+CREATE TABLE `tbl_payment_proof_uploads` (
+  `upload_id` int(11) NOT NULL,
+  `payment_id` int(11) NOT NULL,
+  `uploaded_amount` decimal(10,2) NOT NULL,
+  `payment_proof` varchar(255) NOT NULL,
+  `verification_status` varchar(50) DEFAULT 'Pending',
+  `upload_date` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -434,9 +516,18 @@ CREATE TABLE `tbl_printing_order_items` (
 --
 
 INSERT INTO `tbl_printing_order_items` (`printing_order_item_id`, `cart_id`, `order_id`, `paper_type_id`, `image_path`, `dimension`, `width_inch`, `height_inch`, `total_inch`, `quantity`, `sub_total`) VALUES
-(201, NULL, 102, 1, 'uploads/test_print_1.jpg', '5x7', 5.00, 7.00, 12.00, 1, 80.00),
-(202, NULL, 103, 2, 'uploads/test_print_2.jpg', '8x10', 8.00, 10.00, 18.00, 1, 120.00),
-(203, NULL, 104, 2, 'uploads/test_print_3.jpg', '8x10', 8.00, 10.00, 18.00, 1, 120.00);
+(400, NULL, 520, 1, 'uploads/print_rm_001.jpg', '5x7', 5.00, 7.00, 12.00, 1, 80.00),
+(401, NULL, 521, 2, 'uploads/print_rm_002.jpg', '8x10', 8.00, 10.00, 18.00, 1, 120.00),
+(402, NULL, 522, 1, 'uploads/print_rm_003.jpg', '5x7', 5.00, 7.00, 12.00, 2, 160.00),
+(403, NULL, 523, 2, 'uploads/print_rm_004.jpg', '8x10', 8.00, 10.00, 18.00, 1, 120.00),
+(410, NULL, 530, 1, 'uploads/print_cf_001.jpg', '5x7', 5.00, 7.00, 12.00, 1, 80.00),
+(411, NULL, 531, 2, 'uploads/print_cf_002.jpg', '8x10', 8.00, 10.00, 18.00, 1, 120.00),
+(412, NULL, 532, 2, 'uploads/print_cf_003.jpg', '8x10', 8.00, 10.00, 18.00, 1, 120.00),
+(413, NULL, 533, 2, 'uploads/print_cf_004.jpg', '8x10', 8.00, 10.00, 18.00, 2, 240.00),
+(420, NULL, 540, 1, 'uploads/print_only_001.jpg', '5x7', 5.00, 7.00, 12.00, 3, 240.00),
+(421, NULL, 541, 2, 'uploads/print_only_002.jpg', '8x10', 8.00, 10.00, 18.00, 2, 240.00),
+(422, NULL, 542, 1, 'uploads/print_only_003.jpg', '5x7', 5.00, 7.00, 12.00, 5, 400.00),
+(423, NULL, 543, 2, 'uploads/print_only_004.jpg', '8x10', 8.00, 10.00, 18.00, 10, 1200.00);
 
 -- --------------------------------------------------------
 
@@ -461,7 +552,10 @@ CREATE TABLE `tbl_ready_made_product` (
 
 INSERT INTO `tbl_ready_made_product` (`r_product_id`, `product_name`, `frame_type_id`, `frame_design_id`, `frame_color_id`, `width`, `height`, `product_price`) VALUES
 (1, '5x7 Wooden Red Frame', 1, 1, 1, 5.00, 7.00, 350.00),
-(2, '8x10 Metal Gold Frame', 2, 1, 2, 8.00, 10.00, 550.00);
+(2, '8x10 Metal Gold Frame', 2, 1, 2, 8.00, 10.00, 550.00),
+(3, 'Product 123', 1, 1, 2, 12.00, 12.00, 450.00),
+(4, 'Product456', 2, 1, 1, 12.00, 20.00, 1200.00),
+(5, 'Frame 111', 1, 3, 2, 12.00, 27.00, 200.00);
 
 -- --------------------------------------------------------
 
@@ -477,6 +571,15 @@ CREATE TABLE `tbl_ready_made_product_images` (
   `uploaded_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `tbl_ready_made_product_images`
+--
+
+INSERT INTO `tbl_ready_made_product_images` (`image_id`, `r_product_id`, `image_name`, `is_primary`, `uploaded_at`) VALUES
+(1, 3, '1772770544_1343d63d-4e26-4448-a83c-02a0efced7df.jpg', 1, '2026-03-06 12:15:44'),
+(2, 4, '1772770899_05d6cfc1-f04c-47d8-ae79-78f340dfc68c.jpg', 1, '2026-03-06 12:21:39'),
+(3, 5, '1772771477_6f0ae6a3-d4a7-402c-af67-df88e5c59db9.jpg', 1, '2026-03-06 12:31:17');
+
 -- --------------------------------------------------------
 
 --
@@ -489,6 +592,15 @@ CREATE TABLE `tbl_ready_made_product_stocks` (
   `quantity` int(11) NOT NULL,
   `date_updated` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tbl_ready_made_product_stocks`
+--
+
+INSERT INTO `tbl_ready_made_product_stocks` (`stock_id`, `r_product_id`, `quantity`, `date_updated`) VALUES
+(1, 3, 12, '2026-03-06 12:15:44'),
+(2, 4, 2, '2026-03-06 12:21:39'),
+(3, 5, 2, '2026-03-06 12:31:17');
 
 -- --------------------------------------------------------
 
@@ -636,6 +748,13 @@ ALTER TABLE `tbl_payment`
   ADD KEY `order_id` (`order_id`);
 
 --
+-- Indexes for table `tbl_payment_proof_uploads`
+--
+ALTER TABLE `tbl_payment_proof_uploads`
+  ADD PRIMARY KEY (`upload_id`),
+  ADD KEY `payment_id` (`payment_id`);
+
+--
 -- Indexes for table `tbl_printing_order_items`
 --
 ALTER TABLE `tbl_printing_order_items`
@@ -688,31 +807,31 @@ ALTER TABLE `tbl_admin`
 -- AUTO_INCREMENT for table `tbl_cart`
 --
 ALTER TABLE `tbl_cart`
-  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `tbl_customer`
 --
 ALTER TABLE `tbl_customer`
-  MODIFY `customer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `customer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `tbl_custom_frame_product`
 --
 ALTER TABLE `tbl_custom_frame_product`
-  MODIFY `c_product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `c_product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
 
 --
 -- AUTO_INCREMENT for table `tbl_frame_colors`
 --
 ALTER TABLE `tbl_frame_colors`
-  MODIFY `frame_color_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `frame_color_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `tbl_frame_designs`
 --
 ALTER TABLE `tbl_frame_designs`
-  MODIFY `frame_design_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `frame_design_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `tbl_frame_design_images`
@@ -724,25 +843,25 @@ ALTER TABLE `tbl_frame_design_images`
 -- AUTO_INCREMENT for table `tbl_frame_order_items`
 --
 ALTER TABLE `tbl_frame_order_items`
-  MODIFY `item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=306;
+  MODIFY `item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=644;
 
 --
 -- AUTO_INCREMENT for table `tbl_frame_sizes`
 --
 ALTER TABLE `tbl_frame_sizes`
-  MODIFY `frame_size_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `frame_size_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `tbl_frame_types`
 --
 ALTER TABLE `tbl_frame_types`
-  MODIFY `frame_type_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `frame_type_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `tbl_matboard_colors`
 --
 ALTER TABLE `tbl_matboard_colors`
-  MODIFY `matboard_color_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `matboard_color_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `tbl_mount_type`
@@ -760,7 +879,7 @@ ALTER TABLE `tbl_notifications`
 -- AUTO_INCREMENT for table `tbl_orders`
 --
 ALTER TABLE `tbl_orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=105;
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=544;
 
 --
 -- AUTO_INCREMENT for table `tbl_otp`
@@ -772,37 +891,43 @@ ALTER TABLE `tbl_otp`
 -- AUTO_INCREMENT for table `tbl_paper_type`
 --
 ALTER TABLE `tbl_paper_type`
-  MODIFY `paper_type_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `paper_type_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `tbl_payment`
 --
 ALTER TABLE `tbl_payment`
-  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=403;
+  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=708;
+
+--
+-- AUTO_INCREMENT for table `tbl_payment_proof_uploads`
+--
+ALTER TABLE `tbl_payment_proof_uploads`
+  MODIFY `upload_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `tbl_printing_order_items`
 --
 ALTER TABLE `tbl_printing_order_items`
-  MODIFY `printing_order_item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=204;
+  MODIFY `printing_order_item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=424;
 
 --
 -- AUTO_INCREMENT for table `tbl_ready_made_product`
 --
 ALTER TABLE `tbl_ready_made_product`
-  MODIFY `r_product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `r_product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `tbl_ready_made_product_images`
 --
 ALTER TABLE `tbl_ready_made_product_images`
-  MODIFY `image_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `image_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `tbl_ready_made_product_stocks`
 --
 ALTER TABLE `tbl_ready_made_product_stocks`
-  MODIFY `stock_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `stock_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `tbl_reviews`
@@ -873,6 +998,12 @@ ALTER TABLE `tbl_otp`
 --
 ALTER TABLE `tbl_payment`
   ADD CONSTRAINT `tbl_payment_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `tbl_orders` (`order_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `tbl_payment_proof_uploads`
+--
+ALTER TABLE `tbl_payment_proof_uploads`
+  ADD CONSTRAINT `tbl_payment_proof_uploads_ibfk_1` FOREIGN KEY (`payment_id`) REFERENCES `tbl_payment` (`payment_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `tbl_printing_order_items`
