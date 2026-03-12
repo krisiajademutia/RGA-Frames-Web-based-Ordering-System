@@ -1402,18 +1402,12 @@ html {
 }
 
 .opt-label {
-    font-family: var(--font-secondary);
+     font-family: var(--font-secondary);
     display: block;
     font-size: 14px;
     font-weight: 600;
     margin-bottom: 8px;
     color: #004030;
-    text-transform: uppercase;
-}
-
-.opt-label span {
-    color: #D97706;
-    margin-left: 2px;
 }
 
 .opt-input {
@@ -1428,8 +1422,8 @@ html {
 }
 
 .opt-upload-zone {
-    margin-top: 5px;
-    width: 100%;
+    margin-top: 27px;
+    width: 522px;
     height: 116px;
     border: 2px dashed #b0b8b7;
     border-radius: 12px;
@@ -1439,7 +1433,7 @@ html {
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    position: relative;
+    overflow: visible !important;
 }
 
 .opt-upload-zone input {
