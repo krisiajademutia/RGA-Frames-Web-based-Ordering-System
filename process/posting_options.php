@@ -45,25 +45,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_option'])) {
 }
 
 
-// ── EDIT ─────────────────────────────────────────────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'edit') {
-    $tab = $_POST['tab'] ?? '';
+// ── EDIT (UPDATE) ────────────────────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_option']) || ($_POST['action'] ?? '') === 'edit')) {
+    $active_tab = $_GET['tab'] ?? ($_POST['tab'] ?? '');
     $id  = (int)($_POST['option_id'] ?? 0);
 
-    // Map the incoming form fields to the array expected by the Repository
-    $data = [
-        'name'        => $_POST['edit_name'] ?? '',
-        'price'       => $_POST['edit_price'] ?? 0,
-        'width_inch'  => $_POST['edit_width'] ?? 0,
-        'height_inch' => $_POST['edit_height'] ?? 0,
+    // Map the incoming form fields from admin_custom_frame_options.php
+    // We pass the whole $_POST so the Repository-specific mapping we set up earlier works
+    $data = $_POST;
+    
+    // Ensure is_active is captured correctly
+    $data['is_active'] = isset($_POST['is_active']) ? (int)$_POST['is_active'] : 1;
 
-        // FIX: read status from form instead of forcing active
-        'is_active'   => isset($_POST['edit_is_active']) ? (int)$_POST['edit_is_active'] : 1
-    ];
-
-    if ($id > 0 && $tab !== '') {
-        $success = $service->updateOption($tab, $id, $data, $_FILES);
-        header("Location: ../admin/admin_custom_frame_options.php?tab=$tab&success=" . ($success ? "1" : "0"));
+    if ($id > 0 && $active_tab !== '') {
+        $success = $service->updateOption($active_tab, $id, $data, $_FILES);
+        header("Location: ../admin/admin_custom_frame_options.php?tab=$active_tab&success=" . ($success ? "1" : "0"));
         exit();
     }
 }

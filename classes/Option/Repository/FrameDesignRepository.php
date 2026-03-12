@@ -10,6 +10,15 @@ class FrameDesignRepository implements OptionRepositoryInterface {
         $this->uploadDir = $uploadDir;
     }
 
+    // NEW: Added to allow fetching design details for editing
+    public function getById(int $id): ?array {
+        $stmt = $this->db->prepare("SELECT * FROM tbl_frame_designs WHERE frame_design_id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_assoc() ?: null;
+    }
+
     public function create(array $data, array $files): bool {
         // 1. Insert into tbl_frame_designs
         $isActive = (int)($data['is_active'] ?? 1);
@@ -56,8 +65,13 @@ class FrameDesignRepository implements OptionRepositoryInterface {
     }
 
     public function update(int $id, array $data, array $files = []): bool {
+        // Debug/Fix: Match keys used in your form and DB
+        $designName = $data['design_name'] ?? ($data['name'] ?? '');
+        $price = $data['price'] ?? 0;
+        $isActive = (int)($data['is_active'] ?? 1);
+
         $stmt = $this->db->prepare("UPDATE tbl_frame_designs SET design_name = ?, price = ?, is_active = ? WHERE frame_design_id = ?");
-        $stmt->bind_param("sdii", $data['name'], $data['price'], $data['is_active'], $id);
+        $stmt->bind_param("sdii", $designName, $price, $isActive, $id);
 
         if (!$stmt->execute()) {
             return false;
