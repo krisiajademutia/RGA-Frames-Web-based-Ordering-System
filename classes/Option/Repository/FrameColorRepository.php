@@ -10,6 +10,15 @@ class FrameColorRepository implements OptionRepositoryInterface {
         $this->uploadDir = $uploadDir;
     }
 
+    // NEW: Implemented to allow fetching details when the pencil icon is clicked
+    public function getById(int $id): ?array {
+        $stmt = $this->db->prepare("SELECT * FROM tbl_frame_colors WHERE frame_color_id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_assoc() ?: null;
+    }
+
     public function create(array $data, array $files): bool {
         if (!isset($files['color_image']) || $files['color_image']['error'] !== UPLOAD_ERR_OK) {
             return false;
@@ -33,38 +42,36 @@ class FrameColorRepository implements OptionRepositoryInterface {
         return $this->db->query("SELECT * FROM tbl_frame_colors ORDER BY color_name ASC");
     }
 
-   public function update(int $id, array $data, array $files = []): bool {
+    public function update(int $id, array $data, array $files = []): bool {
+        // Debug/Fix: Ensure we use 'color_name' from the form data
+        $colorName = $data['color_name'] ?? ($data['name'] ?? '');
+        $isActive = (int)($data['is_active'] ?? 1);
 
-    if (isset($files['color_image']) && $files['color_image']['error'] === UPLOAD_ERR_OK) {
+        if (isset($files['color_image']) && $files['color_image']['error'] === UPLOAD_ERR_OK) {
+            $ext = pathinfo($files['color_image']['name'], PATHINFO_EXTENSION);
+            $fileName = 'color_' . time() . '_' . uniqid() . '.' . $ext;
+            $targetPath = ($this->uploadDir ?? "../../uploads/") . $fileName;
 
-        $ext = pathinfo($files['color_image']['name'], PATHINFO_EXTENSION);
-        $fileName = 'color_' . time() . '_' . uniqid() . '.' . $ext;
-        $targetPath = ($this->uploadDir ?? "../../uploads/") . $fileName;
-
-        if (move_uploaded_file($files['color_image']['tmp_name'], $targetPath)) {
-
-            $stmt = $this->db->prepare("
-                UPDATE tbl_frame_colors 
-                SET color_name = ?, color_image = ?, is_active = ?
-                WHERE frame_color_id = ?
-            ");
-
-            $stmt->bind_param("ssii", $data['name'], $fileName, $data['is_active'], $id);
-            return $stmt->execute();
+            if (move_uploaded_file($files['color_image']['tmp_name'], $targetPath)) {
+                $stmt = $this->db->prepare("
+                    UPDATE tbl_frame_colors 
+                    SET color_name = ?, color_image = ?, is_active = ?
+                    WHERE frame_color_id = ?
+                ");
+                $stmt->bind_param("ssii", $colorName, $fileName, $isActive, $id);
+                return $stmt->execute();
+            }
+            return false;
         }
 
-        return false;
+        $stmt = $this->db->prepare("
+            UPDATE tbl_frame_colors 
+            SET color_name = ?, is_active = ?
+            WHERE frame_color_id = ?
+        ");
+        $stmt->bind_param("sii", $colorName, $isActive, $id);
+        return $stmt->execute();
     }
-
-    $stmt = $this->db->prepare("
-        UPDATE tbl_frame_colors 
-        SET color_name = ?, is_active = ?
-        WHERE frame_color_id = ?
-    ");
-
-    $stmt->bind_param("sii", $data['name'], $data['is_active'], $id);
-    return $stmt->execute();
-}
 
     public function delete(int $id): bool {
         $stmt = $this->db->prepare("DELETE FROM tbl_frame_colors WHERE frame_color_id = ?");
