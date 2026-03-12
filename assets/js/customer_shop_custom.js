@@ -5,11 +5,11 @@ const state = {
     frameTypeId:       null,  frameTypeName:    '',  frameTypePrice:   0,
     frameDesignId:     null,  frameDesignName:  '',  frameDesignPrice: 0,
     frameColorId:      null,  frameColorName:   '',
-    frameSizeId:       null,  frameWidth:       0,   frameHeight:      0,  frameSizePrice: 0,
+    frameSizeId:       null,  frameWidth:       0,   frameHeight:      0,
     primaryMatboard:   0,     primaryMatName:   '',  primaryMatPrice:  0,
     secondaryMatboard: 0,     secondaryMatName: '',  secondaryMatPrice:0,
     mountTypeId:       null,  mountName:        '',  mountPrice:       0,
-    paperTypeId:       null,  paperName:        '',  paperPrice:       0,  paperLogic: 'FIXED',
+    paperTypeId:       null,  paperName:        '',  paperMultiplier:  0,
     imageUploaded:     false, imageName:        '',
     quantity:          1,
 };
@@ -29,6 +29,14 @@ function showRow(rowId, valId, text) {
 function hideRow(rowId) {
     const row = qs('#' + rowId);
     if (row) row.style.display = 'none';
+}
+
+function setPrice(elId, amount) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.textContent = amount > 0
+        ? '₱' + amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : '';
 }
 
 // ── Radio-style selectors ────────────────────────────────
@@ -55,7 +63,7 @@ initSelector('.csc-service-option[data-value="FRAME_ONLY"], .csc-service-option[
         hideRow('sum-image-row');
         hideRow('sum-paper-row');
         state.paperTypeId   = null;
-        state.paperPrice    = 0;
+        state.paperMultiplier = 0;
         state.imageUploaded = false;
         state.imageName     = '';
     } else {
@@ -73,6 +81,7 @@ initSelector('.csc-type-option', card => {
     state.frameTypePrice = parseFloat(card.dataset.price) || 0;
     state.frameTypeName  = card.querySelector('.csc-type-name').textContent.trim();
     showRow('sum-frame-type-row', 'sum-frame-type', state.frameTypeName);
+    setPrice('sum-frame-type-price', state.frameTypePrice);
     updateTotal();
 });
 
@@ -94,35 +103,69 @@ initSelector('.csc-color-card', card => {
 });
 
 // ── Frame Size Pills ─────────────────────────────────────
+const customSizeWrap = qs('#csc-custom-size-wrap');
+
 qsa('.csc-size-pill').forEach(pill => {
     pill.addEventListener('click', () => {
         qsa('.csc-size-pill').forEach(p => p.classList.remove('active'));
         pill.classList.add('active');
-        state.frameSizeId    = pill.dataset.value;
-        state.frameSizePrice = parseFloat(pill.dataset.price) || 0;
-        const w = pill.dataset.width;
-        const h = pill.dataset.height;
-        if (pill.dataset.value !== 'OTHER' && w && h) {
-            qs('#csc-width').value  = w;
-            qs('#csc-height').value = h;
-            state.frameWidth  = parseFloat(w);
-            state.frameHeight = parseFloat(h);
+        state.frameSizeId = pill.dataset.value;
+
+        if (pill.dataset.value === 'OTHER') {
+            // Show custom fields, clear preset values
+            if (customSizeWrap) customSizeWrap.style.display = 'flex';
+            qs('#csc-width').value  = '';
+            qs('#csc-height').value = '';
+            state.frameWidth  = 0;
+            state.frameHeight = 0;
+        } else {
+            // Hide custom fields, use preset dimensions
+            if (customSizeWrap) customSizeWrap.style.display = 'none';
+            const w = pill.dataset.width;
+            const h = pill.dataset.height;
+            if (w && h) {
+                state.frameWidth  = parseFloat(w);
+                state.frameHeight = parseFloat(h);
+            }
         }
         updateSizeLabel();
         updateTotal();
     });
 });
 
-// ── Custom Width / Height ────────────────────────────────
+// ── Custom Width / Height (WITH KUYA'S SIZE LIMITS) ──────
 ['#csc-width', '#csc-height'].forEach(sel => {
     qs(sel)?.addEventListener('input', () => {
-        state.frameWidth  = parseFloat(qs('#csc-width').value)  || 0;
-        state.frameHeight = parseFloat(qs('#csc-height').value) || 0;
+        let w = parseFloat(qs('#csc-width').value)  || 0;
+        let h = parseFloat(qs('#csc-height').value) || 0;
+        
+        let maxSide = Math.max(w, h);
+        let minSide = Math.min(w, h);
+
+        // RULE 1: Global Maximum (48x96)
+        if (maxSide > 96 || minSide > 48) {
+            alert("Maximum frame size allowed is 48x96 inches.");
+            qs('#csc-width').value = '';
+            qs('#csc-height').value = '';
+            w = 0; h = 0;
+        }
+
+        // RULE 2: Dynamic ₱75 Design Limit (Max 12x18)
+        // If the design price is ₱75 or below, restrict the size!
+        if (state.frameDesignPrice > 0 && state.frameDesignPrice <= 75 && (maxSide > 18 || minSide > 12)) {
+            alert("Kuya's Rule: Designs in this price range (₱75) are only available for sizes up to 12x18 inches.");
+            qs('#csc-width').value = '';
+            qs('#csc-height').value = '';
+            w = 0; h = 0;
+        }
+
+        state.frameWidth  = w;
+        state.frameHeight = h;
+
         qsa('.csc-size-pill').forEach(p => p.classList.remove('active'));
         const otherPill = qs('.csc-size-pill[data-value="OTHER"]');
         if (otherPill) otherPill.classList.add('active');
-        state.frameSizeId    = 'OTHER';
-        state.frameSizePrice = 0;
+        state.frameSizeId = 'OTHER';
         updateSizeLabel();
         updateTotal();
     });
@@ -132,6 +175,7 @@ function updateSizeLabel() {
     const w = state.frameWidth, h = state.frameHeight;
     if (w && h) {
         showRow('sum-size-row', 'sum-size', w + '" × ' + h + '"');
+        setPrice('sum-size-price', 0); // Hide this, price is now baked into the Design calculation
     } else {
         hideRow('sum-size-row');
     }
@@ -156,17 +200,19 @@ initSelector('#csc-secondary-matboard .csc-matboard-card', card => {
 });
 
 function updateMatboardSummary() {
-    const pri = state.primaryMatboard;
-    const sec = state.secondaryMatboard;
+    const pri = parseInt(state.primaryMatboard)  || 0;
+    const sec = parseInt(state.secondaryMatboard) || 0;
 
-    if (pri == 0 && sec == 0) {
+    if (pri === 0 && sec === 0) {
         hideRow('sum-matboard-row');
-    } else if (pri != 0 && sec != 0) {
+    } else if (pri !== 0 && sec !== 0) {
+        const matTotal = state.primaryMatPrice + state.secondaryMatPrice;
         showRow('sum-matboard-row', 'sum-matboard', state.primaryMatName + ' + ' + state.secondaryMatName);
-    } else if (pri != 0) {
-        showRow('sum-matboard-row', 'sum-matboard', state.primaryMatName);
+        setPrice('sum-matboard-price', matTotal);
     } else {
-        showRow('sum-matboard-row', 'sum-matboard', state.secondaryMatName);
+        const name = pri !== 0 ? state.primaryMatName : state.secondaryMatName;
+        showRow('sum-matboard-row', 'sum-matboard', name);
+        setPrice('sum-matboard-price', 0);
     }
 }
 
@@ -176,6 +222,7 @@ initSelector('.csc-section:last-of-type .csc-service-option', card => {
     state.mountPrice  = parseFloat(card.dataset.price) || 0;
     state.mountName   = card.querySelector('.csc-service-label').textContent.trim();
     showRow('sum-mount-row', 'sum-mount', state.mountName);
+    setPrice('sum-mount-price', state.mountPrice);
     updateTotal();
 });
 
@@ -183,8 +230,7 @@ initSelector('.csc-section:last-of-type .csc-service-option', card => {
 qs('#csc-paper-type')?.addEventListener('change', function() {
     const opt = this.options[this.selectedIndex];
     state.paperTypeId = this.value || null;
-    state.paperPrice  = parseFloat(opt.dataset.price) || 0;
-    state.paperLogic  = opt.dataset.logic || 'FIXED';
+    state.paperMultiplier = parseFloat(opt.dataset.multiplier) || 0; // Grab the new multiplier!
     state.paperName   = opt.textContent.trim();
     if (this.value) {
         showRow('sum-paper-row', 'sum-paper', state.paperName);
@@ -231,29 +277,90 @@ qs('#csc-qty')?.addEventListener('input', function() {
     updateTotal();
 });
 
-// ── Total Calculation ────────────────────────────────────
+// ── THE BRAIN: Total Calculation (Kuya's Logic) ──────────
 function updateTotal() {
-    let base = 0;
-    base += state.frameTypePrice;
-    base += state.frameDesignPrice;
+    let frameBase = 0;
+    let printBase = 0;
+    let extras    = 0;
 
-    if (state.frameSizeId && state.frameSizeId !== 'OTHER') {
-        base += state.frameSizePrice;
-    } else if (state.frameWidth && state.frameHeight) {
-        const totalInch = (state.frameWidth * 2) + (state.frameHeight * 2);
-        base += totalInch * 10;
+    const w = state.frameWidth || 0;
+    const h = state.frameHeight || 0;
+
+    // --- 1. FRAME MATH ---
+    frameBase += state.frameTypePrice;
+    
+    let calculatedDesignPrice = 0;
+    if (w > 0 && h > 0 && state.frameDesignPrice > 0) {
+        // Kuya's Formula: ((W + H) / 6) * Frame Design Price
+        calculatedDesignPrice = ((w + h) / 6) * state.frameDesignPrice;
+        frameBase += calculatedDesignPrice;
+        
+        // Show Base Price in the label, but Calculated Price in the amount column!
+        const designLabel = `${state.frameDesignName} (Base: ₱${state.frameDesignPrice.toFixed(2)})`;
+        showRow('sum-design-row', 'sum-design', designLabel);
+        setPrice('sum-design-price', calculatedDesignPrice); 
+    } else {
+        // If they haven't typed a size yet, just show the normal name and 0 price
+        showRow('sum-design-row', 'sum-design', state.frameDesignName);
+        setPrice('sum-design-price', 0);
     }
 
-    base += state.primaryMatPrice;
-    base += state.secondaryMatPrice;
-    base += state.mountPrice;
+    // --- 2. EXTRAS MATH (Matboards & Mounts) ---
+    const priId = parseInt(state.primaryMatboard)  || 0;
+    const secId = parseInt(state.secondaryMatboard) || 0;
+    if (priId > 0 && secId > 0) {
+        extras += state.primaryMatPrice;
+        extras += state.secondaryMatPrice;
+    }
+    extras += state.mountPrice;
 
-    if (state.serviceType === 'FRAME_PRINT') {
-        base += state.paperPrice;
+    // --- 3. PRINT MATH ---
+    if (state.serviceType === 'FRAME_PRINT' && w > 0 && h > 0 && state.paperTypeId) {
+        let isFixed = false;
+        
+        // Step A: Check Menu (Fixed Prices)
+        if (typeof CSC_DATA !== 'undefined' && CSC_DATA.fixedPrintPrices) {
+            const matchedPackage = CSC_DATA.fixedPrintPrices.find(
+                f => f.paper_id == state.paperTypeId && f.width == w && f.height == h
+            );
+            if (matchedPackage) {
+                printBase = matchedPackage.price;
+                isFixed = true;
+                // Tell them it's a fixed package price
+                showRow('sum-paper-row', 'sum-paper', `${state.paperName} (Fixed Package)`);
+            }
+        }
+
+        // Step B: Custom Math (W x H x Multiplier)
+        if (!isFixed) {
+            printBase = (w * h) * state.paperMultiplier;
+            // Tell them the multiplier rate!
+            showRow('sum-paper-row', 'sum-paper', `${state.paperName} (₱${state.paperMultiplier.toFixed(2)}/sq.in)`);
+        }
+        
+        setPrice('sum-paper-price', printBase); 
+    } else if (state.serviceType === 'FRAME_PRINT' && state.paperTypeId) {
+        showRow('sum-paper-row', 'sum-paper', state.paperName);
+        setPrice('sum-paper-price', 0);
+    } else {
+        setPrice('sum-paper-price', 0);
     }
 
-    const total = base * state.quantity;
-    qs('#csc-total').textContent = '₱' + total.toLocaleString('en-PH', {
+  // --- 4. GRAND TOTAL ---
+    const unitTotal  = frameBase + extras + printBase;
+    let grandTotal = unitTotal * state.quantity;
+
+    // Apply Kuya's 20% Discount for Photographers & Loyal Customers!
+    if (typeof HAS_DISCOUNT !== 'undefined' && HAS_DISCOUNT) {
+        const discountAmount = grandTotal * 0.20;
+        grandTotal = grandTotal - discountAmount;
+        
+        // Show a cool label so they know they got 20% off
+        const serviceLabel = state.serviceType === 'FRAME_PRINT' ? 'Frame & Print' : 'Frame only';
+        showRow('sum-service-row', 'sum-service', `${serviceLabel} (⭐ 20% LOYALTY DISCOUNT!)`);
+    }
+
+    qs('#csc-total').textContent = '₱' + grandTotal.toLocaleString('en-PH', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     });
@@ -286,8 +393,8 @@ async function submitForm(action) {
 
     const cartBtn = qs('#csc-add-to-cart');
     const buyBtn  = qs('#csc-buy-now');
-    cartBtn.disabled = buyBtn.disabled = true;
-    cartBtn.textContent = buyBtn.textContent = 'Processing...';
+    if (cartBtn) { cartBtn.disabled = true; cartBtn.textContent = 'Processing...'; }
+    if (buyBtn)  { buyBtn.disabled = true; buyBtn.textContent = 'Processing...'; }
 
     try {
         const response = await fetch('../process/custom_frame_process.php', {
@@ -307,9 +414,8 @@ async function submitForm(action) {
     } catch (err) {
         showToast('Network error. Please try again.', 'error');
     } finally {
-        cartBtn.disabled = buyBtn.disabled = false;
-        cartBtn.innerHTML = '<i class="fas fa-cart-shopping"></i> Add to Cart';
-        buyBtn.textContent = 'Buy Now';
+        if (cartBtn) { cartBtn.disabled = false; cartBtn.innerHTML = '<i class="fas fa-cart-shopping"></i> Add to Cart'; }
+        if (buyBtn)  { buyBtn.disabled = false; buyBtn.textContent = 'Buy Now'; }
     }
 }
 
@@ -337,26 +443,58 @@ qs('#csc-add-to-cart')?.addEventListener('click', () => submitForm('add_to_cart'
 qs('#csc-buy-now')?.addEventListener('click',     () => submitForm('buy_now'));
 
 // ── Lightbox ─────────────────────────────────────────────
-document.addEventListener('click', function(e) {
-    const btn = e.target.closest('.csc-design-zoom-btn');
-    if (btn) {
-        e.preventDefault();
-        e.stopPropagation();
-        qs('#csc-lightbox-img').src   = btn.dataset.img;
-        qs('#csc-lightbox-name').textContent = btn.dataset.name;
-        qs('#csc-lightbox').style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    }
-});
+let lbImages = [];
+let lbIndex  = 0;
+
+function openLightbox(images, name, startIndex) {
+    lbImages = images;
+    lbIndex  = startIndex || 0;
+    qs('#csc-lightbox-name').textContent = name;
+    renderLightboxImage();
+    qs('#csc-lightbox').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function renderLightboxImage() {
+    qs('#csc-lightbox-img').src = lbImages[lbIndex];
+    const total = lbImages.length;
+    qs('#csc-lightbox-counter').textContent = total > 1 ? (lbIndex + 1) + ' / ' + total : '';
+    qs('#csc-lightbox-prev')?.classList.toggle('hidden', lbIndex === 0);
+    qs('#csc-lightbox-next')?.classList.toggle('hidden', lbIndex === total - 1);
+}
 
 function closeLightbox() {
     qs('#csc-lightbox').style.display = 'none';
     document.body.style.overflow = '';
+    lbImages = [];
 }
+
+document.addEventListener('click', function(e) {
+    const wrap = e.target.closest('.csc-design-img-wrap');
+    if (wrap) {
+        e.preventDefault();
+        e.stopPropagation();
+        const images = JSON.parse(wrap.dataset.images || '[]');
+        const name   = wrap.dataset.name || '';
+        if (images.length) openLightbox(images, name, 0);
+    }
+});
+
+qs('#csc-lightbox-prev')?.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (lbIndex > 0) { lbIndex--; renderLightboxImage(); }
+});
+
+qs('#csc-lightbox-next')?.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (lbIndex < lbImages.length - 1) { lbIndex++; renderLightboxImage(); }
+});
 
 qs('#csc-lightbox-close')?.addEventListener('click', closeLightbox);
 qs('#csc-lightbox-backdrop')?.addEventListener('click', closeLightbox);
 
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft'  && lbImages.length) { if (lbIndex > 0) { lbIndex--; renderLightboxImage(); } }
+    if (e.key === 'ArrowRight' && lbImages.length) { if (lbIndex < lbImages.length - 1) { lbIndex++; renderLightboxImage(); } }
 });

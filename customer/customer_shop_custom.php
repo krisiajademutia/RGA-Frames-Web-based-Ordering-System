@@ -16,6 +16,36 @@ $paperTypes     = $builderData['paper_types'];
 
 // Preset sizes from Figma (filter from DB, fallback to fixed list)
 $presetLabels = ['4×6"','5×7"','8×10"','8×12"','11×14"','12×16"','16×20"','18×24"','20×24"'];
+
+// --- DISCOUNT LOGIC (Photographer or Repetitive Customer) ---
+$customerId = (int)($_SESSION['user_id'] ?? 0);
+$hasDiscount = false;
+
+if ($customerId > 0) {
+    // 1. Check if Photographer
+    $stmt1 = $conn->prepare("SELECT customer_type FROM tbl_customers WHERE customer_id = ?");
+    $stmt1->bind_param("i", $customerId);
+    $stmt1->execute();
+    $custRow = $stmt1->get_result()->fetch_assoc();
+    $isPhotographer = ($custRow && strtolower($custRow['customer_type']) === 'photographer');
+
+    // 2. Count Previous Orders (e.g., 3 or more successful orders = Repetitive)
+    // Adjust the number "3" below if Kuya wants a different threshold for "repetitive"
+    $stmt2 = $conn->prepare("SELECT COUNT(order_id) as order_count FROM tbl_orders WHERE customer_id = ? AND order_status != 'CANCELLED'");
+    $stmt2->bind_param("i", $customerId);
+    $stmt2->execute();
+    $orderRow = $stmt2->get_result()->fetch_assoc();
+    $isRepetitive = ($orderRow && (int)$orderRow['order_count'] >= 3);
+
+    if ($isPhotographer || $isRepetitive) {
+        $hasDiscount = true;
+    }
+}
+?>
+
+<script>
+    const HAS_DISCOUNT = <?= $hasDiscount ? 'true' : 'false' ?>;
+</script>
 ?>
 
 <div class="csc-page">
@@ -86,8 +116,7 @@ $presetLabels = ['4×6"','5×7"','8×10"','8×12"','11×14"','12×16"','16×20"'
                                     <option value="">Select paper type</option>
                                     <?php foreach ($paperTypes as $pt): ?>
                                         <option value="<?= $pt['paper_type_id'] ?>"
-                                                data-price="<?= $pt['price'] ?>"
-                                                data-logic="<?= $pt['pricing_logic'] ?>">
+                                                data-multiplier="<?= $pt['multiplier'] ?>">
                                             <?= htmlspecialchars($pt['paper_name']) ?>
                                         </option>
                                     <?php endforeach; ?>
@@ -115,18 +144,20 @@ $presetLabels = ['4×6"','5×7"','8×10"','8×12"','11×14"','12×16"','16×20"'
                         <!-- Frame Designs Grid -->
                         <div class="csc-design-grid">
                             <?php foreach ($frameDesigns as $fd): ?>
+                                <?php $imgs = !empty($fd['images']) ? $fd['images'] : []; ?>
                                 <label class="csc-design-card" data-value="<?= $fd['frame_design_id'] ?>" data-price="<?= $fd['price'] ?>">
                                     <input type="radio" name="frame_design" value="<?= $fd['frame_design_id'] ?>" hidden>
                                     <?php if (!empty($fd['primary_image'])): ?>
-                                        <div class="csc-design-img-wrap">
+                                        <div class="csc-design-img-wrap"
+                                             data-images="<?= htmlspecialchars(json_encode(array_map(fn($i) => '../assets/img/' . $i, $imgs))) ?>"
+                                             data-name="<?= htmlspecialchars($fd['design_name']) ?>">
                                             <img src="../assets/img/<?= htmlspecialchars($fd['primary_image']) ?>"
                                                  alt="<?= htmlspecialchars($fd['design_name']) ?>"
                                                  class="csc-design-img">
-                                            <button type="button" class="csc-design-zoom-btn"
-                                                data-img="../assets/img/<?= htmlspecialchars($fd['primary_image']) ?>"
-                                                data-name="<?= htmlspecialchars($fd['design_name']) ?>">
-                                                <i class="fas fa-magnifying-glass-plus"></i>
-                                            </button>
+                                            <div class="csc-design-view-overlay">
+                                                <i class="fas fa-expand"></i>
+                                                <span>View</span>
+                                            </div>
                                         </div>
                                     <?php else: ?>
                                         <div class="csc-design-placeholder">
@@ -143,8 +174,15 @@ $presetLabels = ['4×6"','5×7"','8×10"','8×12"','11×14"','12×16"','16×20"'
                             <div id="csc-lightbox-backdrop"></div>
                             <div id="csc-lightbox-content">
                                 <button id="csc-lightbox-close"><i class="fas fa-xmark"></i></button>
-                                <img id="csc-lightbox-img" src="" alt="">
-                                <div id="csc-lightbox-name"></div>
+                                <div id="csc-lightbox-img-wrap">
+                                    <button id="csc-lightbox-prev"><i class="fas fa-chevron-left"></i></button>
+                                    <img id="csc-lightbox-img" src="" alt="">
+                                    <button id="csc-lightbox-next"><i class="fas fa-chevron-right"></i></button>
+                                </div>
+                                <div id="csc-lightbox-footer">
+                                    <div id="csc-lightbox-name"></div>
+                                    <div id="csc-lightbox-counter"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -184,10 +222,9 @@ $presetLabels = ['4×6"','5×7"','8×10"','8×12"','11×14"','12×16"','16×20"'
                         <div class="csc-size-pills" id="csc-size-pills">
                             <?php foreach ($frameSizes as $fs): ?>
                                 <label class="csc-size-pill"
-                                       data-value="<?= $fs['frame_size_id'] ?>"
-                                       data-width="<?= $fs['width_inch'] ?>"
-                                       data-height="<?= $fs['height_inch'] ?>"
-                                       data-price="<?= $fs['price'] ?>">
+                                    data-value="<?= $fs['frame_size_id'] ?>"
+                                    data-width="<?= $fs['width_inch'] ?>"
+                                    data-height="<?= $fs['height_inch'] ?>">
                                     <input type="radio" name="frame_size" value="<?= $fs['frame_size_id'] ?>" hidden>
                                     <?= htmlspecialchars($fs['dimension']) ?>
                                 </label>
@@ -198,8 +235,8 @@ $presetLabels = ['4×6"','5×7"','8×10"','8×12"','11×14"','12×16"','16×20"'
                             </label>
                         </div>
 
-                        <!-- Custom width/height inputs (always visible, auto-fills when preset chosen) -->
-                        <div class="csc-custom-size-wrap mt-3">
+                        <!-- Custom width/height inputs (shown only when Other is selected) -->
+                        <div class="csc-custom-size-wrap mt-3" id="csc-custom-size-wrap" style="display:none;">
                             <div class="csc-custom-size-field">
                                 <label class="csc-field-label">WIDTH (IN)</label>
                                 <input type="number" class="csc-size-input" id="csc-width" placeholder="e.g. 22" min="1" step="0.5">
@@ -298,39 +335,63 @@ $presetLabels = ['4×6"','5×7"','8×10"','8×12"','11×14"','12×16"','16×20"'
                     <div class="csc-summary-body">
                         <div class="csc-summary-row" id="sum-service-row" style="display:none;">
                             <span>Service</span>
-                            <span id="sum-service" class="csc-summary-val"></span>
+                            <div class="csc-summary-val-wrap">
+                                <span id="sum-service" class="csc-summary-val"></span>
+                            </div>
                         </div>
                         <div class="csc-summary-row" id="sum-frame-type-row" style="display:none;">
                             <span>Frame Type</span>
-                            <span id="sum-frame-type" class="csc-summary-val"></span>
+                            <div class="csc-summary-val-wrap">
+                                <span id="sum-frame-type" class="csc-summary-val"></span>
+                                <span id="sum-frame-type-price" class="csc-summary-price"></span>
+                            </div>
                         </div>
                         <div class="csc-summary-row" id="sum-design-row" style="display:none;">
                             <span>Design</span>
-                            <span id="sum-design" class="csc-summary-val"></span>
+                            <div class="csc-summary-val-wrap">
+                                <span id="sum-design" class="csc-summary-val"></span>
+                                <span id="sum-design-price" class="csc-summary-price"></span>
+                            </div>
                         </div>
                         <div class="csc-summary-row" id="sum-color-row" style="display:none;">
                             <span>Color</span>
-                            <span id="sum-color" class="csc-summary-val"></span>
+                            <div class="csc-summary-val-wrap">
+                                <span id="sum-color" class="csc-summary-val"></span>
+                            </div>
                         </div>
                         <div class="csc-summary-row" id="sum-size-row" style="display:none;">
                             <span>Size</span>
-                            <span id="sum-size" class="csc-summary-val"></span>
+                            <div class="csc-summary-val-wrap">
+                                <span id="sum-size" class="csc-summary-val"></span>
+                                <span id="sum-size-price" class="csc-summary-price"></span>
+                            </div>
                         </div>
                         <div class="csc-summary-row" id="sum-matboard-row" style="display:none;">
                             <span>Mat-board</span>
-                            <span id="sum-matboard" class="csc-summary-val"></span>
+                            <div class="csc-summary-val-wrap">
+                                <span id="sum-matboard" class="csc-summary-val"></span>
+                                <span id="sum-matboard-price" class="csc-summary-price"></span>
+                            </div>
                         </div>
                         <div class="csc-summary-row" id="sum-mount-row" style="display:none;">
                             <span>Mount</span>
-                            <span id="sum-mount" class="csc-summary-val"></span>
+                            <div class="csc-summary-val-wrap">
+                                <span id="sum-mount" class="csc-summary-val"></span>
+                                <span id="sum-mount-price" class="csc-summary-price"></span>
+                            </div>
                         </div>
                         <div class="csc-summary-row" id="sum-image-row" style="display:none;">
                             <span>Image</span>
-                            <span id="sum-image" class="csc-summary-val"></span>
+                            <div class="csc-summary-val-wrap">
+                                <span id="sum-image" class="csc-summary-val"></span>
+                            </div>
                         </div>
                         <div class="csc-summary-row" id="sum-paper-row" style="display:none;">
                             <span>Paper</span>
-                            <span id="sum-paper" class="csc-summary-val"></span>
+                            <div class="csc-summary-val-wrap">
+                                <span id="sum-paper" class="csc-summary-val"></span>
+                                <span id="sum-paper-price" class="csc-summary-price"></span>
+                            </div>
                         </div>
 
                         <!-- Quantity -->
@@ -366,22 +427,30 @@ $presetLabels = ['4×6"','5×7"','8×10"','8×12"','11×14"','12×16"','16×20"'
     </div><!-- end container -->
 </div>
 
-<!-- Pass PHP data to JS -->
 <script>
 const CSC_DATA = {
+    // 1. Fixed Frame Sizes (Removed the deleted 'price' column)
     frameSizes: <?= json_encode(array_map(fn($s) => [
         'id'     => $s['frame_size_id'],
         'label'  => $s['dimension'],
         'width'  => $s['width_inch'],
-        'height' => $s['height_inch'],
-        'price'  => $s['price'],
+        'height' => $s['height_inch']
     ], $frameSizes)) ?>,
+    
+    // 2. Paper Types (Removed 'price' & 'pricing_logic', added 'multiplier')
     paperTypes: <?= json_encode(array_map(fn($p) => [
-        'id'    => $p['paper_type_id'],
-        'name'  => $p['paper_name'],
-        'price' => $p['price'],
-        'logic' => $p['pricing_logic'],
+        'id'         => $p['paper_type_id'],
+        'name'       => $p['paper_name'],
+        'multiplier' => (float)$p['multiplier']
     ], $paperTypes)) ?>,
+    
+    // 3. Fixed Print Menu (Added this so JS knows the package deals!)
+    fixedPrintPrices: <?= json_encode(array_map(fn($f) => [
+        'paper_id' => $f['paper_type_id'],
+        'width'    => (float)$f['width_inch'],
+        'height'   => (float)$f['height_inch'],
+        'price'    => (float)$f['fixed_price']
+    ], $builderData['fixed_print_prices'])) ?>
 };
 </script>
 <script src="../assets/js/customer_shop_custom.js"></script>

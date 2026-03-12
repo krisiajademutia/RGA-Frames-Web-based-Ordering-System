@@ -33,7 +33,7 @@ class CustomFrameRepository {
     }
 
     public function getActiveFrameSizes(): array {
-        $r = $this->conn->query("SELECT * FROM tbl_frame_sizes WHERE is_active=1 ORDER BY total_inch ASC");
+        $r = $this->conn->query("SELECT * FROM tbl_frame_sizes WHERE is_active=1 ORDER BY width_inch ASC, height_inch ASC");
         return $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
     }
 
@@ -49,6 +49,11 @@ class CustomFrameRepository {
 
     public function getActivePaperTypes(): array {
         $r = $this->conn->query("SELECT * FROM tbl_paper_type WHERE is_active=1 ORDER BY paper_name");
+        return $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    public function getActiveFixedPrintPrices(): array {
+        $r = $this->conn->query("SELECT * FROM tbl_fixed_print_prices");
         return $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
     }
 
@@ -96,21 +101,28 @@ class CustomFrameRepository {
         return $stmt->get_result()->fetch_assoc() ?: null;
     }
 
+    public function getFixedPrintPrice(int $paperTypeId, float $width, float $height): ?array {
+        $stmt = $this->conn->prepare("SELECT * FROM tbl_fixed_print_prices WHERE paper_type_id = ? AND width_inch = ? AND height_inch = ? LIMIT 1");
+        $stmt->bind_param("idd", $paperTypeId, $width, $height);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_assoc() ?: null;
+    }
+
     // ── Write operations ─────────────────────────────────
 
     public function insertCustomFrameProduct(
         ?int $frameTypeId, ?int $frameDesignId, ?int $frameColorId,
-        ?int $frameSizeId, float $customWidth, float $customHeight,
+        float $customWidth, float $customHeight,
         float $calculatedPrice
     ): int {
         $stmt = $this->conn->prepare("
             INSERT INTO tbl_custom_frame_product
-                (frame_type_id, frame_design_id, frame_color_id, frame_size_id,
+                (frame_type_id, frame_design_id, frame_color_id,
                  custom_width, custom_height, calculated_price)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?)
         ");
-        $stmt->bind_param("iiiiddd",
-            $frameTypeId, $frameDesignId, $frameColorId, $frameSizeId,
+        $stmt->bind_param("iiiddd",
+            $frameTypeId, $frameDesignId, $frameColorId,
             $customWidth, $customHeight, $calculatedPrice
         );
         $stmt->execute();
@@ -119,19 +131,18 @@ class CustomFrameRepository {
 
     public function insertPrintingOrderItem(
         ?int $cartId, ?int $orderId, int $paperTypeId,
-        string $imagePath, string $dimension,
-        float $width, float $height, float $totalInch,
+        string $imagePath, float $width, float $height,
         int $quantity, float $subTotal
     ): int {
         $stmt = $this->conn->prepare("
             INSERT INTO tbl_printing_order_items
-                (cart_id, order_id, paper_type_id, image_path, dimension,
-                 width_inch, height_inch, total_inch, quantity, sub_total)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (cart_id, order_id, paper_type_id, image_path,
+                 width_inch, height_inch, quantity, sub_total)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $stmt->bind_param("iiissdddid",
-            $cartId, $orderId, $paperTypeId, $imagePath, $dimension,
-            $width, $height, $totalInch, $quantity, $subTotal
+        $stmt->bind_param("iiisddid",
+            $cartId, $orderId, $paperTypeId, $imagePath,
+            $width, $height, $quantity, $subTotal
         );
         $stmt->execute();
         return (int)$this->conn->insert_id;

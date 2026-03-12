@@ -346,6 +346,7 @@ function confirmDelete(id, name) {
     new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
 }
 </script>
+
 <script src="/rga_frames/assets/js/post_script.js"></script>
 </body>
 </html>

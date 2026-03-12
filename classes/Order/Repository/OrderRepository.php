@@ -49,15 +49,22 @@ class OrderRepository {
     }
 
     public function getOrderById(int $order_id) {
+        // Get order + customer + payment summary
         $stmt = $this->conn->prepare("
             SELECT 
                 o.*,
                 c.first_name, c.last_name, c.phone_number, c.email, c.username,
-                p.payment_status, p.amount AS amount_paid, p.payment_proof, p.date_paid
+                p.payment_id,
+                p.total_amount,
+                p.payment_status,
+                p.date_paid,
+                COALESCE(SUM(pu.uploaded_amount), 0) AS amount_paid
             FROM tbl_orders o
             JOIN tbl_customer c ON o.customer_id = c.customer_id
             LEFT JOIN tbl_payment p ON o.order_id = p.order_id
+            LEFT JOIN tbl_payment_proof_uploads pu ON p.payment_id = pu.payment_id
             WHERE o.order_id = ?
+            GROUP BY o.order_id, p.payment_id
         ");
         $stmt->bind_param("i", $order_id);
         $stmt->execute();
@@ -65,9 +72,50 @@ class OrderRepository {
         return $result->fetch_assoc();
     }
 
+    public function getPaymentProofs(int $payment_id) {
+        $stmt = $this->conn->prepare("
+            SELECT *
+            FROM tbl_payment_proof_uploads
+            WHERE payment_id = ?
+            ORDER BY upload_date ASC
+        ");
+        $stmt->bind_param("i", $payment_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
     public function updateStatus(int $order_id, string $new_status) {
         $stmt = $this->conn->prepare("UPDATE tbl_orders SET order_status = ? WHERE order_id = ?");
         $stmt->bind_param("si", $new_status, $order_id);
+        return $stmt->execute();
+    }
+
+    public function verifyProof(int $upload_id) {
+        $stmt = $this->conn->prepare("
+            UPDATE tbl_payment_proof_uploads 
+            SET verification_status = 'Verified' 
+            WHERE upload_id = ?
+        ");
+        $stmt->bind_param("i", $upload_id);
+        return $stmt->execute();
+    }
+
+    public function rejectProof(int $upload_id) {
+        $stmt = $this->conn->prepare("
+            UPDATE tbl_payment_proof_uploads 
+            SET verification_status = 'Rejected' 
+            WHERE upload_id = ?
+        ");
+        $stmt->bind_param("i", $upload_id);
+        return $stmt->execute();
+    }
+
+    public function updatePaymentStatus(int $payment_id, string $status) {
+        $stmt = $this->conn->prepare("
+            UPDATE tbl_payment SET payment_status = ? WHERE payment_id = ?
+        ");
+        $stmt->bind_param("si", $status, $payment_id);
         return $stmt->execute();
     }
 }
