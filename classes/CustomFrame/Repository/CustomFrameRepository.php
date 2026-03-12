@@ -33,7 +33,8 @@ class CustomFrameRepository {
     }
 
     public function getActiveFrameSizes(): array {
-        $r = $this->conn->query("SELECT * FROM tbl_frame_sizes WHERE is_active=1 ORDER BY total_inch ASC");
+        // tbl_frame_sizes has no total_inch column — order by width then height
+        $r = $this->conn->query("SELECT * FROM tbl_frame_sizes WHERE is_active=1 ORDER BY width_inch ASC, height_inch ASC");
         return $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
     }
 
@@ -100,17 +101,18 @@ class CustomFrameRepository {
 
     public function insertCustomFrameProduct(
         ?int $frameTypeId, ?int $frameDesignId, ?int $frameColorId,
-        ?int $frameSizeId, float $customWidth, float $customHeight,
+        float $customWidth, float $customHeight,
         float $calculatedPrice
     ): int {
+        // Note: tbl_custom_frame_product has no frame_size_id column
         $stmt = $this->conn->prepare("
             INSERT INTO tbl_custom_frame_product
-                (frame_type_id, frame_design_id, frame_color_id, frame_size_id,
+                (frame_type_id, frame_design_id, frame_color_id,
                  custom_width, custom_height, calculated_price)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?)
         ");
-        $stmt->bind_param("iiiiddd",
-            $frameTypeId, $frameDesignId, $frameColorId, $frameSizeId,
+        $stmt->bind_param("iiiddd",
+            $frameTypeId, $frameDesignId, $frameColorId,
             $customWidth, $customHeight, $calculatedPrice
         );
         $stmt->execute();
