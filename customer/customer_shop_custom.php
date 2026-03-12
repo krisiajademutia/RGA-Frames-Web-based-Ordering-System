@@ -16,6 +16,36 @@ $paperTypes     = $builderData['paper_types'];
 
 // Preset sizes from Figma (filter from DB, fallback to fixed list)
 $presetLabels = ['4×6"','5×7"','8×10"','8×12"','11×14"','12×16"','16×20"','18×24"','20×24"'];
+
+// --- DISCOUNT LOGIC (Photographer or Repetitive Customer) ---
+$customerId = (int)($_SESSION['user_id'] ?? 0);
+$hasDiscount = false;
+
+if ($customerId > 0) {
+    // 1. Check if Photographer
+    $stmt1 = $conn->prepare("SELECT customer_type FROM tbl_customers WHERE customer_id = ?");
+    $stmt1->bind_param("i", $customerId);
+    $stmt1->execute();
+    $custRow = $stmt1->get_result()->fetch_assoc();
+    $isPhotographer = ($custRow && strtolower($custRow['customer_type']) === 'photographer');
+
+    // 2. Count Previous Orders (e.g., 3 or more successful orders = Repetitive)
+    // Adjust the number "3" below if Kuya wants a different threshold for "repetitive"
+    $stmt2 = $conn->prepare("SELECT COUNT(order_id) as order_count FROM tbl_orders WHERE customer_id = ? AND order_status != 'CANCELLED'");
+    $stmt2->bind_param("i", $customerId);
+    $stmt2->execute();
+    $orderRow = $stmt2->get_result()->fetch_assoc();
+    $isRepetitive = ($orderRow && (int)$orderRow['order_count'] >= 3);
+
+    if ($isPhotographer || $isRepetitive) {
+        $hasDiscount = true;
+    }
+}
+?>
+
+<script>
+    const HAS_DISCOUNT = <?= $hasDiscount ? 'true' : 'false' ?>;
+</script>
 ?>
 
 <div class="csc-page">
@@ -86,8 +116,7 @@ $presetLabels = ['4×6"','5×7"','8×10"','8×12"','11×14"','12×16"','16×20"'
                                     <option value="">Select paper type</option>
                                     <?php foreach ($paperTypes as $pt): ?>
                                         <option value="<?= $pt['paper_type_id'] ?>"
-                                                data-price="<?= $pt['price'] ?>"
-                                                data-logic="<?= $pt['pricing_logic'] ?>">
+                                                data-multiplier="<?= $pt['multiplier'] ?>">
                                             <?= htmlspecialchars($pt['paper_name']) ?>
                                         </option>
                                     <?php endforeach; ?>
@@ -193,10 +222,9 @@ $presetLabels = ['4×6"','5×7"','8×10"','8×12"','11×14"','12×16"','16×20"'
                         <div class="csc-size-pills" id="csc-size-pills">
                             <?php foreach ($frameSizes as $fs): ?>
                                 <label class="csc-size-pill"
-                                       data-value="<?= $fs['frame_size_id'] ?>"
-                                       data-width="<?= $fs['width_inch'] ?>"
-                                       data-height="<?= $fs['height_inch'] ?>"
-                                       data-price="<?= $fs['price'] ?>">
+                                    data-value="<?= $fs['frame_size_id'] ?>"
+                                    data-width="<?= $fs['width_inch'] ?>"
+                                    data-height="<?= $fs['height_inch'] ?>">
                                     <input type="radio" name="frame_size" value="<?= $fs['frame_size_id'] ?>" hidden>
                                     <?= htmlspecialchars($fs['dimension']) ?>
                                 </label>
@@ -399,31 +427,31 @@ $presetLabels = ['4×6"','5×7"','8×10"','8×12"','11×14"','12×16"','16×20"'
     </div><!-- end container -->
 </div>
 
-<!-- Pass PHP data to JS -->
 <script>
 const CSC_DATA = {
+    // 1. Fixed Frame Sizes (Removed the deleted 'price' column)
     frameSizes: <?= json_encode(array_map(fn($s) => [
         'id'     => $s['frame_size_id'],
         'label'  => $s['dimension'],
         'width'  => $s['width_inch'],
-        'height' => $s['height_inch'],
-        'price'  => $s['price'],
+        'height' => $s['height_inch']
     ], $frameSizes)) ?>,
+    
+    // 2. Paper Types (Removed 'price' & 'pricing_logic', added 'multiplier')
     paperTypes: <?= json_encode(array_map(fn($p) => [
-        'id'    => $p['paper_type_id'],
-        'name'  => $p['paper_name'],
-        'price' => $p['price'],
-        'logic' => $p['pricing_logic'],
+        'id'         => $p['paper_type_id'],
+        'name'       => $p['paper_name'],
+        'multiplier' => (float)$p['multiplier']
     ], $paperTypes)) ?>,
+    
+    // 3. Fixed Print Menu (Added this so JS knows the package deals!)
+    fixedPrintPrices: <?= json_encode(array_map(fn($f) => [
+        'paper_id' => $f['paper_type_id'],
+        'width'    => (float)$f['width_inch'],
+        'height'   => (float)$f['height_inch'],
+        'price'    => (float)$f['fixed_price']
+    ], $builderData['fixed_print_prices'])) ?>
 };
-</script>
-<script>
-// Size tiers passed from PHP for client-side tiered pricing
-window.sizeTiers = <?= json_encode(array_map(fn($s) => [
-    'total_inch' => (float)$s['total_inch'],
-    'price'      => (float)$s['price'],
-    'dimension'  => $s['dimension']
-], $frameSizes)) ?>;
 </script>
 <script src="../assets/js/customer_shop_custom.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

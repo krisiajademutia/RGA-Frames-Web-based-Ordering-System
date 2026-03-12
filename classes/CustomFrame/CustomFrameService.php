@@ -15,81 +15,52 @@ class CustomFrameService {
     // ── Builder page data ────────────────────────────────
     public function getFrameBuilderData(): array {
         return [
-            'frame_types'     => $this->repo->getActiveFrameTypes(),
-            'frame_designs'   => $this->repo->getActiveFrameDesigns(),
-            'frame_colors'    => $this->repo->getActiveFrameColors(),
-            'frame_sizes'     => $this->repo->getActiveFrameSizes(),
-            'matboard_colors' => $this->repo->getActiveMatboardColors(),
-            'mount_types'     => $this->repo->getActiveMountTypes(),
-            'paper_types'     => $this->repo->getActivePaperTypes(),
+            'frame_types'        => $this->repo->getActiveFrameTypes(),
+            'frame_designs'      => $this->repo->getActiveFrameDesigns(),
+            'frame_colors'       => $this->repo->getActiveFrameColors(),
+            'frame_sizes'        => $this->repo->getActiveFrameSizes(),
+            'matboard_colors'    => $this->repo->getActiveMatboardColors(),
+            'mount_types'        => $this->repo->getActiveMountTypes(),
+            'paper_types'        => $this->repo->getActivePaperTypes(),
+            'fixed_print_prices' => $this->repo->getActiveFixedPrintPrices(),
         ];
     }
 
-    // ── Tiered size price (width+height → find matching tier) ──
-    private function calcTieredSizePrice(float $w, float $h): float {
-        $totalInch = $w + $h;
-
-        // Fetch all active sizes ordered by total_inch ASC
-        $sizes = $this->repo->getActiveFrameSizes();
-
-        // If exact match exists, return its price
-        foreach ($sizes as $s) {
-            if ((float)$s['total_inch'] == $totalInch) {
-                return (float)$s['price'];
-            }
-        }
-
-        // Find the next tier UP (first size whose total_inch >= our total)
-        foreach ($sizes as $s) {
-            if ((float)$s['total_inch'] >= $totalInch) {
-                return (float)$s['price'];
-            }
-        }
-
-        // If larger than all tiers, use the largest tier price
-        if (!empty($sizes)) {
-            return (float)end($sizes)['price'];
-        }
-
-        return 0.0;
-    }
-
-    // ── Server-side price calculation ────────────────────
+    // ── Server-side price calculation (Kuya's Logic) ─────
     public function calculatePrice(array $data): array {
         $basePrice  = 0.0;
         $extraPrice = 0.0;
+        $printPrice = 0.0;
 
-        // Frame type price
-        if (!empty($data['frame_type_id'])) {
-            $ft = $this->repo->getFrameTypeById((int)$data['frame_type_id']);
-            $basePrice += $ft ? (float)$ft['type_price'] : 0;
-        }
+        $w = (float)($data['custom_width'] ?? 0);
+        $h = (float)($data['custom_height'] ?? 0);
 
-        // Frame design price
-        if (!empty($data['frame_design_id'])) {
-            $fd = $this->repo->getFrameDesignById((int)$data['frame_design_id']);
-            $basePrice += $fd ? (float)$fd['price'] : 0;
-        }
-
-        // Frame size price — tiered logic
-        $customWidth  = (float)($data['custom_width']  ?? 0);
-        $customHeight = (float)($data['custom_height'] ?? 0);
-
+        // If user selected a preset size from the dropdown UI, override the custom W & H
         if (!empty($data['frame_size_id']) && $data['frame_size_id'] !== 'OTHER') {
-            // Preset size — get its dimensions then run through tier
             $fs = $this->repo->getFrameSizeById((int)$data['frame_size_id']);
             if ($fs) {
-                $customWidth  = (float)$fs['width_inch'];
-                $customHeight = (float)$fs['height_inch'];
+                $w = (float)$fs['width_inch'];
+                $h = (float)$fs['height_inch'];
             }
         }
 
-        // Both preset and custom sizes go through the same tier logic
-        if ($customWidth > 0 && $customHeight > 0) {
-            $basePrice += $this->calcTieredSizePrice($customWidth, $customHeight);
+        // --- 1. FRAME MATH ---
+        if ($w > 0 && $h > 0) {
+            // Frame Type base fee (if applicable)
+            if (!empty($data['frame_type_id'])) {
+                $ft = $this->repo->getFrameTypeById((int)$data['frame_type_id']);
+                $basePrice += $ft ? (float)$ft['type_price'] : 0;
+            }
+
+            // Kuya's Frame Design Logic: ((Width + Height) / 6) * Design Price
+            if (!empty($data['frame_design_id'])) {
+                $fd = $this->repo->getFrameDesignById((int)$data['frame_design_id']);
+                $designPrice = $fd ? (float)$fd['price'] : 0;
+                $basePrice += (($w + $h) / 6) * $designPrice;
+            }
         }
 
-        // Matboard — only charge when BOTH primary AND secondary are selected (not None/0)
+        // --- 2. EXTRAS (Matboards & Mounts) ---
         $primaryId   = (int)($data['primary_matboard_id']   ?? 0);
         $secondaryId = (int)($data['secondary_matboard_id'] ?? 0);
 
@@ -100,24 +71,26 @@ class CustomFrameService {
             $extraPrice += $mc2 ? (float)$mc2['base_price'] : 0;
         }
 
-        // Mount type
         if (!empty($data['mount_type_id'])) {
             $mt = $this->repo->getMountById((int)$data['mount_type_id']);
             $extraPrice += $mt ? (float)$mt['additional_fee'] : 0;
         }
 
-        // Print price
-        $printPrice = 0.0;
-        if (!empty($data['service_type']) && $data['service_type'] === 'FRAME&PRINT') {
-            if (!empty($data['paper_type_id'])) {
-                $pt = $this->repo->getPaperTypeById((int)$data['paper_type_id']);
-                if ($pt) {
-                    if ($pt['pricing_logic'] === 'FIXED') {
-                        $printPrice = (float)$pt['price'];
-                    } else {
-                        // CALCULATED: total_inch × price per inch
-                        $totalInch  = ($customWidth + $customHeight) * 2;
-                        $printPrice = $totalInch * (float)$pt['price'];
+        // --- 3. PRINT MATH ---
+        if (!empty($data['service_type']) && $data['service_type'] === 'FRAME&PRINT' && $w > 0 && $h > 0) {
+            $paperTypeId = (int)($data['paper_type_id'] ?? 0);
+            
+            if ($paperTypeId > 0) {
+                // Step A: Check Menu (Fixed Prices) first
+                $fixedPriceItem = $this->repo->getFixedPrintPrice($paperTypeId, $w, $h);
+                if ($fixedPriceItem) {
+                    $printPrice = (float)$fixedPriceItem['fixed_price'];
+                } else {
+                    // Step B: Custom Math using Multiplier (W x H x Multiplier)
+                    $pt = $this->repo->getPaperTypeById($paperTypeId);
+                    if ($pt) {
+                        $multiplier = (float)$pt['multiplier'];
+                        $printPrice = ($w * $h) * $multiplier;
                     }
                 }
             }
@@ -134,8 +107,8 @@ class CustomFrameService {
             'print_price' => round($printPrice, 2),
             'sub_total'   => round($unitSubTotal, 2),
             'grand_total' => round($grandTotal, 2),
-            'width'       => $customWidth,
-            'height'      => $customHeight,
+            'width'       => $w,
+            'height'      => $h,
         ];
     }
 
@@ -145,12 +118,11 @@ class CustomFrameService {
         try {
             $prices = $this->calculatePrice($data);
 
-            // 1. Insert custom frame product
+            // 1. Insert custom frame product (No frame_size_id parameter anymore!)
             $cProductId = $this->repo->insertCustomFrameProduct(
                 !empty($data['frame_type_id'])   ? (int)$data['frame_type_id']   : null,
                 !empty($data['frame_design_id']) ? (int)$data['frame_design_id'] : null,
                 !empty($data['frame_color_id'])  ? (int)$data['frame_color_id']  : null,
-                (!empty($data['frame_size_id']) && $data['frame_size_id'] !== 'OTHER') ? (int)$data['frame_size_id'] : null,
                 $prices['width'],
                 $prices['height'],
                 $prices['base_price']
@@ -169,14 +141,12 @@ class CustomFrameService {
                 $paperTypeId = (int)($data['paper_type_id'] ?? 0);
                 $width       = $prices['width'];
                 $height      = $prices['height'];
-                $totalInch   = ($width + $height) * 2;
                 $qty         = max(1, (int)($data['quantity'] ?? 1));
 
                 $printingItemId = $this->repo->insertPrintingOrderItem(
                     $cartId, null, $paperTypeId,
                     $imagePath,
-                    "{$width}x{$height}",
-                    $width, $height, $totalInch,
+                    $width, $height,
                     $qty,
                     $prices['print_price']
                 );
@@ -216,7 +186,6 @@ class CustomFrameService {
                 !empty($data['frame_type_id'])   ? (int)$data['frame_type_id']   : null,
                 !empty($data['frame_design_id']) ? (int)$data['frame_design_id'] : null,
                 !empty($data['frame_color_id'])  ? (int)$data['frame_color_id']  : null,
-                (!empty($data['frame_size_id']) && $data['frame_size_id'] !== 'OTHER') ? (int)$data['frame_size_id'] : null,
                 $prices['width'],
                 $prices['height'],
                 $prices['base_price']
@@ -247,13 +216,11 @@ class CustomFrameService {
                 $paperTypeId = (int)($data['paper_type_id'] ?? 0);
                 $width       = $prices['width'];
                 $height      = $prices['height'];
-                $totalInch   = ($width + $height) * 2;
 
                 $printingItemId = $this->repo->insertPrintingOrderItem(
                     null, $orderId, $paperTypeId,
                     $imagePath,
-                    "{$width}x{$height}",
-                    $width, $height, $totalInch,
+                    $width, $height,
                     $qty,
                     $prices['print_price']
                 );
