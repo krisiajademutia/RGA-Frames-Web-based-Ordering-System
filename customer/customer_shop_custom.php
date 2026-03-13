@@ -23,7 +23,7 @@ $hasDiscount = false;
 
 if ($customerId > 0) {
     // 1. Check if Photographer
-    $stmt1 = $conn->prepare("SELECT customer_type FROM tbl_customers WHERE customer_id = ?");
+    $stmt1 = $conn->prepare("SELECT customer_type FROM tbl_customer WHERE customer_id = ?");
     $stmt1->bind_param("i", $customerId);
     $stmt1->execute();
     $custRow = $stmt1->get_result()->fetch_assoc();

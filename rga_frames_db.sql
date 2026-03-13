@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 12, 2026 at 04:54 PM
+-- Generation Time: Mar 13, 2026 at 12:58 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -43,7 +43,7 @@ CREATE TABLE `tbl_admin` (
 --
 
 INSERT INTO `tbl_admin` (`admin_id`, `first_name`, `last_name`, `username`, `email`, `password`, `created_at`, `last_login`) VALUES
-(1, 'Admin', 'User', 'admin', 'mutiakrisiaj@gmail.com', '$2y$10$kd9FoZ0japdSk3mzS96QmeYSUH1Pbqm/0SdIRHO57r9NoMUuMQZia', '2026-02-18 12:57:20', '2026-03-12 22:50:46'),
+(1, 'Admin', 'User', 'admin', 'mutiakrisiaj@gmail.com', '$2y$10$kd9FoZ0japdSk3mzS96QmeYSUH1Pbqm/0SdIRHO57r9NoMUuMQZia', '2026-02-18 12:57:20', '2026-03-13 01:47:02'),
 (2, 'Calise', 'Sav', 'calise', 'savvcalise@gmail.com', '$2y$10$LyY134gbnwtwvLUchKeOHesA.5lmBNfBSFQt1kF8cLnyzcDd2xiLu', '2026-03-06 01:25:46', '2026-03-06 01:26:43');
 
 -- --------------------------------------------------------
@@ -79,6 +79,7 @@ CREATE TABLE `tbl_customer` (
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `phone_number` varchar(20) DEFAULT NULL,
+  `customer_type` enum('REGULAR','PHOTOGRAPHER') NOT NULL DEFAULT 'REGULAR',
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -86,10 +87,10 @@ CREATE TABLE `tbl_customer` (
 -- Dumping data for table `tbl_customer`
 --
 
-INSERT INTO `tbl_customer` (`customer_id`, `first_name`, `last_name`, `username`, `email`, `password`, `phone_number`, `created_at`) VALUES
-(1, 'Krisia Jade', 'Mutia', 'krisia_jade', 'mutiakrisiajade@gmail.com', '$2y$10$/8VWQYDM/meDf6GFWWkbEe.OaQj6N.LtOneEVBHysvpnWPYh8Ohla', '09306282413', '2026-02-18 01:32:41'),
-(2, 'Customer', 'Test', 'customer_101', 'customer@gmail.com', '$2y$10$aqvIYWozM8Rk0pK/7Ra6J.PeUelKWfcW8zna4vuGQN.xoH1YWy.fy', '09890987154', '2026-02-21 03:22:36'),
-(9, 'Trisha', 'Lleno', 'trisha', 'kreiafey@gmail.com', '$2y$10$A3keQnqhfj8iAGI.untxiu0Uz3RMx1U8x86SwH7mm4VQkrnVftqHC', '09364650128', '2026-03-06 15:37:46');
+INSERT INTO `tbl_customer` (`customer_id`, `first_name`, `last_name`, `username`, `email`, `password`, `phone_number`, `customer_type`, `created_at`) VALUES
+(1, 'Krisia Jade', 'Mutia', 'krisia_jade', 'mutiakrisiajade@gmail.com', '$2y$10$/8VWQYDM/meDf6GFWWkbEe.OaQj6N.LtOneEVBHysvpnWPYh8Ohla', '09306282413', 'REGULAR', '2026-02-18 01:32:41'),
+(2, 'Customer', 'Test', 'customer_101', 'customer@gmail.com', '$2y$10$aqvIYWozM8Rk0pK/7Ra6J.PeUelKWfcW8zna4vuGQN.xoH1YWy.fy', '09890987154', 'REGULAR', '2026-02-21 03:22:36'),
+(9, 'Trisha', 'Lleno', 'trisha', 'kreiafey@gmail.com', '$2y$10$A3keQnqhfj8iAGI.untxiu0Uz3RMx1U8x86SwH7mm4VQkrnVftqHC', '09364650128', 'REGULAR', '2026-03-06 15:37:46');
 
 -- --------------------------------------------------------
 
