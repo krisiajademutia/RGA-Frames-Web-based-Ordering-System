@@ -33,8 +33,10 @@ class MatboardColorRepository implements OptionRepositoryInterface {
         }
 
         $isActive = (int)($data['is_active'] ?? 1);
-        $stmt = $this->db->prepare("INSERT INTO tbl_matboard_colors (matboard_color_name, image_name, is_active) VALUES (?, ?, ?)");
-        $stmt->bind_param("ssi", $data['matboard_color_name'], $fileName, $isActive);
+        $basePrice = (float)($data['base_price'] ?? 0.00); // Added base_price
+        
+        $stmt = $this->db->prepare("INSERT INTO tbl_matboard_colors (matboard_color_name, base_price, image_name, is_active) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("sdsi", $data['matboard_color_name'], $basePrice, $fileName, $isActive);
         return $stmt->execute();
     }
 
@@ -46,9 +48,10 @@ class MatboardColorRepository implements OptionRepositoryInterface {
         // Debug/Fix: Match keys used in your opt-form-grid
         $colorName = $data['matboard_color_name'] ?? ($data['name'] ?? '');
         $isActive = (int)($data['is_active'] ?? 1);
+        $basePrice = (float)($data['base_price'] ?? 0.00); // Added base_price
 
-        $stmt = $this->db->prepare("UPDATE tbl_matboard_colors SET matboard_color_name = ?, is_active = ? WHERE matboard_color_id = ?");
-        $stmt->bind_param("sii", $colorName, $isActive, $id);
+        $stmt = $this->db->prepare("UPDATE tbl_matboard_colors SET matboard_color_name = ?, base_price = ?, is_active = ? WHERE matboard_color_id = ?");
+        $stmt->bind_param("sdii", $colorName, $basePrice, $isActive, $id);
         return $stmt->execute();
     }
 

@@ -8,7 +8,6 @@ $is_editing = false;
 
 if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) {
     $edit_id = (int)$_GET['id'];
-    // Service method fix
     $edit_data = $service->getOptionById($active_tab, $edit_id); 
     if ($edit_data) {
         $is_editing = true;
@@ -96,16 +95,21 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                         <label class="opt-label">Price (₱) <span>*</span></label>
                         <input type="number" step="0.01" name="type_price" class="opt-input" required value="<?= $edit_data['type_price'] ?? '' ?>">
                     </div>
-                    <div style="grid-column: span 2;">
-                        <div class="opt-upload-container">
-                            <label class="opt-label">PRODUCT PHOTO <span class="text-danger">*</span></label>
-                            <div class="opt-upload-zone position-relative" onclick="document.getElementById('add_type_img').click();">
-                                <input type="file" name="type_image" id="add_type_img" style="display:none;" onchange="handleSingleFilePreview(this, 'image_preview_container', 'opt_img_text')">
-                                <div id="image_preview_container" class="preview-overlay"></div>
-                                <div class="upload-content text-center">
-                                    <i class="fa-solid fa-images"></i>
-                                    <p class="m-0" id="opt_img_text">Click to upload photo</p>
-                                </div>
+                    <div>
+                        <label class="opt-label">Status</label>
+                        <select name="is_active" class="opt-input">
+                            <option value="1" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 1) ? 'selected' : '' ?>>Active</option>
+                            <option value="0" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 0) ? 'selected' : '' ?>>Inactive</option>
+                        </select>
+                    </div>
+                    <div class="opt-upload-container">
+                        <label class="opt-label">PRODUCT PHOTO <span class="text-danger">*</span></label>
+                        <div class="opt-upload-zone position-relative" onclick="document.getElementById('add_type_img').click();">
+                            <input type="file" name="type_image" id="add_type_img" style="display:none;" onchange="handleSingleFilePreview(this, 'image_preview_container', 'opt_img_text')">
+                            <div id="image_preview_container" class="preview-overlay"></div>
+                            <div class="upload-content text-center">
+                                <i class="fa-solid fa-images"></i>
+                                <p class="m-0" id="opt_img_text">Click to upload photo</p>
                             </div>
                         </div>
                     </div>
@@ -119,16 +123,21 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                         <label class="opt-label">Price (₱) <span>*</span></label>
                         <input type="number" step="0.01" name="price" class="opt-input" required value="<?= $edit_data['price'] ?? '' ?>">
                     </div>
-                    <div style="grid-column: span 2;">
-                        <div class="opt-upload-container">
-                            <label class="opt-label">PRODUCT PHOTOS <span class="text-danger">*</span></label>
-                            <div class="opt-upload-zone position-relative" onclick="document.getElementById('add_design_imgs').click();">
-                                <input type="file" name="design_images[]" id="add_design_imgs" style="display:none;" multiple onchange="handleMultipleFilePreview(this, 'image_preview_container', 'opt_img_text')">
-                                <div id="image_preview_container" class="preview-overlay"></div>
-                                <div class="upload-content text-center">
-                                    <i class="fa-solid fa-images"></i>
-                                    <p class="m-0" id="opt_img_text">Click to upload multiple photos</p>
-                                </div>
+                    <div>
+                        <label class="opt-label">Status</label>
+                        <select name="is_active" class="opt-input">
+                            <option value="1" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 1) ? 'selected' : '' ?>>Active</option>
+                            <option value="0" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 0) ? 'selected' : '' ?>>Inactive</option>
+                        </select>
+                    </div>
+                    <div class="opt-upload-container">
+                        <label class="opt-label">PRODUCT PHOTOS <span class="text-danger">*</span></label>
+                        <div class="opt-upload-zone position-relative" onclick="document.getElementById('add_design_imgs').click();">
+                            <input type="file" name="design_images[]" id="add_design_imgs" style="display:none;" multiple onchange="handleMultipleFilePreview(this, 'image_preview_container', 'opt_img_text')">
+                            <div id="image_preview_container" class="preview-overlay"></div>
+                            <div class="upload-content text-center">
+                                <i class="fa-solid fa-images"></i>
+                                <p class="m-0" id="opt_img_text">Click to upload multiple photos</p>
                             </div>
                         </div>
                     </div>
@@ -138,16 +147,50 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                         <label class="opt-label">Color Name <span>*</span></label>
                         <input type="text" name="color_name" class="opt-input" required value="<?= htmlspecialchars($edit_data['color_name'] ?? '') ?>">
                     </div>
-                    <div style="grid-column: span 2;">
-                        <div class="opt-upload-container">
-                            <label class="opt-label">COLOR SWATCH <span class="text-danger">*</span></label>
-                            <div class="opt-upload-zone position-relative" onclick="document.getElementById('color_img').click();">
-                                <input type="file" name="color_image" id="color_img" style="display:none;" onchange="handleSingleFilePreview(this, 'color_preview', 'color_text')">
-                                <div id="color_preview" class="preview-overlay"></div>
-                                <div class="upload-content text-center">
-                                    <i class="fa-solid fa-palette"></i>
-                                    <p class="m-0" id="color_text">Click to upload swatch</p>
-                                </div>
+                    <div>
+                        <label class="opt-label">Status</label>
+                        <select name="is_active" class="opt-input">
+                            <option value="1" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 1) ? 'selected' : '' ?>>Active</option>
+                            <option value="0" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 0) ? 'selected' : '' ?>>Inactive</option>
+                        </select>
+                    </div>
+                    <div></div>
+                    <div class="opt-upload-container">
+                        <label class="opt-label">COLOR SWATCH <span class="text-danger">*</span></label>
+                        <div class="opt-upload-zone position-relative" onclick="document.getElementById('color_img').click();">
+                            <input type="file" name="color_image" id="color_img" style="display:none;" onchange="handleSingleFilePreview(this, 'color_preview', 'color_text')">
+                            <div id="color_preview" class="preview-overlay"></div>
+                            <div class="upload-content text-center">
+                                <i class="fa-solid fa-palette"></i>
+                                <p class="m-0" id="color_text">Click to upload swatch</p>
+                            </div>
+                        </div>
+                    </div>
+
+                <?php elseif($active_tab == 'matboard_colors'): ?>
+                    <div>
+                        <label class="opt-label">Color Name *</label>
+                        <input type="text" name="matboard_color_name" class="opt-input" required value="<?= htmlspecialchars($edit_data['matboard_color_name'] ?? '') ?>">
+                    </div>
+                    <div>
+                        <label class="opt-label">Status</label>
+                        <select name="is_active" class="opt-input">
+                            <option value="1" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 1) ? 'selected' : '' ?>>Active</option>
+                            <option value="0" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 0) ? 'selected' : '' ?>>Inactive</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="opt-label">Additional Price (₱) <span>*</span></label>
+                        <input type="number" step="0.01" name="base_price" class="opt-input" required value="<?= $edit_data['base_price'] ?? '' ?>">
+                    </div>
+                    <div class="opt-upload-container">
+                        <label class="opt-label">MATBOARD SWATCH <span class="text-danger">*</span></label>
+                        <div class="opt-upload-zone position-relative" onclick="document.getElementById('mat_img').click();">
+                            <input type="file" name="matboard_image" id="mat_img" style="display:none;" onchange="handleSingleFilePreview(this, 'mat_preview', 'mat_text')">
+                            <div id="mat_preview" class="preview-overlay"></div>
+                            <div class="upload-content text-center">
+                                <i class="fa-solid fa-palette"></i>
+                                <p class="m-0" id="mat_text">Click to upload swatch</p>
                             </div>
                         </div>
                     </div>
@@ -157,39 +200,36 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                     <div><label class="opt-label">Height *</label><input type="number" step="0.01" name="height" class="opt-input" required value="<?= $edit_data['height_inch'] ?? '' ?>"></div>
                     <div><label class="opt-label">Total Inches *</label><input type="number" step="0.01" name="total_inches" class="opt-input" required value="<?= $edit_data['total_inch'] ?? '' ?>"></div>
                     <div><label class="opt-label">Base Price *</label><input type="number" step="0.01" name="base_price" class="opt-input" required value="<?= $edit_data['price'] ?? '' ?>"></div>
-
-                <?php elseif($active_tab == 'matboard_colors'): ?>
-                    <div><label class="opt-label">Color Name *</label><input type="text" name="matboard_color_name" class="opt-input" required value="<?= htmlspecialchars($edit_data['matboard_color_name'] ?? '') ?>"></div>
-                    <div style="grid-column: span 2;">
-                         <div class="opt-upload-container">
-                            <label class="opt-label">MATBOARD SWATCH <span class="text-danger">*</span></label>
-                            <div class="opt-upload-zone position-relative" onclick="document.getElementById('mat_img').click();">
-                                <input type="file" name="matboard_image" id="mat_img" style="display:none;" onchange="handleSingleFilePreview(this, 'mat_preview', 'mat_text')">
-                                <div id="mat_preview" class="preview-overlay"></div>
-                                <div class="upload-content text-center">
-                                    <i class="fa-solid fa-palette"></i>
-                                    <p class="m-0" id="mat_text">Click to upload swatch</p>
-                                </div>
-                            </div>
-                        </div>
+                    <div>
+                        <label class="opt-label">Status</label>
+                        <select name="is_active" class="opt-input">
+                            <option value="1" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 1) ? 'selected' : '' ?>>Active</option>
+                            <option value="0" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 0) ? 'selected' : '' ?>>Inactive</option>
+                        </select>
                     </div>
 
                 <?php elseif($active_tab == 'mount_types'): ?>
                     <div><label class="opt-label">Mount Name *</label><input type="text" name="generic_name" class="opt-input" required value="<?= htmlspecialchars($edit_data['mount_name'] ?? '') ?>"></div>
                     <div><label class="opt-label">Fee (₱) *</label><input type="number" step="0.01" name="generic_price" class="opt-input" required value="<?= $edit_data['additional_fee'] ?? '' ?>"></div>
+                    <div>
+                        <label class="opt-label">Status</label>
+                        <select name="is_active" class="opt-input">
+                            <option value="1" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 1) ? 'selected' : '' ?>>Active</option>
+                            <option value="0" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 0) ? 'selected' : '' ?>>Inactive</option>
+                        </select>
+                    </div>
 
                 <?php elseif($active_tab == 'paper_types'): ?>
                     <div><label class="opt-label">Paper Name *</label><input type="text" name="paper_name" class="opt-input" required value="<?= htmlspecialchars($edit_data['paper_name'] ?? '') ?>"></div>
                     <div><label class="opt-label">Price (₱) *</label><input type="number" step="0.01" name="price" class="opt-input" required value="<?= $edit_data['price'] ?? '' ?>"></div>
+                    <div>
+                        <label class="opt-label">Status</label>
+                        <select name="is_active" class="opt-input">
+                            <option value="1" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 1) ? 'selected' : '' ?>>Active</option>
+                            <option value="0" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 0) ? 'selected' : '' ?>>Inactive</option>
+                        </select>
+                    </div>
                 <?php endif; ?>
-
-                <div>
-                    <label class="opt-label">Status</label>
-                    <select name="is_active" class="opt-input">
-                        <option value="1" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 1) ? 'selected' : '' ?>>Active</option>
-                        <option value="0" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 0) ? 'selected' : '' ?>>Inactive</option>
-                    </select>
-                </div>
 
                 <div style="grid-column: span 2; display:flex; justify-content:center; gap:15px; margin-top:20px;">
                     <?php if($is_editing): ?>
@@ -207,22 +247,24 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
     <div class="opted-main-container">
         <div class="opted-header-bar">
             <span class="opted-title">Posted <?= htmlspecialchars($tab_label ?? '') ?></span>
-            <span class="opted-count-badge"><?= $count ?> Items</span>
+            <span class="opted-count-badge"><?= $res ? $res->num_rows : 0 ?> Items</span>
         </div>
         <div class="opted-list-wrapper">
             <?php if ($res && $res->num_rows > 0): ?>
                 <?php while($row = $res->fetch_assoc()):
                     $title = $row['type_name'] ?? $row['design_name'] ?? $row['color_name'] ?? 
-                             $row['matboard_color_name'] ?? $row['mount_name'] ?? $row['paper_name'] ?? 'Unnamed';
+                             $row['matboard_color_name'] ?? $row['mount_name'] ?? $row['paper_name'] ?? 
+                             ($active_tab == 'frame_sizes' ? ($row['dimension'] ?? 'Size') : 'Unnamed');
                     
-                    $pkMap = [
+                    // Logic for getting the correct option ID dynamically
+                    $pkMapLoop = [
                         'frame_types' => 'frame_type_id', 'frame_designs' => 'frame_design_id',
                         'frame_colors' => 'frame_color_id', 'frame_sizes' => 'frame_size_id',
                         'matboard_colors' => 'matboard_color_id', 'mount_types' => 'mount_type_id',
                         'paper_types' => 'paper_type_id'
                     ];
-                    $pkCol = $pkMap[$active_tab] ?? 'id';
-                    $recordId = $row[$pkCol];
+                    $pkColLoop = $pkMapLoop[$active_tab] ?? 'id';
+                    $recordId = $row[$pkColLoop] ?? 0;
                     $isActive = (int)($row['is_active'] ?? 1);
                 ?>
                 <div class="opted-row-item" id="row-<?= $recordId ?>">
@@ -273,7 +315,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
 <script src="../assets/js/admin_options.js"></script>
 >>>>>>> b5c71d73b83f4360f89afd718f8ad1690b0653fa
 <script>
-    // Required to render your Lucide icons after page load
     lucide.createIcons();
 </script>
 </body>
