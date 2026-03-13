@@ -230,7 +230,7 @@ html {
 .idx-mobile-menu-toggle span {
     width: 30px;
     height: 3px;
-    background: white; /* Your brand color */
+    background: white; 
     border-radius: 10px;
     transition: all 0.3s ease-in-out;
     transform-origin: center;
@@ -1631,7 +1631,7 @@ color: #DC2626;
     border: 2px solid gold;
 }
 
- .gst-hdr-logo img {
+.gst-hdr-logo img {
     width: 100%;
     height: 100%;
     object-fit: contain;
@@ -1656,6 +1656,7 @@ color: #DC2626;
     font-weight: 600;
 }
 
+/* --- Mobile Toggle --- */
 .gst-mobile-menu-toggle {
     display: none;
     flex-direction: column;
@@ -1672,7 +1673,7 @@ color: #DC2626;
 .gst-mobile-menu-toggle span {
     width: 30px;
     height: 3px;
-    background: var(--forest-dark);
+    background: white;
     border-radius: 10px;
     transition: all 0.3s ease;
     transform-origin: center;
@@ -1690,6 +1691,7 @@ color: #DC2626;
     transform: translateY(-8px) rotate(-45deg);
 }
 
+/* --- Navigation & Overlay --- */
 .gst-mobile-overlay {
     display: none;
     position: fixed;
@@ -1704,6 +1706,7 @@ color: #DC2626;
 }
 
 .gst-mobile-overlay.active {
+    display: block;
     opacity: 1;
 }
 
@@ -1731,50 +1734,27 @@ color: #DC2626;
     text-decoration: none;
     font-family: var(--font-primary);
     color: white;
-    /* background: var(--forest-muted); */
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
     white-space: nowrap;
 }
 
-.gst-hdr-nav-link::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-    transition: left 0.5s ease;
-}
-
-.gst-hdr-nav-link:hover::before {
-    left: 100%;
-}
-
+/* Desktop Hover Effect */
 .gst-hdr-nav-link:hover {
     background: var(--forest-muted);
     color: white !important;
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(15, 71, 58, 0.2);
-
 }
 
 .gst-hdr-nav-link i {
     font-size: 0.95rem;
 }
 
+/* Desktop Login/Register Overrides */
 .gst-hdr-btn-login {
     background: transparent;
-    border: 2px solid white;
-}
-
-.gst-hdr-btn-login:hover {
-    background: var(--forest-muted);
-    border-color: var(--forest-dark);
-    color: white !important;
-    /* border: 2px solid white; */
 }
 
 .gst-hdr-btn-register {
@@ -1783,50 +1763,60 @@ color: #DC2626;
     border: 2px solid var(--forest-dark);
 }
 
-.gst-hdr-btn-register:hover {
-    background: var(--forest-muted);
-    border-color: var(--forest-muted);
-}
- /* Mobile Navigation Styles */
+/* =========================================
+   RESPONSIVE STYLES (Mobile Menu Fixes)
+   ========================================= */
+
 @media (max-width: 768px) {
     .gst-mobile-menu-toggle {
-        display: flex; /* Show the hamburger button */
+        display: flex;
     }
 
     .gst-hdr-nav {
         position: fixed;
         top: 0;
-        right: -100%; /* Hide it off-screen to the right */
+        right: -100%;
         width: 280px;
         height: 100vh;
         background: white;
-        flex-direction: column; /* Stack the links vertically */
-        padding: 80px 20px 20px 20px;
-        gap: 1rem;
+        flex-direction: column;
+        padding: 90px 20px 20px 20px;
+        gap: 0.5rem; /* Tighter gap for a list look */
         transition: right 0.4s ease-in-out;
         box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
         z-index: 2000;
-        align-items: stretch; /* Make buttons full width */
+        align-items: stretch;
     }
 
     .gst-hdr-nav.active {
-        right: 0; /* Slide it in when active */
+        right: 0;
     }
+    
 
-    .gst-mobile-overlay.active {
-        display: block; /* Show the dark background blur */
-        opacity: 1;
-    }
-
-    .gst-hdr-divider {
-        width: 100%;
-        height: 1px;
-        margin: 10px 0;
-    }
-
+    /* Target all links in mobile nav */
     .gst-hdr-nav-link {
-        justify-content: flex-start; /* Align icon and text to the left */
+        justify-content: flex-start;
         width: 100%;
+        border: none !important; /* Remove all borders */
+        background: transparent !important; /* Remove all backgrounds */
+        color: var(--forest-dark) !important; /* A solid green color for visibility on white */
+        border-radius: 10px;
+        padding: 1rem 1.2rem;
+    }
+
+    /* Hover State for Home, Login, and Register */
+    .gst-hdr-nav-link:hover {
+        background: var(--forest-dark) !important; /* Dark forest background */
+        color: white !important; /* White text on hover */
+        transform: none; /* Remove desktop lift effect */
+        box-shadow: none;
+    }
+
+    /* Ensure specific buttons match the clean mobile style */
+    .gst-hdr-btn-login, 
+    .gst-hdr-btn-register {
+        margin: 0;
+        font-weight: 600;
     }
 }
 /* =========================================
@@ -2632,191 +2622,131 @@ color: #DC2626;
 /* ============================================================
    FULL ADMIN HEADER STYLES (DESKTOP & MOBILE)
    ============================================================ */
-.admn-body {
-    margin: 0;
-    padding: 0;
-    font-family: var(--font-primary);
-    scroll-behavior: smooth;
-}
 
-/* ================= HEADER ================= */
-
-.admn-body {
-    margin: 0;
-    padding: 0;
-    font-family: var(--font-primary);
-    scroll-behavior: smooth;
-}
+/* --- 1. Layout & Header Container --- */ 
 
 .admn-hdr-container {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    background: #004030;
-    backdrop-filter: blur(10px);
-    height: 76px; /* Standardized Height */
-    padding: 0 2rem; /* Standardized Padding */
-    box-sizing: border-box; /* Prevents stretching */
+    background: var(--hdr-bg);
+    height: 76px;
+    padding: 0 1.5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    z-index: 2000;
-    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1100; /* Stays below the mobile sidebar */
 }
 
-.admn-hdr-container.scrolled {
-    background: #004030;
-}
 
-.admn-hdr-left {
+/* --- 2. Branding --- */
+.admn-hdr-brand-link {
+    text-decoration: none;
     display: flex;
     align-items: center;
     gap: 0.8rem;
-    flex: 1;
 }
-.admn-hdr-logo svg {
-    width: 28px !important;
-    height: 28px !important;
-    display: block;
+
+.admn-hdr-logo {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid gold;
+    background: white;
+    overflow: hidden;
+}
+
+.admn-hdr-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .admn-hdr-brand h1 {
-    margin: 0;
-    font-size: 1.25rem; /* Standardized from 20px */
+    font-size: 20px;
     font-weight: 700;
     color: white;
-    line-height: 1;
+    margin: 0;
 }
 
-/* ================= DESKTOP NAV ================= */
+/* --- 3. Desktop Navigation --- */
+.admn-hdr-left,
+.admn-hdr-nav,
+.admn-hdr-right-actions {
+    display: flex;
+    align-items: center;
+}
 
 .admn-hdr-nav {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 2001;
+    gap: 0.5rem;
 }
 
-.admn-hdr-nav-link {
+.admn-hdr-nav-link,
+.admn-hdr-dropdown-toggle {
     display: flex;
     align-items: center;
-    gap: 8px;
-    color: white !important;
+    gap: 0.3rem;
+    padding: 0.5rem 0.8rem;
     text-decoration: none;
     font-weight: 600;
-    font-size: 1rem;
-    padding: 12px 20px;
-    transition: all 0.2s ease;
-    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.8);
+    transition: 0.2s;
 }
 
-.admn-hdr-nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-/* ================= USER DROPDOWN ================= */
-.admn-hdr-user-area {
-    display: flex;
-    justify-content: flex-end;
-    flex: 1;
-    position: relative;
-    overflow: visible !important;
-}
-
-.dropdown {
-    position: relative;
+.admn-hdr-nav-link:hover,
+.admn-hdr-active,
+.admn-hdr-user-area .cust-hdr-dropdown-toggle:hover {
+    background: var(--hdr-accent);
+    color: white !important;
+    border-radius: 8px;
 }
 
 .admn-hdr-dropdown-menu {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: 100%;
-    z-index: 9999 !important;
-    background-color: #ffffff !important;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-    min-width: 160px;
-    padding: 0.5rem 0;
-    margin-top: 10px !important;
+    padding: 0;
+    overflow: hidden;
 }
-
-.admn-hdr-dropdown-menu.show {
-    display: block !important;
-}
-
-.admn-hdr-dropdown-toggle {
-    color: white !important;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.admn-dropdown-item {
-    color: white !important;
+.admn-hdr-dropdown-menu .dropdown-item {
+    padding: 10px 15px;
     display: block;
     width: 100%;
-    padding: 0.75rem 1.5rem;
-    text-decoration: none;
-    transition: background 0.2s;
+    transition: 0.2s;
+}
+.admn-hdr-logout-item {
+    color: var(--danger-red) !important;
 }
 
-.admn-dropdown-item:hover {
-    background-color: #bd2130 !important;
-}
-/* ================= MOBILE TOGGLE ================= */
-
-.admn-mobile-menu-toggle {
-    display: none;
-    flex-direction: column;
-    gap: 5px;
-    background: none;
-    border: none;
-    position: relative;
-    z-index: 2101; /* Higher than nav */
+.admn-hdr-logout-item:hover {
+    background-color: var(--danger-red) !important;
+    color: white !important;
 }
 
-.admn-mobile-menu-toggle span {
-    width: 25px;
-    height: 3px;
+/* --- 5. Mobile Menu & Sidebar (THE CLICK FIX) --- */
+.admn-mobile-menu {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 280px;
+    height: 100vh;
     background: white;
-    transition: 0.3s ease;
+    z-index: 1500; /* HIGHER than overlay */
+    transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 80px 0 20px 0; /* Top padding for the header height */
 }
 
-/* Animate hamburger */
-.admn-mobile-menu-toggle.active span:nth-child(1) {
-    transform: rotate(45deg) translate(5px, 5px);
+.admn-mobile-menu.active {
+    right: 0;
 }
-
-.admn-mobile-menu-toggle.active span:nth-child(2) {
-    opacity: 0;
-}
-
-.admn-mobile-menu-toggle.active span:nth-child(3) {
-    transform: rotate(-45deg) translate(6px, -6px);
-}
-
-
-/* ================= MOBILE OVERLAY ================= */
 
 .admn-mobile-overlay {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.5);
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
     visibility: hidden;
     opacity: 0;
+    z-index: 1400; /* LOWER than sidebar */
     transition: 0.3s;
-    z-index: 1999;
 }
 
 .admn-mobile-overlay.active {
@@ -2824,62 +2754,95 @@ color: #DC2626;
     opacity: 1;
 }
 
-/* ================= MOBILE STYLES ================= */
+.admn-hdr-nav-mobile {
+    display: flex;
+    flex-direction: column;
+}
 
+/* Make mobile links full-width for clicking */
+.admn-hdr-nav-mobile .admn-hdr-nav-link {
+    color: #333;
+    padding: 15px 25px;
+    width: 100%;
+    border-bottom: 1px solid #eee;
+}
+
+/* Mobile Logout Red Hover */
+.admn-hdr-nav-mobile .admn-hdr-nav-link.text-danger:hover {
+    background-color: var(--danger-red) !important;
+    color: white !important;
+}
+
+/* --- 6. Icons & Toggles --- */
+.admn-hdr-icon-btn {
+    color: white;
+    font-size: 1.2rem;
+    position: relative;
+    text-decoration: none;
+    padding: 0 5px;
+}
+
+.admn-hdr-badge {
+    position: absolute;
+    top: -8px;
+    right: -5px;
+    background: var(--danger-red);
+    color: white;
+    font-size: 0.65rem;
+    padding: 2px 5px;
+    border-radius: 50%;
+}
+
+.admn-mobile-menu-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    padding: 5px;
+}
+
+.admn-mobile-menu-toggle span {
+    width: 25px;
+    height: 3px;
+    background: white;
+    transition: 0.3s;
+}
+
+/* Hamburger lines */
+.admn-mobile-menu-toggle {
+    display: none; /* default hidden on desktop */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.admn-mobile-menu-toggle span {
+    width: 25px;
+    height: 3px;
+    background: white;
+    transition: 0.3s;
+}
+
+/* Show hamburger only on screens <= 992px */
 @media (max-width: 992px) {
-
-    /* Hide desktop dropdown completely */
-    .admn-hdr-user-area {
-        display: none !important;
-    }
-
     .admn-mobile-menu-toggle {
         display: flex;
     }
 
-    .admn-hdr-nav {
-        position: fixed;
-        top: 0;
-        right: -100%;
-        width: 280px;
-        height: 100vh;
-        background: #ffffff;
-        flex-direction: column;
-        justify-content: flex-start;
-        padding: 100px 20px 20px 20px;
-        left: auto;
-        transform: none;
-        transition: right 0.4s ease;
-        box-shadow: -5px 0 25px rgba(0,0,0,0.1);
-        z-index: 2050;
+    .admn-hdr-nav,
+    .admn-hdr-user-area {
+        display: none;
     }
-
-    .admn-hdr-nav.active {
-        right: 0;
-    }
-
-    .admn-hdr-nav-link {
-        color: #004030 !important;
-        width: 100%;
-        padding: 14px 16px;
-        border-radius: 8px;
-    }
-
-    .admn-hdr-nav-link:hover {
-        background: #f4f4f4;
-    }
-
-    /* Logout styling in mobile */
-    .logout-mobile {
-        margin-top: 30px;
-        padding-top: 20px;
-        border-top: 1px solid #e5e5e5;
-        color: #bd2130 !important;
-        font-weight: 600;
-    }
-
     
 }
+
+
 /* =========================================
    CUSTOMER HEADER STYLES
    ========================================= */
@@ -2905,6 +2868,7 @@ color: #DC2626;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     z-index: 1100; /* Stays below the mobile sidebar */
 }
+
 
 /* --- 2. Branding --- */
 .cust-hdr-brand-link {
@@ -2968,23 +2932,34 @@ color: #DC2626;
     border-radius: 8px;
 }
 
-/* --- 4. User Dropdown & Logout (Full Box Red) --- */
+/* --- 4. User Dropdown --- */
 .cust-hdr-dropdown-menu {
-    padding: 0; /* Removes gap so hover fills the box */
+    padding: 0;
     overflow: hidden;
+}
+.cust-hdr-dropdown-menu .dropdown-item {
+    padding: 10px 15px;
+    display: block;
+    width: 100%;
+    transition: 0.2s;
+}
+
+.cust-hdr-profile-item {
+    color: var(--hdr-bg) !important; 
+}
+
+.cust-hdr-profile-item:hover {
+    background-color: var(--forest-muted) !important;
+    color: white !important;
 }
 
 .cust-hdr-logout-item {
     color: var(--danger-red) !important;
-    padding: 10px 15px; /* Adjust padding to match other items */
-    display: block;
-    width: 100%;
 }
 
 .cust-hdr-logout-item:hover {
     background-color: var(--danger-red) !important;
     color: white !important;
-    border-radius: 0; /* Keeps it a full rectangle box */
 }
 
 /* --- 5. Mobile Menu & Sidebar (THE CLICK FIX) --- */
@@ -3789,7 +3764,7 @@ body {
    10. PRINTING SERVICES STYLES (ps-)
    ========================================= */
 
-/* --- 1. Layout & Base --- */
+
 .ps-body {
     background-color: #fcfcfc;
 }

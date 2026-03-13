@@ -1,5 +1,4 @@
 <?php
-// admin/download_image.php
 // Serves the original image file as a forced download — preserves full quality.
 session_start();
 include __DIR__ . '/../config/db_connect.php';
@@ -14,8 +13,8 @@ $filename = $_GET['name'] ?? 'download';
 
 // Sanitize: strip any directory traversal attempts
 $rawPath = ltrim($rawPath, '/');
-$rawPath = preg_replace('/\.\.\//', '', $rawPath); // remove ../
-$rawPath = preg_replace('/\.\.\\\\/', '', $rawPath); // remove ..\
+$rawPath = preg_replace('/\.\.\//', '', $rawPath); 
+$rawPath = preg_replace('/\.\.\\\\/', '', $rawPath); 
 
 // Build absolute path — images are stored relative to project root
 $basePath = realpath(__DIR__ . '/../');

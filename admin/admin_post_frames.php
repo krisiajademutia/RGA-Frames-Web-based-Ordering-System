@@ -316,8 +316,37 @@ $posted_frames = $frameService->getAllFrames();
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Inline JS to handle preview and basic functions without changing UI
+function handleMultipleFilePreview(input) {
+    const container = document.getElementById('image_preview_container');
+    container.innerHTML = '';
+    if (input.files) {
+        Array.from(input.files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'preview-thumb';
+                img.style.width = '60px';
+                img.style.height = '60px';
+                img.style.objectFit = 'cover';
+                img.style.borderRadius = '5px';
+                img.style.margin = '2px';
+                container.appendChild(img);
+            }
+            reader.readAsDataURL(file);
+        });
+    }
+}
+
+function confirmDelete(id, name) {
+    document.getElementById('deleteProductName').textContent = name;
+    document.getElementById('confirmDeleteLink').href = '/rga_frames/process/postframe_process.php?delete_id=' + id;
+    new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
+}
+</script>
+
 <script src="/rga_frames/assets/js/post_script.js"></script>
 </body>
 </html>

@@ -27,12 +27,10 @@
 
     <!-- Navigation -->
     <nav class="gst-hdr-nav" id="gstMainNav">
-        <a href="index.php" class="gst-hdr-nav-link">
+        <a href="index.php" class="gst-hdr-nav-link gst-hdr-btn-home">
             <i class="fas fa-home"></i> 
             <span>Home</span>
         </a>
-        
-        <div class="gst-hdr-divider"></div>
         
         <a href="login.php" class="gst-hdr-nav-link gst-hdr-btn-login">
             <i class="fas fa-sign-in-alt"></i> 
