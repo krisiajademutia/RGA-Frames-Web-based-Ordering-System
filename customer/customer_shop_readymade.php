@@ -85,7 +85,7 @@ $posted_frames = $frameService->getAllFrames();
         </div>
     </div>
 
-    <div class="modal fade" id="productDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="productDetailsModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content custom-modal-content shadow-lg">
                 <div class="modal-body p-5">
@@ -168,14 +168,14 @@ $posted_frames = $frameService->getAllFrames();
 <script>
     const productModal = document.getElementById('productDetailsModal');
     
-    // Clear backdrop manually when the modal is hidden
+    // FORCE REMOVAL of black background whenever modal is closed
     productModal.addEventListener('hidden.bs.modal', function () {
         const backdrops = document.querySelectorAll('.modal-backdrop');
         backdrops.forEach(backdrop => backdrop.remove());
+        document.body.style.overflow = 'auto'; // Re-enable scrolling
         document.body.classList.remove('modal-open');
-        document.body.style.overflow = 'auto';
     });
-
+    
     productModal.addEventListener('show.bs.modal', function (event) {
         const button = event.relatedTarget;
         const product = JSON.parse(button.getAttribute('data-product'));
@@ -210,9 +210,10 @@ $posted_frames = $frameService->getAllFrames();
         const formData = new FormData(document.getElementById('addToCartForm'));
         alert(`Adding ${formData.get('quantity')} units of Product ID ${formData.get('product_id')} to cart!`);
         
-        // Proper way to hide using Bootstrap Instance
-        const modalInstance = bootstrap.Modal.getInstance(productModal) || new bootstrap.Modal(productModal);
-        modalInstance.hide();
+        const modalInstance = bootstrap.Modal.getInstance(productModal);
+        if (modalInstance) {
+            modalInstance.hide();
+        }
     }
 </script>
 <?php require_once __DIR__ . '/../includes/idx_footer.php'; ?>
