@@ -10,26 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-document.querySelectorAll('.opt-btn-edit').forEach(button => {
-    button.addEventListener('click', function() {
-        const row = this.closest('.opted-row-item');
-        const recordId = row.id.replace('row-', '');
-        const urlParams = new URLSearchParams(window.location.search);
-        const activeTab = urlParams.get('tab') || 'frame_types';
-        window.location.href = `?tab=${activeTab}&action=edit&id=${recordId}#form-section`;
-    });
-});
-
-window.addEventListener('load', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('action') === 'edit') {
-        const formElement = document.getElementById('form-section');
-        if (formElement) {
-            formElement.scrollIntoView({ behavior: 'smooth' });
-        }
-    }
-});
-
 function confirmDelete(id, name, tab) {
     document.getElementById('deleteOptionName').textContent = name;
     document.getElementById('deleteOptionId').value = id;
@@ -39,25 +19,72 @@ function confirmDelete(id, name, tab) {
 }
 
 /**
- * SINGLE FILE PREVIEW (Frame Types, Colors, Matboards)
+ * SHOW EXISTING IMAGE (Used during Edit Mode)
+ */
+function showExistingImage(imgUrl, containerId, textId, inputId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    const uploadZone = container.closest('.opt-upload-zone');
+    
+    // Fill the entire zone
+    container.style.position = 'absolute';
+    container.style.top = '0';
+    container.style.left = '0';
+    container.style.width = '100%';
+    container.style.height = '100%';
+    container.style.zIndex = '10';
+    container.style.backgroundColor = '#fff';
+    container.style.borderRadius = '8px';
+    container.style.overflow = 'hidden';
+
+    container.innerHTML = `
+        <div class="preview-wrapper" style="width: 100%; height: 100%; position: relative; pointer-events: auto;">
+            <button type="button" 
+                onclick="removeSingleImage(event, '${inputId}', '${containerId}', '${textId}')" 
+                style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.6); color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:50%; width:28px; height:28px; cursor:pointer; z-index:20; display:flex; align-items:center; justify-content:center; font-size: 18px;">
+                &times;
+            </button>
+            <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+        </div>`;
+
+    // Hide background helper content
+    const uploadContent = uploadZone.querySelector('.upload-content');
+    if (uploadContent) uploadContent.style.visibility = 'hidden';
+}
+
+/**
+ * SINGLE FILE PREVIEW (New Uploads)
  */
 function handleSingleFilePreview(input, containerId, textId) {
     const container = document.getElementById(containerId);
-    const textElement = document.getElementById(textId);
+    const uploadZone = container.closest('.opt-upload-zone');
     
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = function(e) {
+            container.style.position = 'absolute';
+            container.style.top = '0';
+            container.style.left = '0';
+            container.style.width = '100%';
+            container.style.height = '100%';
+            container.style.zIndex = '10';
+            container.style.backgroundColor = '#fff';
+            container.style.borderRadius = '8px';
+            container.style.overflow = 'hidden';
+
             container.innerHTML = `
-                <div class="preview-wrapper" style="width: 100px; height: 100px; position: relative; margin: 0 auto; pointer-events: auto;">
+                <div class="preview-wrapper" style="width: 100%; height: 100%; position: relative; pointer-events: auto;">
                     <button type="button" 
                         onclick="removeSingleImage(event, '${input.id}', '${containerId}', '${textId}')" 
-                        style="position:absolute; top:-10px; right:-10px; background:#000; color:#fff; border:2px solid #fff; border-radius:50%; width:24px; height:24px; cursor:pointer; z-index:10; display:flex; align-items:center; justify-content:center;">
+                        style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.6); color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:50%; width:28px; height:28px; cursor:pointer; z-index:20; display:flex; align-items:center; justify-content:center; font-size: 18px;">
                         &times;
                     </button>
-                    <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">
+                    <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
                 </div>`;
-            textElement.style.display = 'none';
+            
+            const uploadContent = uploadZone.querySelector('.upload-content');
+            if (uploadContent) uploadContent.style.visibility = 'hidden';
         };
         reader.readAsDataURL(input.files[0]);
     }
@@ -65,14 +92,19 @@ function handleSingleFilePreview(input, containerId, textId) {
 
 function removeSingleImage(event, inputId, containerId, textId) {
     event.stopPropagation();
+    const container = document.getElementById(containerId);
+    const uploadZone = container.closest('.opt-upload-zone');
+    
     document.getElementById(inputId).value = "";
-    document.getElementById(containerId).innerHTML = "";
-    document.getElementById(textId).style.display = 'block';
-    document.getElementById(textId).innerText = "Click to upload photo";
+    container.innerHTML = "";
+    container.style.zIndex = '-1'; 
+
+    const uploadContent = uploadZone.querySelector('.upload-content');
+    if (uploadContent) uploadContent.style.visibility = 'visible';
 }
 
 /**
- * MULTI-FILE PREVIEW (Frame Designs Only)
+ * MULTI-FILE PREVIEW (Designs)
  */
 function handleMultipleFilePreview(input, containerId, textId) {
     if (input.files && input.files.length > 0) {

@@ -10,7 +10,6 @@ class FrameTypeRepository implements OptionRepositoryInterface {
         $this->uploadDir = $uploadDir;
     }
 
-    // NEW: Added to allow fetching specific type details for editing
     public function getById(int $id): ?array {
         $stmt = $this->db->prepare("SELECT * FROM tbl_frame_types WHERE frame_type_id = ?");
         $stmt->bind_param("i", $id);
@@ -21,15 +20,10 @@ class FrameTypeRepository implements OptionRepositoryInterface {
 
     public function create(array $data, array $files): bool {
         $imageName = null;
-
         if (isset($files['type_image']) && $files['type_image']['error'] === UPLOAD_ERR_OK) {
             $ext = pathinfo($files['type_image']['name'], PATHINFO_EXTENSION);
             $imageName = 'type_' . time() . '_' . uniqid() . '.' . $ext;
-            $targetPath = $this->uploadDir . $imageName;
-
-            if (!move_uploaded_file($files['type_image']['tmp_name'], $targetPath)) {
-                return false;
-            }
+            if (!move_uploaded_file($files['type_image']['tmp_name'], $this->uploadDir . $imageName)) return false;
         }
 
         $isActive = (int)($data['is_active'] ?? 1);
@@ -43,17 +37,38 @@ class FrameTypeRepository implements OptionRepositoryInterface {
     }
 
     public function update(int $id, array $data, array $files = []): bool {
-        // Debug/Fix: Match keys used in your opt-form-grid
         $typeName = $data['type_name'] ?? ($data['name'] ?? '');
         $typePrice = $data['type_price'] ?? ($data['price'] ?? 0);
         $isActive = (int)($data['is_active'] ?? 1);
+        $existingImage = $data['existing_image'] ?? null; // Hidden field from form
+        
+        $current = $this->getById($id);
+        $finalImage = $current['image_name'];
 
-        $stmt = $this->db->prepare("UPDATE tbl_frame_types SET type_name = ?, type_price = ?, is_active = ? WHERE frame_type_id = ?");
-        $stmt->bind_param("sdii", $typeName, $typePrice, $isActive, $id);
+        // Case 1: New File Uploaded
+        if (isset($files['type_image']) && $files['type_image']['error'] === UPLOAD_ERR_OK) {
+            if ($finalImage && file_exists($this->uploadDir . $finalImage)) unlink($this->uploadDir . $finalImage);
+            
+            $ext = pathinfo($files['type_image']['name'], PATHINFO_EXTENSION);
+            $finalImage = 'type_' . time() . '_' . uniqid() . '.' . $ext;
+            move_uploaded_file($files['type_image']['tmp_name'], $this->uploadDir . $finalImage);
+        } 
+        // Case 2: User clicked "Remove" (existing_image will be empty)
+        elseif (empty($existingImage) && $finalImage) {
+            if (file_exists($this->uploadDir . $finalImage)) unlink($this->uploadDir . $finalImage);
+            $finalImage = null;
+        }
+
+        $stmt = $this->db->prepare("UPDATE tbl_frame_types SET type_name = ?, type_price = ?, image_name = ?, is_active = ? WHERE frame_type_id = ?");
+        $stmt->bind_param("sdsii", $typeName, $typePrice, $finalImage, $isActive, $id);
         return $stmt->execute();
     }
 
     public function delete(int $id): bool {
+        $current = $this->getById($id);
+        if ($current && $current['image_name'] && file_exists($this->uploadDir . $current['image_name'])) {
+            unlink($this->uploadDir . $current['image_name']);
+        }
         $stmt = $this->db->prepare("DELETE FROM tbl_frame_types WHERE frame_type_id = ?");
         $stmt->bind_param("i", $id);
         return $stmt->execute();

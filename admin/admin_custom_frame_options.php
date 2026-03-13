@@ -105,13 +105,17 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                     <div class="opt-upload-container">
                         <label class="opt-label">PRODUCT PHOTO <span class="text-danger">*</span></label>
                         <div class="opt-upload-zone position-relative" onclick="document.getElementById('add_type_img').click();">
-                            <input type="file" name="type_image" id="add_type_img" style="display:none;" onchange="handleSingleFilePreview(this, 'image_preview_container', 'opt_img_text')">
-                            <div id="image_preview_container" class="preview-overlay"></div>
+                            <input type="hidden" name="existing_image" id="existing_type_val" value="<?= htmlspecialchars($edit_data['image_name'] ?? '') ?>">
+                            <input type="file" name="type_image" id="add_type_img" style="display:none;" onchange="handleSingleFilePreview(this, 'type_preview', 'type_text', 'existing_type_val')">
+                            <div id="type_preview" class="preview-overlay"></div>
                             <div class="upload-content text-center">
                                 <i class="fa-solid fa-images"></i>
-                                <p class="m-0" id="opt_img_text">Click to upload photo</p>
+                                <p class="m-0" id="type_text">Click to upload photo</p>
                             </div>
                         </div>
+                        <?php if($is_editing && !empty($edit_data['image_name'])): ?>
+                            <script>window.addEventListener('load', () => { showExistingImage('../uploads/<?= $edit_data['image_name'] ?>', 'type_preview', 'type_text', 'add_type_img', 'existing_type_val'); });</script>
+                        <?php endif; ?>
                     </div>
 
                 <?php elseif($active_tab == 'frame_designs'): ?>
@@ -158,13 +162,17 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                     <div class="opt-upload-container">
                         <label class="opt-label">COLOR SWATCH <span class="text-danger">*</span></label>
                         <div class="opt-upload-zone position-relative" onclick="document.getElementById('color_img').click();">
-                            <input type="file" name="color_image" id="color_img" style="display:none;" onchange="handleSingleFilePreview(this, 'color_preview', 'color_text')">
+                            <input type="hidden" name="existing_image" id="existing_color_val" value="<?= htmlspecialchars($edit_data['color_image'] ?? '') ?>">
+                            <input type="file" name="color_image" id="color_img" style="display:none;" onchange="handleSingleFilePreview(this, 'color_preview', 'color_text', 'existing_color_val')">
                             <div id="color_preview" class="preview-overlay"></div>
                             <div class="upload-content text-center">
                                 <i class="fa-solid fa-palette"></i>
                                 <p class="m-0" id="color_text">Click to upload swatch</p>
                             </div>
                         </div>
+                        <?php if($is_editing && !empty($edit_data['color_image'])): ?>
+                            <script>window.addEventListener('load', () => { showExistingImage('../uploads/<?= $edit_data['color_image'] ?>', 'color_preview', 'color_text', 'color_img', 'existing_color_val'); });</script>
+                        <?php endif; ?>
                     </div>
 
                 <?php elseif($active_tab == 'matboard_colors'): ?>
@@ -186,13 +194,17 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                     <div class="opt-upload-container">
                         <label class="opt-label">MATBOARD SWATCH <span class="text-danger">*</span></label>
                         <div class="opt-upload-zone position-relative" onclick="document.getElementById('mat_img').click();">
-                            <input type="file" name="matboard_image" id="mat_img" style="display:none;" onchange="handleSingleFilePreview(this, 'mat_preview', 'mat_text')">
+                            <input type="hidden" name="existing_image" id="existing_mat_val" value="<?= htmlspecialchars($edit_data['image_name'] ?? '') ?>">
+                            <input type="file" name="image_name" id="mat_img" style="display:none;" onchange="handleSingleFilePreview(this, 'mat_preview', 'mat_text', 'existing_mat_val')">
                             <div id="mat_preview" class="preview-overlay"></div>
                             <div class="upload-content text-center">
                                 <i class="fa-solid fa-palette"></i>
                                 <p class="m-0" id="mat_text">Click to upload swatch</p>
                             </div>
                         </div>
+                        <?php if($is_editing && !empty($edit_data['image_name'])): ?>
+                            <script>window.addEventListener('load', () => { showExistingImage('../uploads/<?= $edit_data['image_name'] ?>', 'mat_preview', 'mat_text', 'mat_img', 'existing_mat_val'); });</script>
+                        <?php endif; ?>
                     </div>
 
                 <?php elseif($active_tab == 'frame_sizes'): ?>
@@ -256,7 +268,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                              $row['matboard_color_name'] ?? $row['mount_name'] ?? $row['paper_name'] ?? 
                              ($active_tab == 'frame_sizes' ? ($row['dimension'] ?? 'Size') : 'Unnamed');
                     
-                    // Logic for getting the correct option ID dynamically
                     $pkMapLoop = [
                         'frame_types' => 'frame_type_id', 'frame_designs' => 'frame_design_id',
                         'frame_colors' => 'frame_color_id', 'frame_sizes' => 'frame_size_id',
@@ -290,8 +301,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
         </div>
     </div>
 </div>
-<<<<<<< HEAD
-=======
 
 <div class="modal fade" id="deleteConfirmModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -311,9 +320,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
     </div>
 </div>
 
-
 <script src="../assets/js/admin_options.js"></script>
->>>>>>> b5c71d73b83f4360f89afd718f8ad1690b0653fa
 <script>
     lucide.createIcons();
 </script>
