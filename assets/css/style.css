@@ -1579,7 +1579,85 @@ color: #059669;
 background: #FECACA;
 color: #DC2626;
 }
+/* --- Mobile Responsiveness (The Fix) --- */
+@media (max-width: 768px) {
+    .gst-mobile-menu-toggle {
+        display: flex;
+    }
 
+    /* Shrink the main container to fit screen */
+    .opt-admin-container {
+        width: 100%;
+        max-width: 100vw;
+        margin: 100px 0 20px 0;
+        padding: 0 15px;
+        box-sizing: border-box;
+    }
+
+    /* Stack header items vertically */
+    .opt-header-wrapper {
+        flex-direction: column;
+        align-items: flex-start !important;
+        margin-bottom: 30px !important;
+        gap: 15px;
+    }
+
+    /* Make dropdown full width */
+    .opt-dropdown, .opt-dropbtn {
+        width: 100%;
+    }
+
+    /* Force the form grid to 1 column and shrink */
+    .opt-form-grid {
+        grid-template-columns: 1fr; 
+        padding: 20px;
+        gap: 20px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Shrink the upload zone */
+    .opt-upload-zone {
+        width: 100%;
+        margin-top: 10px;
+        box-sizing: border-box;
+    }
+
+    /* Shrink buttons */
+    .opt-btn-submit, .opt-btn-clear {
+        width: 100%;
+    }
+
+    /* Adjust Card Headers for smaller screens */
+    .opt-card-header, .opted-header-bar {
+        padding: 15px 20px;
+    }
+
+    /* Shrink the list rows */
+    .opted-list-wrapper {
+        padding: 15px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .opted-row-item {
+        width: 100%;
+        min-height: auto;
+    }
+
+    .opted-row-inner {
+        flex-direction: column; /* Stack name and buttons */
+        height: auto;
+        padding: 15px;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .opted-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
 /* =========================================
    4. GUEST HEADER STYLES (gst-)
    ========================================= */

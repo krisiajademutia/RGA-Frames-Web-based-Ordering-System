@@ -1,4 +1,5 @@
 <?php
+// Include the logic that initializes the database, the OptionService, and registers all repositories
 require_once __DIR__ . '/../process/fetch_options.php';
 
 $status    = $_GET['success'] ?? null;
@@ -6,8 +7,10 @@ $error_msg = $_GET['error']   ?? null;
 $edit_data = null;
 $is_editing = false;
 
+// Check if an "edit" action is requested via URL parameters
 if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) {
     $edit_id = (int)$_GET['id'];
+    // $service is defined in fetch_options.php
     $edit_data = $service->getOptionById($active_tab, $edit_id); 
     if ($edit_data) {
         $is_editing = true;
@@ -134,7 +137,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                             <option value="0" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 0) ? 'selected' : '' ?>>Inactive</option>
                         </select>
                     </div>
-                    <div class="opt-upload-container">
+                   <div class="opt-upload-container">
                         <label class="opt-label">PRODUCT PHOTOS <span class="text-danger">*</span></label>
                         <div class="opt-upload-zone position-relative" onclick="document.getElementById('add_design_imgs').click();">
                             <input type="file" name="design_images[]" id="add_design_imgs" style="display:none;" multiple onchange="handleMultipleFilePreview(this, 'image_preview_container', 'opt_img_text')">
@@ -145,6 +148,18 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                             </div>
                         </div>
                     </div>
+                    <?php if($is_editing && !empty($edit_data['images'])): ?>
+                        <script>
+                            window.addEventListener('load', () => {
+                                loadExistingPhotos(
+                                    <?= json_encode($edit_data['images']) ?>, 
+                                    'image_preview_container', 
+                                    'opt_img_text', 
+                                    'add_design_imgs'
+                                );
+                            });
+                        </script>
+                    <?php endif; ?>
 
                 <?php elseif($active_tab == 'frame_colors'): ?>
                     <div>
