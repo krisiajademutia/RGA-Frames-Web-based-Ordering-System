@@ -12,8 +12,19 @@ $posted_frames = $frameService->getAllFrames();
 
 <link rel="stylesheet" href="../assets/css/customer_shop.css">
 
+<style>
+    /* BRUTE FORCE FIX: If Bootstrap gets stuck, this ensures the page is clickable */
+    body.modal-open { 
+        overflow: auto !important; 
+        padding-right: 0 !important; 
+    }
+    /* Hide any "ghost" backdrops that aren't properly removed */
+    .modal-backdrop.show:nth-of-type(n+2) {
+        display: none !important;
+    }
+</style>
+
 <div class="post-admin-container animate-fade-in-up" style="margin-top: 120px; padding-bottom: 60px;">
-    
     <div class="post-header-wrapper mb-5 d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
             <h1 class="fw-bold m-0" style="font-size: 26px;">Ready-Made Frames</h1>
@@ -65,7 +76,7 @@ $posted_frames = $frameService->getAllFrames();
                         </div>
                         <div class="posted-card-footer border-top pt-3">
                             <span class="posted-price-text">₱ <?= number_format($row['product_price'], 2) ?></span>
-                            <button class="btn btn-sm rounded-pill px-3 shadow-sm" 
+                            <button class="btn btn-sm rounded-pill px-3 shadow-sm open-details-btn" 
                                     style="background: var(--forest-dark); color: white; font-weight: 700;"
                                     data-bs-toggle="modal" 
                                     data-bs-target="#productDetailsModal"
@@ -85,7 +96,7 @@ $posted_frames = $frameService->getAllFrames();
         </div>
     </div>
 
-    <div class="modal fade" id="productDetailsModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
+    <div class="modal fade" id="productDetailsModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content custom-modal-content shadow-lg">
                 <div class="modal-body p-5">
@@ -110,31 +121,31 @@ $posted_frames = $frameService->getAllFrames();
                         <div class="col-md-7">
                             <button type="button" class="btn-close float-end" data-bs-dismiss="modal" aria-label="Close"></button>
                             
-                            <section>
+                            <section class="mb-4">
                                 <label class="section-label">Service Type</label>
                                 <div class="tile-group">
-                                    <div class="option-tile active"><strong>Frame only</strong><span>Frame without print</span></div>
-                                    <div class="option-tile"><strong>Frame & Print</strong><span>Frame + Printed image</span></div>
+                                    <div class="option-tile active" onclick="toggleTile(this)"><strong>Frame only</strong><span>Frame without print</span></div>
+                                    <div class="option-tile" onclick="toggleTile(this)"><strong>Frame & Print</strong><span>Frame + Printed image</span></div>
                                 </div>
                             </section>
 
-                            <section>
+                            <section class="mb-4">
                                 <label class="section-label">Primary Mat-board <small class="text-muted fw-normal">(optional)</small></label>
                                 <div class="swatch-group">
                                     <div class="swatch-item active" style="background:#f3f4f6; font-size:9px; display:flex; align-items:center; justify-content:center;">None</div>
                                     <div class="swatch-item" style="background:#000033"></div>
                                     <div class="swatch-item" style="background:#004236"></div>
-                                    <div class="swatch-item" style="background:#ffffff;"></div>
+                                    <div class="swatch-item" style="background:#ffffff; border: 1px solid #ddd;"></div>
                                     <div class="swatch-item" style="background:#ffe4c4"></div>
                                     <div class="swatch-item" style="background:#000000"></div>
                                 </div>
                             </section>
 
-                            <section>
+                            <section class="mb-4">
                                 <label class="section-label">Mount Type</label>
                                 <div class="tile-group">
-                                    <div class="option-tile active"><strong>Wall Hanging</strong><span>Hang on wall</span></div>
-                                    <div class="option-tile"><strong>Stand</strong><span>Tabletop display</span></div>
+                                    <div class="option-tile active" onclick="toggleTile(this)"><strong>Wall Hanging</strong><span>Hang on wall</span></div>
+                                    <div class="option-tile" onclick="toggleTile(this)"><strong>Stand</strong><span>Tabletop display</span></div>
                                 </div>
                             </section>
 
@@ -166,20 +177,13 @@ $posted_frames = $frameService->getAllFrames();
 </div>
 
 <script>
+    // 1. POPULATE MODAL ON OPEN
     const productModal = document.getElementById('productDetailsModal');
-    
-    // FORCE REMOVAL of black background whenever modal is closed
-    productModal.addEventListener('hidden.bs.modal', function () {
-        const backdrops = document.querySelectorAll('.modal-backdrop');
-        backdrops.forEach(backdrop => backdrop.remove());
-        document.body.style.overflow = 'auto'; // Re-enable scrolling
-        document.body.classList.remove('modal-open');
-    });
-    
     productModal.addEventListener('show.bs.modal', function (event) {
         const button = event.relatedTarget;
         const product = JSON.parse(button.getAttribute('data-product'));
 
+        // Assign data
         document.getElementById('modalProductId').value = product.r_product_id;
         document.getElementById('modalProductName').innerText = product.product_name;
         document.getElementById('modalProductImg').src = "/rga_frames/uploads/" + product.image_name;
@@ -197,23 +201,43 @@ $posted_frames = $frameService->getAllFrames();
         document.getElementById('modalQtyInput').value = 1;
     });
 
+    // 2. BACKDROP FIX: Force cleanup on close
+    productModal.addEventListener('hidden.bs.modal', function () {
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(backdrop => backdrop.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = 'auto';
+        document.body.style.paddingRight = '0';
+    });
+
+    // 3. UI INTERACTIVITY
     function adjustQty(val) {
         const input = document.getElementById('modalQtyInput');
-        const max = parseInt(input.getAttribute('max'));
+        const max = parseInt(input.getAttribute('max')) || 1;
         let newVal = parseInt(input.value) + val;
         if (newVal >= 1 && newVal <= max) {
             input.value = newVal;
         }
     }
 
+    function toggleTile(element) {
+        // Toggle active class within the same parent group
+        const group = element.parentElement;
+        group.querySelectorAll('.option-tile').forEach(tile => tile.classList.remove('active'));
+        element.classList.add('active');
+    }
+
     function submitAddToCart() {
         const formData = new FormData(document.getElementById('addToCartForm'));
+        // Replace this with your actual AJAX call
         alert(`Adding ${formData.get('quantity')} units of Product ID ${formData.get('product_id')} to cart!`);
         
+        // Proper way to close Bootstrap 5 modal
         const modalInstance = bootstrap.Modal.getInstance(productModal);
         if (modalInstance) {
             modalInstance.hide();
         }
     }
 </script>
+
 <?php require_once __DIR__ . '/../includes/idx_footer.php'; ?>
