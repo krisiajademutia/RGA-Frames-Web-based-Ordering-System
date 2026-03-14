@@ -1,4 +1,5 @@
 <?php
+// Include the logic that initializes the database, the OptionService, and registers all repositories
 require_once __DIR__ . '/../process/fetch_options.php';
 
 $status    = $_GET['success'] ?? null;
@@ -6,9 +7,10 @@ $error_msg = $_GET['error']   ?? null;
 $edit_data = null;
 $is_editing = false;
 
+// Check if an "edit" action is requested via URL parameters
 if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) {
     $edit_id = (int)$_GET['id'];
-    // Service method fix
+    // $service is defined in fetch_options.php
     $edit_data = $service->getOptionById($active_tab, $edit_id); 
     if ($edit_data) {
         $is_editing = true;
@@ -21,10 +23,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Frame Options Management | Admin</title>
-    <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/fixed_price_modal.css">
 </head>
 <body>
 <?php include __DIR__ . '/../includes/admin_header.php'; ?>
@@ -87,7 +90,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
 
             <div class="opt-form-grid">
 
-                <?php if($active_tab == 'frame_types'): ?>
+               <?php if($active_tab == 'frame_types'): ?>
                     <div>
                         <label class="opt-label">Type Name <span>*</span></label>
                         <input type="text" name="type_name" class="opt-input" required value="<?= htmlspecialchars($edit_data['type_name'] ?? '') ?>">
@@ -96,21 +99,30 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                         <label class="opt-label">Price (₱) <span>*</span></label>
                         <input type="number" step="0.01" name="type_price" class="opt-input" required value="<?= $edit_data['type_price'] ?? '' ?>">
                     </div>
-                    <div style="grid-column: span 2;">
-                        <div class="opt-upload-container">
-                            <label class="opt-label">PRODUCT PHOTO <span class="text-danger">*</span></label>
-                            <div class="opt-upload-zone position-relative" onclick="document.getElementById('add_type_img').click();">
-                                <input type="file" name="type_image" id="add_type_img" style="display:none;" onchange="handleSingleFilePreview(this, 'image_preview_container', 'opt_img_text')">
-                                <div id="image_preview_container" class="preview-overlay"></div>
-                                <div class="upload-content text-center">
-                                    <i class="fa-solid fa-images"></i>
-                                    <p class="m-0" id="opt_img_text">Click to upload photo</p>
-                                </div>
+                    <div>
+                        <label class="opt-label">Status</label>
+                        <select name="is_active" class="opt-input">
+                            <option value="1" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 1) ? 'selected' : '' ?>>Active</option>
+                            <option value="0" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 0) ? 'selected' : '' ?>>Inactive</option>
+                        </select>
+                    </div>
+                    <div class="opt-upload-container">
+                        <label class="opt-label">PRODUCT PHOTO <span class="text-danger">*</span></label>
+                        <div class="opt-upload-zone position-relative" onclick="document.getElementById('add_type_img').click();">
+                            <input type="hidden" name="existing_image" id="existing_type_val" value="<?= htmlspecialchars($edit_data['image_name'] ?? '') ?>">
+                            <input type="file" name="type_image" id="add_type_img" style="display:none;" onchange="handleSingleFilePreview(this, 'type_preview', 'type_text', 'existing_type_val')">
+                            <div id="type_preview" class="preview-overlay"></div>
+                            <div class="upload-content text-center">
+                                <i class="fa-solid fa-images"></i>
+                                <p class="m-0" id="type_text">Click to upload photo</p>
                             </div>
                         </div>
+                        <?php if($is_editing && !empty($edit_data['image_name'])): ?>
+                            <script>window.addEventListener('load', () => { showExistingImage('../uploads/<?= $edit_data['image_name'] ?>', 'type_preview', 'type_text', 'add_type_img', 'existing_type_val'); });</script>
+                        <?php endif; ?>
                     </div>
 
-                <?php elseif($active_tab == 'frame_designs'): ?>
+                 <?php elseif($active_tab == 'frame_designs'): ?>
                     <div>
                         <label class="opt-label">Design Name <span>*</span></label>
                         <input type="text" name="design_name" class="opt-input" required value="<?= htmlspecialchars($edit_data['design_name'] ?? '') ?>">
@@ -119,81 +131,30 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                         <label class="opt-label">Price (₱) <span>*</span></label>
                         <input type="number" step="0.01" name="price" class="opt-input" required value="<?= $edit_data['price'] ?? '' ?>">
                     </div>
-                    <div style="grid-column: span 2;">
-                        <div class="opt-upload-container">
-                            <label class="opt-label">PRODUCT PHOTOS <span class="text-danger">*</span></label>
-                            <div class="opt-upload-zone position-relative" onclick="document.getElementById('add_design_imgs').click();">
-                                <input type="file" name="design_images[]" id="add_design_imgs" style="display:none;" multiple onchange="handleMultipleFilePreview(this, 'image_preview_container', 'opt_img_text')">
-                                <div id="image_preview_container" class="preview-overlay"></div>
-                                <div class="upload-content text-center">
-                                    <i class="fa-solid fa-images"></i>
-                                    <p class="m-0" id="opt_img_text">Click to upload multiple photos</p>
-                                </div>
+                    <div>
+                        <label class="opt-label">Status</label>
+                        <select name="is_active" class="opt-input">
+                            <option value="1" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 1) ? 'selected' : '' ?>>Active</option>
+                            <option value="0" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 0) ? 'selected' : '' ?>>Inactive</option>
+                        </select>
+                    </div>
+                    <div class="opt-upload-container">
+                        <label class="opt-label">PRODUCT PHOTOS <span class="text-danger">*</span></label>
+                        <div class="opt-upload-zone position-relative" onclick="document.getElementById('add_design_imgs').click();">
+                            <input type="file" name="design_images[]" id="add_design_imgs" style="display:none;" multiple onchange="handleMultipleFilePreview(this, 'image_preview_container', 'opt_img_text')">
+                            <div id="image_preview_container" class="preview-overlay"></div>
+                            <div class="upload-content text-center">
+                                <i class="fa-solid fa-images"></i>
+                                <p class="m-0" id="opt_img_text">Click to upload multiple photos</p>
                             </div>
                         </div>
                     </div>
 
-                <?php elseif($active_tab == 'frame_colors'): ?>
+
+                   <?php elseif($active_tab == 'frame_colors'): ?>
                     <div>
                         <label class="opt-label">Color Name <span>*</span></label>
                         <input type="text" name="color_name" class="opt-input" required value="<?= htmlspecialchars($edit_data['color_name'] ?? '') ?>">
-                    </div>
-                    <div style="grid-column: span 2;">
-                        <div class="opt-upload-container">
-                            <label class="opt-label">COLOR SWATCH <span class="text-danger">*</span></label>
-                            <div class="opt-upload-zone position-relative" onclick="document.getElementById('color_img').click();">
-                                <input type="file" name="color_image" id="color_img" style="display:none;" onchange="handleSingleFilePreview(this, 'color_preview', 'color_text')">
-                                <div id="color_preview" class="preview-overlay"></div>
-                                <div class="upload-content text-center">
-                                    <i class="fa-solid fa-palette"></i>
-                                    <p class="m-0" id="color_text">Click to upload swatch</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                <?php elseif($active_tab == 'frame_sizes'): ?>
-                    <div><label class="opt-label">Width *</label><input type="number" step="0.01" name="width" class="opt-input" required value="<?= $edit_data['width_inch'] ?? '' ?>"></div>
-                    <div><label class="opt-label">Height *</label><input type="number" step="0.01" name="height" class="opt-input" required value="<?= $edit_data['height_inch'] ?? '' ?>"></div>
-                    <div><label class="opt-label">Total Inches *</label><input type="number" step="0.01" name="total_inches" class="opt-input" required value="<?= $edit_data['total_inch'] ?? '' ?>"></div>
-                    <div><label class="opt-label">Base Price *</label><input type="number" step="0.01" name="base_price" class="opt-input" required value="<?= $edit_data['price'] ?? '' ?>"></div>
-
-                <?php elseif($active_tab == 'matboard_colors'): ?>
-                    <div><label class="opt-label">Color Name *</label><input type="text" name="matboard_color_name" class="opt-input" required value="<?= htmlspecialchars($edit_data['matboard_color_name'] ?? '') ?>"></div>
-                    <div style="grid-column: span 2;">
-                         <div class="opt-upload-container">
-                            <label class="opt-label">MATBOARD SWATCH <span class="text-danger">*</span></label>
-                            <div class="opt-upload-zone position-relative" onclick="document.getElementById('mat_img').click();">
-                                <input type="file" name="matboard_image" id="mat_img" style="display:none;" onchange="handleSingleFilePreview(this, 'mat_preview', 'mat_text')">
-                                <div id="mat_preview" class="preview-overlay"></div>
-                                <div class="upload-content text-center">
-                                    <i class="fa-solid fa-palette"></i>
-                                    <p class="m-0" id="mat_text">Click to upload swatch</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                <?php elseif($active_tab == 'mount_types'): ?>
-                    <div><label class="opt-label">Mount Name *</label><input type="text" name="generic_name" class="opt-input" required value="<?= htmlspecialchars($edit_data['mount_name'] ?? '') ?>"></div>
-                    <div><label class="opt-label">Fee (₱) *</label><input type="number" step="0.01" name="generic_price" class="opt-input" required value="<?= $edit_data['additional_fee'] ?? '' ?>"></div>
-
-                <?php elseif($active_tab == 'paper_types'): ?>
-                    <div>
-                        <label class="opt-label">Paper Name *</label>
-                        <input type="text" name="paper_name" class="opt-input" required value="<?= htmlspecialchars($edit_data['paper_name'] ?? '') ?>">
-                    </div>
-                    <div>
-                        <label class="opt-label">Price (₱) *</label>
-                        <input type="number" step="0.01" name="price" class="opt-input" required value="<?= $edit_data['price'] ?? '' ?>">
-                    </div>
-                    <div>
-                        <label class="opt-label">Max Width (in) *</label>
-                        <input type="number" step="0.01" name="max_width" class="opt-input" required value="<?= $edit_data['max_width'] ?? '' ?>">
-                    </div>
-                    <div>
-                        <label class="opt-label">Max Height (in) *</label>
-                        <input type="number" step="0.01" name="max_height" class="opt-input" required value="<?= $edit_data['max_height'] ?? '' ?>">
                     </div>
                     <div>
                         <label class="opt-label">Status</label>
@@ -202,15 +163,102 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                             <option value="0" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 0) ? 'selected' : '' ?>>Inactive</option>
                         </select>
                     </div>
-                <?php endif; ?>
+                    <div></div>
+                    <div class="opt-upload-container">
+                        <label class="opt-label">COLOR SWATCH <span class="text-danger">*</span></label>
+                        <div class="opt-upload-zone position-relative" onclick="document.getElementById('color_img').click();">
+                            <input type="hidden" name="existing_image" id="existing_color_val" value="<?= htmlspecialchars($edit_data['color_image'] ?? '') ?>">
+                            <input type="file" name="color_image" id="color_img" style="display:none;" onchange="handleSingleFilePreview(this, 'color_preview', 'color_text', 'existing_color_val')">
+                            <div id="color_preview" class="preview-overlay"></div>
+                            <div class="upload-content text-center">
+                                <i class="fa-solid fa-palette"></i>
+                                <p class="m-0" id="color_text">Click to upload swatch</p>
+                            </div>
+                        </div>
+                        <?php if($is_editing && !empty($edit_data['color_image'])): ?>
+                            <script>window.addEventListener('load', () => { showExistingImage('../uploads/<?= $edit_data['color_image'] ?>', 'color_preview', 'color_text', 'color_img', 'existing_color_val'); });</script>
+                        <?php endif; ?>
+                    </div>
 
-                <div>
-                    <label class="opt-label">Status</label>
-                    <select name="is_active" class="opt-input">
-                        <option value="1" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 1) ? 'selected' : '' ?>>Active</option>
-                        <option value="0" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 0) ? 'selected' : '' ?>>Inactive</option>
-                    </select>
-                </div>
+
+               
+                <?php elseif($active_tab == 'matboard_colors'): ?>
+                    <div>
+                        <label class="opt-label">Color Name *</label>
+                        <input type="text" name="matboard_color_name" class="opt-input" required value="<?= htmlspecialchars($edit_data['matboard_color_name'] ?? '') ?>">
+                    </div>
+                    <div>
+                        <label class="opt-label">Status</label>
+                        <select name="is_active" class="opt-input">
+                            <option value="1" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 1) ? 'selected' : '' ?>>Active</option>
+                            <option value="0" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 0) ? 'selected' : '' ?>>Inactive</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="opt-label">Additional Price (₱) <span>*</span></label>
+                        <input type="number" step="0.01" name="base_price" class="opt-input" required value="<?= $edit_data['base_price'] ?? '' ?>">
+                    </div>
+                    <div class="opt-upload-container">
+                        <label class="opt-label">MATBOARD SWATCH <span class="text-danger">*</span></label>
+                        <div class="opt-upload-zone position-relative" onclick="document.getElementById('mat_img').click();">
+                            <input type="hidden" name="existing_image" id="existing_mat_val" value="<?= htmlspecialchars($edit_data['image_name'] ?? '') ?>">
+                            <input type="file" name="image_name" id="mat_img" style="display:none;" onchange="handleSingleFilePreview(this, 'mat_preview', 'mat_text', 'existing_mat_val')">
+                            <div id="mat_preview" class="preview-overlay"></div>
+                            <div class="upload-content text-center">
+                                <i class="fa-solid fa-palette"></i>
+                                <p class="m-0" id="mat_text">Click to upload swatch</p>
+                            </div>
+                        </div>
+                        <?php if($is_editing && !empty($edit_data['image_name'])): ?>
+                            <script>window.addEventListener('load', () => { showExistingImage('../uploads/<?= $edit_data['image_name'] ?>', 'mat_preview', 'mat_text', 'mat_img', 'existing_mat_val'); });</script>
+                        <?php endif; ?>
+                    </div>
+
+
+                <?php elseif($active_tab == 'frame_sizes'): ?>
+                    <div><label class="opt-label">Width (in) *</label><input type="number" step="0.01" name="width" class="opt-input" required value="<?= $edit_data['width_inch'] ?? '' ?>"></div>
+                    <div><label class="opt-label">Height (in) *</label><input type="number" step="0.01" name="height" class="opt-input" required value="<?= $edit_data['height_inch'] ?? '' ?>"></div>
+                    <div>
+                        <label class="opt-label">Status</label>
+                        <select name="is_active" class="opt-input">
+                            <option value="1" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 1) ? 'selected' : '' ?>>Active</option>
+                            <option value="0" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 0) ? 'selected' : '' ?>>Inactive</option>
+                        </select>
+                    </div>
+
+                
+                <?php elseif($active_tab == 'mount_types'): ?>
+                    <div><label class="opt-label">Mount Name *</label><input type="text" name="generic_name" class="opt-input" required value="<?= htmlspecialchars($edit_data['mount_name'] ?? '') ?>"></div>
+                    <div><label class="opt-label">Fee (₱) *</label><input type="number" step="0.01" name="generic_price" class="opt-input" required value="<?= $edit_data['additional_fee'] ?? '' ?>"></div>
+                    <div>
+                        <label class="opt-label">Status</label>
+                        <select name="is_active" class="opt-input">
+                            <option value="1" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 1) ? 'selected' : '' ?>>Active</option>
+                            <option value="0" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 0) ? 'selected' : '' ?>>Inactive</option>
+                        </select>
+                    </div>
+
+
+                <?php elseif($active_tab == 'paper_types'): ?>
+                    <div><label class="opt-label">Paper Name *</label><input type="text" name="paper_name" class="opt-input" required value="<?= htmlspecialchars($edit_data['paper_name'] ?? '') ?>"></div>
+                    <div><label class="opt-label">Multiplier *</label><input type="number" step="0.0001" name="multiplier" class="opt-input" required value="<?= $edit_data['multiplier'] ?? '' ?>"></div>
+                    <div><label class="opt-label">Min Width (in) *</label><input type="number" step="0.01" name="min_width_inch" class="opt-input" required value="<?= $edit_data['min_width_inch'] ?? '' ?>"></div>
+                    <div><label class="opt-label">Min Height (in) *</label><input type="number" step="0.01" name="min_height_inch" class="opt-input" required value="<?= $edit_data['min_height_inch'] ?? '' ?>"></div>
+                    <div><label class="opt-label">Max Width (in) *</label><input type="number" step="0.01" name="max_width_inch" class="opt-input" required value="<?= $edit_data['max_width_inch'] ?? '' ?>"></div>
+                    <div><label class="opt-label">Max Height (in) *</label><input type="number" step="0.01" name="max_height_inch" class="opt-input" required value="<?= $edit_data['max_height_inch'] ?? '' ?>"></div>
+                    <div>
+                        <label class="opt-label">Status</label>
+                        <select name="is_active" class="opt-input">
+                            <option value="1" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 1) ? 'selected' : '' ?>>Active</option>
+                            <option value="0" <?= (isset($edit_data['is_active']) && $edit_data['is_active'] == 0) ? 'selected' : '' ?>>Inactive</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button type="button" class="opt-btn-submit" style="width:100%; margin-top:28px;" data-bs-toggle="modal" data-bs-target="#fixedPriceModal">
+                            <i class="fa-solid fa-tags" style="margin-right:8px;"></i> Manage Fixed Print Prices
+                        </button>
+                    </div>
+                <?php endif; ?>
 
                 <div style="grid-column: span 2; display:flex; justify-content:center; gap:15px; margin-top:20px;">
                     <?php if($is_editing): ?>
@@ -228,22 +276,26 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
     <div class="opted-main-container">
         <div class="opted-header-bar">
             <span class="opted-title">Posted <?= htmlspecialchars($tab_label ?? '') ?></span>
-            <span class="opted-count-badge"><?= $count ?> Items</span>
+            <span class="opted-count-badge"><?= ($res && $res->num_rows > 0) ? $res->num_rows : 0 ?> Items</span>
         </div>
         <div class="opted-list-wrapper">
             <?php if ($res && $res->num_rows > 0): ?>
                 <?php while($row = $res->fetch_assoc()):
                     $title = $row['type_name'] ?? $row['design_name'] ?? $row['color_name'] ?? 
-                             $row['matboard_color_name'] ?? $row['mount_name'] ?? $row['paper_name'] ?? 'Unnamed';
+                             $row['matboard_color_name'] ?? $row['mount_name'] ?? $row['paper_name'] ?? 
+                             ($active_tab == 'frame_sizes' ? ($row['dimension'] ?? 'Size') : 'Unnamed');
                     
-                    $pkMap = [
-                        'frame_types' => 'frame_type_id', 'frame_designs' => 'frame_design_id',
-                        'frame_colors' => 'frame_color_id', 'frame_sizes' => 'frame_size_id',
-                        'matboard_colors' => 'matboard_color_id', 'mount_types' => 'mount_type_id',
-                        'paper_types' => 'paper_type_id'
+                    $pkMapLoop = [
+                        'frame_types'     => 'frame_type_id',
+                        'frame_designs'   => 'frame_design_id',
+                        'frame_colors'    => 'frame_color_id',
+                        'frame_sizes'     => 'frame_size_id',
+                        'matboard_colors' => 'matboard_color_id',
+                        'mount_types'     => 'mount_type_id',
+                        'paper_types'     => 'paper_type_id',
                     ];
-                    $pkCol = $pkMap[$active_tab] ?? 'id';
-                    $recordId = $row[$pkCol];
+                    $pkColLoop = $pkMapLoop[$active_tab] ?? 'id';
+                    $recordId = $row[$pkColLoop] ?? 0;
                     $isActive = (int)($row['is_active'] ?? 1);
                 ?>
                 <div class="opted-row-item" id="row-<?= $recordId ?>">
@@ -269,8 +321,89 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
         </div>
     </div>
 </div>
-<<<<<<< HEAD
-=======
+
+<div class="modal fade" id="fixedPriceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content fixed-price-modal-content">
+            <div class="modal-header bg-forest-dark text-white">
+                <h5 class="modal-title"><i class="fa-solid fa-tags me-2"></i> Fixed Print Price Management</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form action="../process/posting_options.php?tab=paper_types" method="POST">
+                    <input type="hidden" name="action" value="add_fixed_price">
+                    <h6 class="fw-bold mb-3 text-uppercase small text-muted">Add New Pricing</h6>
+                    <div class="row g-3 bg-light p-3 rounded mb-4">
+                        <div class="col-md-6">
+                            <label class="small fw-bold">Select Paper Type</label>
+                            <select name="paper_type_id" class="form-select" required>
+                                <?php 
+                                $papers = $conn->query("SELECT paper_type_id, paper_name FROM tbl_paper_type");
+                                while($p = $papers->fetch_assoc()): ?>
+                                    <option value="<?= $p['paper_type_id'] ?>"><?= htmlspecialchars($p['paper_name']) ?></option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">Dimension Name</label>
+                            <input type="text" name="dimension" class="form-control" placeholder="e.g. 8x10" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="small fw-bold">Width (in)</label>
+                            <input type="number" step="0.01" name="width_inch" class="form-control" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="small fw-bold">Height (in)</label>
+                            <input type="number" step="0.01" name="height_inch" class="form-control" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="small fw-bold">Price (₱)</label>
+                            <input type="number" step="0.01" name="fixed_price" class="form-control" required>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-forest-submit w-100">Add</button>
+                        </div>
+                    </div>
+                </form>
+
+                <h6 class="fw-bold mb-3 text-uppercase small text-muted">Existing Prices</h6>
+                <div class="table-responsive" style="max-height: 300px;">
+                    <table class="table table-hover table-sm">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Paper</th>
+                                <th>Size</th>
+                                <th>Price</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php 
+                            $prices = $conn->query("SELECT f.*, p.paper_name FROM tbl_fixed_print_prices f JOIN tbl_paper_type p ON f.paper_type_id = p.paper_type_id ORDER BY p.paper_name ASC");
+                            if($prices && $prices->num_rows > 0):
+                                while($pr = $prices->fetch_assoc()): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($pr['paper_name']) ?></td>
+                                    <td><?= $pr['dimension'] ?> (<?= $pr['width_inch'] ?>x<?= $pr['height_inch'] ?>")</td>
+                                    <td class="text-success fw-bold">₱<?= number_format($pr['fixed_price'], 2) ?></td>
+                                    <td class="text-center">
+                                        <form action="../process/posting_options.php?tab=paper_types" method="POST" onsubmit="return confirm('Delete this price?');">
+                                            <input type="hidden" name="action" value="delete_fixed_price">
+                                            <input type="hidden" name="fixed_price_id" value="<?= $pr['fixed_price_id'] ?>">
+                                            <button type="submit" class="btn btn-link text-danger p-0"><i class="fa-solid fa-trash-can"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <?php endwhile; else: ?>
+                                <tr><td colspan="4" class="text-center text-muted py-3">No fixed prices set.</td></tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="modal fade" id="deleteConfirmModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -290,11 +423,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
     </div>
 </div>
 
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../assets/js/admin_options.js"></script>
->>>>>>> b5c71d73b83f4360f89afd718f8ad1690b0653fa
+<script src="https://unpkg.com/lucide@latest"></script>
 <script>
-    // Required to render your Lucide icons after page load
     lucide.createIcons();
 </script>
 </body>
