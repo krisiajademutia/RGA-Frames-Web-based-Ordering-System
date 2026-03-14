@@ -2,7 +2,7 @@
 include '../includes/customer_header.php'; 
 include_once __DIR__ . '/../config/db_connect.php';
 
-$paper_type_query = "SELECT DISTINCT paper_name FROM tbl_paper_type WHERE is_active = 1 ORDER BY paper_name ASC";
+$paper_type_query = "SELECT paper_type_id, paper_name FROM tbl_paper_type WHERE is_active = 1 ORDER BY paper_name ASC";
 $paper_type_result = mysqli_query($conn, $paper_type_query);
 ?>
 
@@ -14,7 +14,6 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
     <title>Printing Services - RGA Frames</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
@@ -55,7 +54,7 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
                             <select class="form-select ps-select" id="paper-type-select">
                                 <option selected disabled>Select paper name</option>
                                 <?php while($row = mysqli_fetch_assoc($paper_type_result)): ?>
-                                    <option value="<?= htmlspecialchars($row['paper_name']) ?>"><?= htmlspecialchars($row['paper_name']) ?></option>
+                                    <option value="<?= $row['paper_type_id'] ?>"><?= htmlspecialchars($row['paper_name']) ?></option>
                                 <?php endwhile; ?>
                             </select>
                             <span id="paper-error" class="text-danger small d-none">Please select a paper type.</span>
@@ -137,7 +136,6 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
     // Inline Validation Helper
     function validateForm() {
         let isValid = true;
-        // Reset visibility for all error messages
         document.querySelectorAll('.text-danger').forEach(el => el.classList.add('d-none'));
 
         if (!fileInput.files[0]) {
@@ -155,7 +153,7 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
         return isValid;
     }
 
-    // Helper: Calculate Area (Total Inch)
+    // Calculate Area (Total Inch)
     function calculateArea() {
         const w = parseFloat(customW.value) || 0;
         const h = parseFloat(customH.value) || 0;
@@ -165,29 +163,28 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
 
     // 1. Price Calculation Logic
     function updatePrice() {
-        const type = paperSelect.value;
+        const typeId = paperSelect.value; 
         const size = sizeSelect.value;
         const qty = parseInt(qtyInput.value) || 1;
         
-        if (!type || !size) return;
+        if (!typeId || size === 'Select a paper name first') return;
 
         const formData = new URLSearchParams();
-        formData.append('type', type);
+        formData.append('type', typeId); // Sends ID to get_print_price.php
         formData.append('size', size);
         formData.append('width', customW.value || 0);
         formData.append('height', customH.value || 0);
 
         fetch('../process/get_print_price.php', { method: 'POST', body: formData })
-        .then(response => response.text())
+        .then(res => res.text())
         .then(price => {
             const total = parseFloat(price) * qty;
             document.getElementById('display-total').innerText = '₱' + (isNaN(total) ? "0.00" : total.toFixed(2));
-        })
-        .catch(error => console.error('Error fetching price:', error));
+        });
     }
 
-   // 2. Updated Add to Cart Handler with Professional Feedback
-btnCart.addEventListener('click', function() {
+   // 2. Updated Add to Cart 
+        btnCart.addEventListener('click', function() {
         if (!validateForm()) return;
 
         const formData = new FormData();
@@ -258,9 +255,9 @@ btnCart.addEventListener('click', function() {
 
     // 5. Paper Type Selection
     paperSelect.addEventListener('change', function() {
-        fetch('../process/fetch_sizes.php', {
+        fetch('../process/fetch_print_sizes.php', {
             method: 'POST',
-            body: 'paper_name=' + encodeURIComponent(this.value),
+            body: 'paper_id=' + encodeURIComponent(this.value), 
             headers: {'Content-Type': 'application/x-www-form-urlencoded'}
         })
         .then(res => res.text())
@@ -274,7 +271,7 @@ btnCart.addEventListener('click', function() {
         });
     });
 
-    // 6. Size Selection Logic (The "Smart" Toggle)
+    // 6. Size Selection Logic
     sizeSelect.addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
         

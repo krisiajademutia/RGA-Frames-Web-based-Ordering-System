@@ -240,6 +240,9 @@ class CustomFrameService {
                 $prices['sub_total']
             );
 
+            // Insert payment record
+            $this->repo->insertPayment($orderId, $grandTotal);
+
             $this->conn->commit();
             return [
                 'success'  => true,

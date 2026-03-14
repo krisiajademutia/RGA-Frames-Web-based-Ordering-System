@@ -151,7 +151,6 @@ qsa('.csc-size-pill').forEach(pill => {
         }
 
         // RULE 2: Dynamic ₱75 Design Limit (Max 12x18)
-        // If the design price is ₱75 or below, restrict the size!
         if (state.frameDesignPrice > 0 && state.frameDesignPrice <= 75 && (maxSide > 18 || minSide > 12)) {
             alert("Kuya's Rule: Designs in this price range (₱75) are only available for sizes up to 12x18 inches.");
             qs('#csc-width').value = '';
@@ -230,7 +229,7 @@ initSelector('.csc-section:last-of-type .csc-service-option', card => {
 qs('#csc-paper-type')?.addEventListener('change', function() {
     const opt = this.options[this.selectedIndex];
     state.paperTypeId = this.value || null;
-    state.paperMultiplier = parseFloat(opt.dataset.multiplier) || 0; // Grab the new multiplier!
+    state.paperMultiplier = parseFloat(opt.dataset.multiplier) || 0;
     state.paperName   = opt.textContent.trim();
     if (this.value) {
         showRow('sum-paper-row', 'sum-paper', state.paperName);
@@ -243,6 +242,14 @@ qs('#csc-paper-type')?.addEventListener('change', function() {
 // ── Image Upload ─────────────────────────────────────────
 qs('#csc-image-input')?.addEventListener('change', function() {
     if (this.files && this.files[0]) {
+        // Validate it is an image
+        if (!this.files[0].type.startsWith('image/')) {
+            alert('Please upload a valid image file (JPG, PNG).');
+            this.value = '';
+            state.imageUploaded = false;
+            return;
+        }
+
         const reader = new FileReader();
         reader.onload = e => {
             qs('#csc-image-preview').src = e.target.result;
@@ -254,6 +261,12 @@ qs('#csc-image-input')?.addEventListener('change', function() {
         const name = this.files[0].name;
         state.imageName = name.length > 22 ? name.substring(0, 22) + '...' : name;
         showRow('sum-image-row', 'sum-image', state.imageName);
+    } else {
+        state.imageUploaded = false;
+        state.imageName = '';
+        hideRow('sum-image-row');
+        qs('#csc-image-preview').style.display = 'none';
+        qs('#csc-upload-placeholder').style.display = 'flex';
     }
 });
 
@@ -274,6 +287,10 @@ qs('#csc-qty-plus')?.addEventListener('click', () => {
 });
 qs('#csc-qty')?.addEventListener('input', function() {
     state.quantity = parseInt(this.value) || 1;
+    if (state.quantity < 1) {
+        this.value = 1;
+        state.quantity = 1;
+    }
     updateTotal();
 });
 
@@ -308,7 +325,7 @@ function updateTotal() {
     // --- 2. EXTRAS MATH (Matboards & Mounts) ---
     const priId = parseInt(state.primaryMatboard)  || 0;
     const secId = parseInt(state.secondaryMatboard) || 0;
-    if (priId > 0 && secId > 0) {
+    if (priId > 0 || secId > 0) {
         extras += state.primaryMatPrice;
         extras += state.secondaryMatPrice;
     }
@@ -346,7 +363,7 @@ function updateTotal() {
         setPrice('sum-paper-price', 0);
     }
 
-  // --- 4. GRAND TOTAL ---
+    // --- 4. GRAND TOTAL ---
     const unitTotal  = frameBase + extras + printBase;
     let grandTotal = unitTotal * state.quantity;
 
@@ -367,55 +384,90 @@ function updateTotal() {
 }
 
 // ── Form Submission ──────────────────────────────────────
-async function submitForm(action) {
-    const formData = new FormData();
-    formData.append('action',             action);
-    formData.append('service_type',       state.serviceType === 'FRAME_PRINT' ? 'FRAME&PRINT' : 'FRAME_ONLY');
-    formData.append('frame_type_id',      state.frameTypeId    ?? '');
-    formData.append('frame_design_id',    state.frameDesignId  ?? '');
-    formData.append('frame_color_id',     state.frameColorId   ?? '');
-    formData.append('frame_size_id',      state.frameSizeId    ?? 'OTHER');
-    formData.append('custom_width',       state.frameWidth     ?? 0);
-    formData.append('custom_height',      state.frameHeight    ?? 0);
-    formData.append('primary_matboard',   state.primaryMatboard   ?? 0);
-    formData.append('secondary_matboard', state.secondaryMatboard ?? 0);
-    formData.append('mount_type_id',      state.mountTypeId    ?? '');
-    formData.append('paper_type_id',      state.paperTypeId    ?? '');
-    formData.append('quantity',           state.quantity);
-    formData.append('payment_method',     'CASH');
-    formData.append('delivery_option',    'PICKUP');
-    formData.append('delivery_address',   '');
-
-    const imageInput = qs('#csc-image-input');
-    if (imageInput && imageInput.files[0]) {
-        formData.append('customer_image', imageInput.files[0]);
+// Add to Cart
+async function submitAddToCart() {
+    if (state.serviceType === 'FRAME_PRINT' && !state.imageUploaded) {
+        showToast('Please upload an image for Frame & Print!', 'error'); return;
     }
+    const fd = new FormData();
+    fd.append('action',           'add_to_cart');
+    fd.append('service_type',     state.serviceType === 'FRAME_PRINT' ? 'FRAME&PRINT' : 'FRAME_ONLY');
+    fd.append('frame_type_id',    state.frameTypeId    ?? '');
+    fd.append('frame_design_id',  state.frameDesignId  ?? '');
+    fd.append('frame_color_id',   state.frameColorId   ?? '');
+    fd.append('frame_size_id',    state.frameSizeId    ?? 'OTHER');
+    fd.append('custom_width',     state.frameWidth     ?? 0);
+    fd.append('custom_height',    state.frameHeight    ?? 0);
+    fd.append('primary_matboard',   state.primaryMatboard   ?? 0);
+    fd.append('secondary_matboard', state.secondaryMatboard ?? 0);
+    fd.append('mount_type_id',    state.mountTypeId    ?? '');
+    fd.append('paper_type_id',    state.paperTypeId    ?? '');
+    fd.append('quantity',         state.quantity);
+    const img = qs('#csc-image-input');
+    if (img && img.files[0]) fd.append('customer_image', img.files[0]);
 
     const cartBtn = qs('#csc-add-to-cart');
     const buyBtn  = qs('#csc-buy-now');
-    if (cartBtn) { cartBtn.disabled = true; cartBtn.textContent = 'Processing...'; }
-    if (buyBtn)  { buyBtn.disabled = true; buyBtn.textContent = 'Processing...'; }
-
+    if (cartBtn) { cartBtn.disabled = true; cartBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...'; }
+    if (buyBtn)  buyBtn.disabled = true;
     try {
-        const response = await fetch('../process/custom_frame_process.php', {
-            method: 'POST',
-            body:   formData,
-        });
-        const result = await response.json();
+        const res    = await fetch('../process/custom_frame_process.php', { method: 'POST', body: fd });
+        const result = await res.json();
+        if (result.success) showToast('Frame added to your cart!', 'success');
+        else showToast(result.message || 'Something went wrong.', 'error');
+    } catch (e) { showToast('Network error. Please try again.', 'error'); }
+    finally {
+        if (cartBtn) { cartBtn.disabled = false; cartBtn.innerHTML = '<i class="fas fa-cart-shopping"></i> Add to Cart'; }
+        if (buyBtn)  buyBtn.disabled = false;
+    }
+}
+
+// Buy Now - store in session then go to checkout
+async function submitBuyNow() {
+    if (state.serviceType === 'FRAME_PRINT' && !state.imageUploaded) {
+        showToast('Please upload an image for Frame & Print!', 'error'); return;
+    }
+    if (!state.frameTypeId || !state.frameDesignId || !state.frameColorId) {
+        showToast('Please complete your frame selection first.', 'error'); return;
+    }
+    if (!state.frameWidth || !state.frameHeight) {
+        showToast('Please select or enter a frame size.', 'error'); return;
+    }
+    const fd = new FormData();
+    fd.append('action',           'buy_now');
+    fd.append('service_type',     state.serviceType === 'FRAME_PRINT' ? 'FRAME&PRINT' : 'FRAME_ONLY');
+    fd.append('frame_type_id',    state.frameTypeId    ?? '');
+    fd.append('frame_design_id',  state.frameDesignId  ?? '');
+    fd.append('frame_color_id',   state.frameColorId   ?? '');
+    fd.append('frame_size_id',    state.frameSizeId    ?? 'OTHER');
+    fd.append('custom_width',     state.frameWidth     ?? 0);
+    fd.append('custom_height',    state.frameHeight    ?? 0);
+    fd.append('primary_matboard',   state.primaryMatboard   ?? 0);
+    fd.append('secondary_matboard', state.secondaryMatboard ?? 0);
+    fd.append('mount_type_id',    state.mountTypeId    ?? '');
+    fd.append('paper_type_id',    state.paperTypeId    ?? '');
+    fd.append('quantity',         state.quantity);
+    const img = qs('#csc-image-input');
+    if (img && img.files[0]) fd.append('customer_image', img.files[0]);
+
+    const buyBtn = qs('#csc-buy-now');
+    const cartBtn = qs('#csc-add-to-cart');
+    if (buyBtn)  { buyBtn.disabled = true; buyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...'; }
+    if (cartBtn) cartBtn.disabled = true;
+    try {
+        const res    = await fetch('../process/custom_frame_process.php', { method: 'POST', body: fd });
+        const result = await res.json();
         if (result.success) {
-            if (action === 'add_to_cart') {
-                showToast('Added to cart successfully!', 'success');
-            } else {
-                window.location.href = 'customer_my_orders.php?new_order=' + result.order_id;
-            }
+            window.location.href = 'customer_checkout.php';
         } else {
             showToast(result.message || 'Something went wrong.', 'error');
+            if (buyBtn)  { buyBtn.disabled = false; buyBtn.textContent = 'Buy Now'; }
+            if (cartBtn) cartBtn.disabled = false;
         }
-    } catch (err) {
+    } catch (e) {
         showToast('Network error. Please try again.', 'error');
-    } finally {
-        if (cartBtn) { cartBtn.disabled = false; cartBtn.innerHTML = '<i class="fas fa-cart-shopping"></i> Add to Cart'; }
         if (buyBtn)  { buyBtn.disabled = false; buyBtn.textContent = 'Buy Now'; }
+        if (cartBtn) cartBtn.disabled = false;
     }
 }
 
@@ -439,8 +491,21 @@ function showToast(message, type = 'success') {
 }
 
 // ── Button Handlers ──────────────────────────────────────
-qs('#csc-add-to-cart')?.addEventListener('click', () => submitForm('add_to_cart'));
-qs('#csc-buy-now')?.addEventListener('click',     () => submitForm('buy_now'));
+qs('#csc-add-to-cart')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    submitAddToCart();
+});
+
+qs('#csc-buy-now')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    submitBuyNow();
+});
+
+
+qs('#csc-buy-now')?.addEventListener('click', (e) => {
+    e.preventDefault(); // This stops the page from reloading!
+    submitForm('buy_now');
+});
 
 // ── Lightbox ─────────────────────────────────────────────
 let lbImages = [];

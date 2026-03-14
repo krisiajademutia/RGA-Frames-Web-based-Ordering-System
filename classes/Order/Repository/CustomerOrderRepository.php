@@ -11,7 +11,7 @@ class CustomerOrderRepository {
     public function getCountsByCustomer(int $customer_id): array {
         $stmt = $this->conn->prepare("
             SELECT
-                COUNT(*)                                                            AS all_orders,
+                COUNT(*)                                                           AS all_orders,
                 COUNT(CASE WHEN order_status = 'PENDING'          THEN 1 END)      AS pending,
                 COUNT(CASE WHEN order_status = 'PROCESSING'       THEN 1 END)      AS processing,
                 COUNT(CASE WHEN order_status = 'READY_FOR_PICKUP' THEN 1 END)      AS ready_for_pickup,
@@ -28,12 +28,13 @@ class CustomerOrderRepository {
     }
 
     public function getOrdersByCustomer(int $customer_id, string $status = 'ALL', string $search = ''): array {
+        // FIXED: Used a subquery for pu_agg to prevent Cartesian Join (Fan-out) when an order has multiple items AND multiple receipts!
         $sql = "
             SELECT
                 o.order_id, o.order_reference_no, o.created_at,
                 o.total_price, o.order_status, o.payment_method, o.delivery_option,
                 p.payment_id, p.payment_status, p.total_amount,
-                COALESCE(SUM(pu.uploaded_amount), 0) AS amount_paid,
+                COALESCE(pu_agg.amount_paid, 0) AS amount_paid,
                 -- Item summary for card display
                 MAX(CASE WHEN i.r_product_id IS NOT NULL THEN rm.product_name
                          WHEN i.c_product_id IS NOT NULL THEN fd.design_name
@@ -43,8 +44,12 @@ class CustomerOrderRepository {
                 MAX(CASE WHEN i.c_product_id IS NOT NULL THEN 1 ELSE 0 END) AS is_custom,
                 SUM(i.quantity) AS total_qty
             FROM tbl_orders o
-            LEFT JOIN tbl_payment p                  ON o.order_id    = p.order_id
-            LEFT JOIN tbl_payment_proof_uploads pu   ON p.payment_id  = pu.payment_id
+            LEFT JOIN tbl_payment p ON o.order_id = p.order_id
+            LEFT JOIN (
+                SELECT payment_id, SUM(uploaded_amount) AS amount_paid
+                FROM tbl_payment_proof_uploads
+                GROUP BY payment_id
+            ) pu_agg ON p.payment_id = pu_agg.payment_id
             LEFT JOIN tbl_frame_order_items i        ON o.order_id    = i.order_id
             LEFT JOIN tbl_ready_made_product rm      ON i.r_product_id = rm.r_product_id
             LEFT JOIN tbl_custom_frame_product cfp   ON i.c_product_id = cfp.c_product_id
