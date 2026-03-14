@@ -142,7 +142,20 @@ $old    = $_SESSION['old_input'] ?? [];
                                 </div>
                             <?php endif; ?>
                         </div>
-
+                        <div class="mb-4 form-check">
+                            <input type="checkbox" class="form-check-input <?php echo isset($errors['data_privacy']) ? 'is-invalid' : ''; ?>" id="data_privacy" name="data_privacy" required>
+                            <label class="form-check-label text-muted small" for="data_privacy" style="font-size: 0.85rem;">
+                                I have read and agree to the 
+                                <a href="#" onclick="document.getElementById('privacy-modal').style.display='flex'; return false;" style="color: var(--forest-dark); font-weight: 600; text-decoration: underline;">
+                                    Data Privacy Policy
+                                </a>.
+                            </label>
+                            <?php if (isset($errors['data_privacy'])): ?>
+                                <div class="text-danger small mt-1">
+                                    <?php echo htmlspecialchars($errors['data_privacy']); ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                         <button type="submit" name="register_btn" class="reg-btn-submit">Register Account</button>
                     </form>
 
@@ -162,7 +175,32 @@ $old    = $_SESSION['old_input'] ?? [];
     unset($_SESSION['errors']);
     unset($_SESSION['old_input']);
     ?>
-
+    <div id="privacy-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+    <div style="background: #fff; padding: 30px; border-radius: 10px; max-width: 600px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+        <h3 style="color: #0F473A; margin-top: 0; font-weight: bold; border-bottom: 2px solid #eee; padding-bottom: 10px;">RGA Frames Data Privacy Policy</h3>
+        <p style="font-size: 0.9rem; color: #555;">Effective Date: March 2026</p>
+        
+        <p class="small text-muted">In compliance with the <strong>Data Privacy Act of 2012 (RA 10173)</strong>, RGA Frames is committed to protecting your personal data.</p>
+        
+        <h5 style="color: #0F473A; margin-top: 20px; font-size: 1rem;">1. What Information We Collect</h5>
+        <p class="small text-muted">When you register and use our system, we collect: your First and Last Name, Gmail Address, 11-digit Phone Number, Delivery Addresses, uploaded personal photos (for the Frame & Print service), and GCash payment receipts.</p>
+        
+        <h5 style="color: #0F473A; margin-top: 15px; font-size: 1rem;">2. How We Use Your Data</h5>
+        <ul class="small text-muted">
+            <li>To create and secure your RGA Frames account.</li>
+            <li>To contact you regarding order updates, pick-ups, or delivery.</li>
+            <li><strong>Photo Uploads:</strong> Your uploaded images are strictly used to print and assemble your custom frame. They will NEVER be posted publicly, sold, or shared without your explicit consent.</li>
+            <li><strong>Payment Proofs:</strong> GCash receipts are collected solely by our admin for payment verification.</li>
+        </ul>
+        
+        <h5 style="color: #0F473A; margin-top: 15px; font-size: 1rem;">3. Data Protection & Security</h5>
+        <p class="small text-muted">Your passwords are encrypted securely in our database. Only authorized RGA Frames administrators have access to your uploaded images, addresses, and receipts.</p>
+        
+        <button type="button" onclick="document.getElementById('data_privacy').checked = true; document.getElementById('privacy-modal').style.display='none';" style="background: #0F473A; color: #fff; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; margin-top: 20px; width: 100%; font-weight: bold; font-size: 1rem;">
+            I Understand and Accept
+        </button>
+    </div>
+</div>
     <script src="assets/js/main.js"></script>
 </body>
 </html>

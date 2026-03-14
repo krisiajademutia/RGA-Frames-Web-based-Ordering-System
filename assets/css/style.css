@@ -3668,6 +3668,13 @@ body {
     box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.05);
     border: 1px solid #EAEAEA;
 }
+.admn-dshbrd-btn-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.6rem;
+    justify-content: flex-end;
+}
 
 .admn-sales-table {
     width: 100%;
@@ -3736,7 +3743,10 @@ body {
 
     .admn-dshbrd-btn-wrapper {
         display: flex;
-        justify-content: flex-end; /* Keeps the button on the right */
+        flex-direction: row;
+        align-items: center;
+        gap: 0.6rem;
+        justify-content: flex-end;
     }
 
     .admn-dshbrd-total-earnings-card {
@@ -7452,3 +7462,251 @@ body {
     cursor: pointer;
     line-height: 1;
 }
+/* =========================================
+   ADMIN CUSTOMERS PAGE — IMPROVED
+   ========================================= */
+ 
+/* Page wrapper */
+.admn-cust-wrapper {
+    max-width: 1100px;
+    margin: 130px auto 60px;
+    padding: 0 24px;
+}
+ 
+/* Page header */
+.admn-cust-page-header {
+    margin-bottom: 1.75rem;
+}
+.admn-cust-page-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 0 0 0.25rem;
+    letter-spacing: -0.4px;
+}
+.admn-cust-page-subtitle {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0;
+}
+ 
+/* Card container */
+.admn-cust-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+}
+ 
+/* Card toolbar (search + filter row) */
+.admn-cust-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #f3f4f6;
+    flex-wrap: wrap;
+}
+.admn-cust-search-wrap {
+    position: relative;
+    flex: 1;
+    max-width: 320px;
+}
+.admn-cust-search-wrap i {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 0.8rem;
+}
+.admn-cust-search {
+    width: 100%;
+    padding: 0.55rem 0.85rem 0.55rem 2.1rem;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #374151;
+    outline: none;
+    transition: border-color 0.15s;
+}
+.admn-cust-search:focus { border-color: #0F473A; }
+.admn-cust-count {
+    font-size: 0.78rem;
+    color: #9ca3af;
+    font-weight: 600;
+    white-space: nowrap;
+}
+ 
+/* Table */
+.admn-cust-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+.admn-cust-table thead tr {
+    background: #f9fafb;
+    border-bottom: 2px solid #e5e7eb;
+}
+.admn-cust-table thead th {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #6b7280;
+    text-transform: uppercase;
+    white-space: nowrap;
+    text-align: left;
+}
+.admn-cust-table tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: background 0.12s;
+}
+.admn-cust-table tbody tr:last-child { border-bottom: none; }
+.admn-cust-table tbody tr:hover      { background: #f9fafb; }
+.admn-cust-table tbody td {
+    padding: 1rem 1.25rem;
+    vertical-align: middle;
+}
+ 
+/* Cell styles */
+.admn-cust-id {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    font-weight: 700;
+    font-family: monospace;
+}
+.admn-cust-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #0F473A;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.admn-cust-name-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+.admn-cust-name {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+.admn-cust-username {
+    font-size: 0.73rem;
+    color: #9ca3af;
+    margin: 2px 0 0;
+}
+.admn-cust-email {
+    font-size: 0.78rem;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+.admn-cust-phone {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 3px;
+}
+.admn-cust-email i,
+.admn-cust-phone i { color: #d1d5db; font-size: 0.68rem; }
+.admn-cust-date {
+    font-size: 0.775rem;
+    color: #6b7280;
+    white-space: nowrap;
+}
+.admn-cust-orders-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    color: #374151;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 3px 12px;
+    min-width: 32px;
+}
+ 
+/* Type badges */
+.admn-cust-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 20px;
+    padding: 4px 12px;
+    white-space: nowrap;
+}
+.admn-cust-type-badge.regular {
+    background: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #e5e7eb;
+}
+.admn-cust-type-badge.photographer {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+ 
+/* Action buttons */
+.admn-cust-btn-promote,
+.admn-cust-btn-revoke {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border: none;
+    border-radius: 8px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, transform 0.1s;
+}
+.admn-cust-btn-promote {
+    background: #0F473A;
+    color: #fff;
+}
+.admn-cust-btn-promote:hover  { background: #0a3229; }
+.admn-cust-btn-revoke {
+    background: #fee2e2;
+    color: #991b1b;
+}
+.admn-cust-btn-revoke:hover   { background: #fecaca; }
+.admn-cust-btn-promote:active,
+.admn-cust-btn-revoke:active  { transform: scale(0.97); }
+ 
+/* Empty state */
+.admn-cust-empty {
+    text-align: center;
+    padding: 4rem 1rem;
+    color: #9ca3af;
+}
+.admn-cust-empty i { font-size: 2.5rem; display: block; margin-bottom: 0.75rem; color: #d1d5db; }
+.admn-cust-empty p { font-size: 0.9rem; margin: 0; }
+ 
+/* Responsive */
+@media (max-width: 768px) {
+    .admn-cust-wrapper { margin-top: 100px; padding: 0 16px; }
+    .admn-cust-toolbar { flex-direction: column; align-items: stretch; }
+    .admn-cust-search-wrap { max-width: 100%; }
+    .admn-cust-table thead th:nth-child(1),
+    .admn-cust-table tbody td:nth-child(1) { display: none; }
+}
+ 

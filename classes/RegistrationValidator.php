@@ -25,6 +25,11 @@ class RegistrationValidator {
         if (empty($username))     $errors['username']     = "Username cannot be empty.";
         if (empty($email))        $errors['email']        = "Email address is required.";
         if (empty($password))     $errors['password']     = "Password is required.";
+        
+        // --- NEW: DATA PRIVACY VALIDATION ---
+        if (empty($data['data_privacy'])) {
+            $errors['data_privacy'] = "You must read and agree to the Data Privacy Policy to register.";
+        }
 
         // Username validation
         if (!empty($username)) {
@@ -36,13 +41,12 @@ class RegistrationValidator {
             }
         }
 
-        // Email validation
+        // Email validation (Must be Gmail as per your logic)
         if (!empty($email)) {
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $errors['email'] = "Invalid email format.";
-            }
-            if (!str_ends_with(strtolower($email), '@gmail.com')) {
-                $errors['email'] = "We only accept Gmail addresses (e.g., user@gmail.com).";
+            } elseif (!str_ends_with(strtolower($email), '@gmail.com')) {
+                $errors['email'] = "We currently only accept Gmail addresses (e.g., user@gmail.com).";
             }
         }
 
@@ -79,7 +83,7 @@ class RegistrationValidator {
         $stmt->bind_param("s", $username);
         $stmt->execute();
         if ($stmt->get_result()->num_rows > 0) {
-            $errors['username'] = "This username is taken.";
+            $errors['username'] = "This username is already taken.";
         }
         $stmt->close();
 

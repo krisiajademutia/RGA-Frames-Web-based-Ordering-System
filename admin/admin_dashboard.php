@@ -1,7 +1,5 @@
 <?php
 session_start();
-
-// 1. Fetch the real-time database numbers
 require_once '../process/fetch_dashboard.php';
 ?>
 <!DOCTYPE html>
@@ -10,7 +8,6 @@ require_once '../process/fetch_dashboard.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - RGA Frames</title>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet"> 
@@ -20,10 +17,7 @@ require_once '../process/fetch_dashboard.php';
 </head>
 <body>
 
-    <?php 
-    // 2. Inject your reusable header/navbar here
-    include_once '../includes/admin_header.php'; 
-    ?>
+    <?php include_once '../includes/admin_header.php'; ?>
 
     <main class="admn-dshbrd-wrapper">
         
@@ -37,6 +31,9 @@ require_once '../process/fetch_dashboard.php';
                 <div class="admn-dshbrd-btn-wrapper">
                     <a href="admin_daily_sales.php" class="admn-dshbrd-btn-daily-sales" style="text-decoration: none;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg> Daily Sales
+                    </a>
+                    <a href="admin_customers.php" class="admn-dshbrd-btn-daily-sales" style="text-decoration: none;">
+                        <i class="fas fa-users"></i> Customers
                     </a>
                 </div>
                 
@@ -86,10 +83,6 @@ require_once '../process/fetch_dashboard.php';
 
         </div>
     </main>
-    <?php 
-    // If you have a footer, include it here. Otherwise, the closing tags below handle it.
-    // include_once '../includes/admin_footer.php'; 
-    ?>
        
 </body>
 </html>
