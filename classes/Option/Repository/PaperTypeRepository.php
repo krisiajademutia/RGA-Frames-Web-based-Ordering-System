@@ -9,22 +9,18 @@ class PaperTypeRepository implements OptionRepositoryInterface {
     }
 
     /**
-     * NEW: Fetches a single record by ID for the edit form
+     * Fetches a single record by ID for the edit form
      */
     public function getById(int $id): ?array {
         $stmt = $this->db->prepare("SELECT 
             paper_type_id,
             paper_name,
             paper_name AS name,
-            pricing_logic,
-            dimension,
-            width_inch,
-            width_inch AS width,
-            height_inch,
-            height_inch AS height,
-            total_inch,
-            total_inch AS total_inches,
-            price,
+            multiplier,
+            min_width_inch,
+            min_height_inch,
+            max_width_inch,
+            max_height_inch,
             is_active
             FROM tbl_paper_type 
             WHERE paper_type_id = ?");
@@ -38,48 +34,39 @@ class PaperTypeRepository implements OptionRepositoryInterface {
      * Handles creating a new Paper Type
      */
     public function create(array $data, array $files): bool {
-        $paperName    = $data['paper_name'] ?? $data['edit_paper_name'] ?? '';
-        $width        = (float)($data['width'] ?? $data['edit_width'] ?? 0);
-        $height       = (float)($data['height'] ?? $data['edit_height'] ?? 0);
-        $price        = (float)($data['price'] ?? $data['edit_price'] ?? 0);
-        
-        $pricingLogic = strtoupper($data['pricing_logic'] ?? 'FIXED'); 
-        $dim          = ($width > 0 && $height > 0) ? $width . "x" . $height : null;
-        
-        $totalInches  = (float)($data['total_inches'] ?? ($width * $height)); 
-        $isActive     = (int)($data['is_active'] ?? 1);
+        $paperName  = $data['paper_name'] ?? $data['edit_paper_name'] ?? '';
+        $multiplier = (float)($data['multiplier'] ?? 0);
+        $minWidth   = (float)($data['min_width_inch'] ?? 0);
+        $minHeight  = (float)($data['min_height_inch'] ?? 0);
+        $maxWidth   = (float)($data['max_width_inch'] ?? 0);
+        $maxHeight  = (float)($data['max_height_inch'] ?? 0);
+        $isActive   = (int)($data['is_active'] ?? 1);
 
         $sql = "INSERT INTO tbl_paper_type 
-                (paper_name, pricing_logic, dimension, width_inch, height_inch, total_inch, price, is_active) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                (paper_name, multiplier, min_width_inch, min_height_inch, max_width_inch, max_height_inch, is_active) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
         
         $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("sssddddi", 
-            $paperName, $pricingLogic, $dim, $width, $height, $totalInches, $price, $isActive
+        $stmt->bind_param("sdddddi", 
+            $paperName, $multiplier, $minWidth, $minHeight, $maxWidth, $maxHeight, $isActive
         );
 
         return $stmt->execute();
     }
 
     /**
-     * Fetches all paper types with aliased names to match form inputs
+     * Fetches all paper types with corrected column names
      */
     public function getAll() {
-        // We use aliases (e.g., width_inch AS width) so that when the 
-        // admin_custom_frame_options.php loops through $row, $row['width'] exists.
         return $this->db->query("SELECT 
             paper_type_id,
             paper_name,
             paper_name AS name,
-            pricing_logic,
-            dimension,
-            width_inch,
-            width_inch AS width,
-            height_inch,
-            height_inch AS height,
-            total_inch,
-            total_inch AS total_inches,
-            price,
+            multiplier,
+            min_width_inch,
+            min_height_inch,
+            max_width_inch,
+            max_height_inch,
             is_active
             FROM tbl_paper_type 
             ORDER BY paper_name ASC");
@@ -89,31 +76,27 @@ class PaperTypeRepository implements OptionRepositoryInterface {
      * Handles updating an existing Paper Type
      */
     public function update(int $id, array $data, array $files = []): bool {
-        // Check for 'edit_paper_name' (from raw POST) or 'name' (from posting_options.php mapping)
-        $paperName    = $data['edit_paper_name'] ?? $data['name'] ?? $data['paper_name'] ?? '';
-        $width        = (float)($data['edit_width'] ?? $data['width_inch'] ?? $data['width'] ?? 0);
-        $height       = (float)($data['edit_height'] ?? $data['height_inch'] ?? $data['height'] ?? 0);
-        $price        = (float)($data['edit_price'] ?? $data['price'] ?? 0);
-        
-        $pricingLogic = strtoupper($data['pricing_logic'] ?? 'FIXED');
-        $dim          = ($width > 0 && $height > 0) ? $width . "x" . $height : null;
-        $totalInches  = (float)($data['total_inches'] ?? ($width * $height));
-        $isActive     = (int)($data['is_active'] ?? 1);
+        $paperName  = $data['edit_paper_name'] ?? $data['name'] ?? $data['paper_name'] ?? '';
+        $multiplier = (float)($data['multiplier'] ?? 0);
+        $minWidth   = (float)($data['min_width_inch'] ?? 0);
+        $minHeight  = (float)($data['min_height_inch'] ?? 0);
+        $maxWidth   = (float)($data['max_width_inch'] ?? 0);
+        $maxHeight  = (float)($data['max_height_inch'] ?? 0);
+        $isActive   = (int)($data['is_active'] ?? 1);
 
         $sql = "UPDATE tbl_paper_type SET 
                 paper_name = ?, 
-                pricing_logic = ?, 
-                dimension = ?, 
-                width_inch = ?, 
-                height_inch = ?, 
-                total_inch = ?, 
-                price = ?, 
+                multiplier = ?, 
+                min_width_inch = ?, 
+                min_height_inch = ?, 
+                max_width_inch = ?, 
+                max_height_inch = ?, 
                 is_active = ? 
                 WHERE paper_type_id = ?";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("sssddddii", 
-            $paperName, $pricingLogic, $dim, $width, $height, $totalInches, $price, $isActive, $id
+        $stmt->bind_param("sdddddii", 
+            $paperName, $multiplier, $minWidth, $minHeight, $maxWidth, $maxHeight, $isActive, $id
         );
 
         return $stmt->execute();
@@ -122,6 +105,42 @@ class PaperTypeRepository implements OptionRepositoryInterface {
     public function delete(int $id): bool {
         $stmt = $this->db->prepare("DELETE FROM tbl_paper_type WHERE paper_type_id = ?");
         $stmt->bind_param("i", $id);
+        return $stmt->execute();
+    }
+
+    // --- FIXED PRINT PRICE METHODS ---
+
+    /**
+     * Fetches all fixed prices for a specific paper type (For the Modal List)
+     */
+    public function getAllFixedPrices(int $paperTypeId) {
+        $stmt = $this->db->prepare("SELECT * FROM tbl_fixed_print_prices WHERE paper_type_id = ? ORDER BY width_inch ASC, height_inch ASC");
+        $stmt->bind_param("i", $paperTypeId);
+        $stmt->execute();
+        return $stmt->get_result();
+    }
+
+    /**
+     * Creates a new entry in tbl_fixed_print_prices
+     */
+    public function createFixedPrice(array $data): bool {
+        $paperTypeId = (int)$data['paper_type_id'];
+        $width       = (float)$data['width_inch'];
+        $height      = (float)$data['height_inch'];
+        $price       = (float)$data['fixed_price'];
+        $dimension   = $width . "x" . $height;
+
+        $stmt = $this->db->prepare("INSERT INTO tbl_fixed_print_prices (paper_type_id, dimension, width_inch, height_inch, fixed_price) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("isddd", $paperTypeId, $dimension, $width, $height, $price);
+        return $stmt->execute();
+    }
+
+    /**
+     * Deletes a fixed price entry
+     */
+    public function deleteFixedPrice(int $fixedPriceId): bool {
+        $stmt = $this->db->prepare("DELETE FROM tbl_fixed_print_prices WHERE fixed_price_id = ?");
+        $stmt->bind_param("i", $fixedPriceId);
         return $stmt->execute();
     }
 }
