@@ -21,10 +21,10 @@ if (!$order) { header("Location: customer_orders.php"); exit(); }
 
 /* ── Stepper config ── */
 $stepper_steps = [
-    ['label' => 'Pending',          'keys' => ['PENDING']],
-    ['label' => 'Processing',       'keys' => ['PROCESSING']],
+    ['label' => 'Pending',           'keys' => ['PENDING']],
+    ['label' => 'Processing',        'keys' => ['PROCESSING']],
     ['label' => 'Pick-up / Delivery','keys' => ['READY_FOR_PICKUP','FOR_DELIVERY']],
-    ['label' => 'Completed',        'keys' => ['COMPLETED']],
+    ['label' => 'Completed',         'keys' => ['COMPLETED']],
 ];
 $status_index = [
     'PENDING'          => 0,
@@ -180,6 +180,11 @@ $psClass = match($payment_status) { 'FULL'=>'cst-ord-dtls-ps-full', 'PARTIAL'=>'
                 <i class="fas fa-download"></i> Download Receipt
             </a>
             <?php endif; ?>
+            <?php if ($isPending): ?>
+            <button class="cst-ord-dtls-cancel-btn" onclick="confirmCancel()">
+                <i class="fas fa-times-circle"></i> Cancel Order
+            </button>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -314,13 +319,15 @@ $psClass = match($payment_status) { 'FULL'=>'cst-ord-dtls-ps-full', 'PARTIAL'=>'
                 $isPrintOnly  = empty($item['r_product_id']) && empty($item['c_product_id']);
 
                 // Fetch frame image
-                $frameDesignId = $itemIsCustom ? ($item['cfp_frame_design_id'] ?? null) : ($item['rm_frame_design_id'] ?? null);
+                $frameDesignId = $itemIsCustom
+                    ? ($item['cfp_frame_design_id'] ?? null)
+                    : ($item['rm_frame_design_id']  ?? null);
                 $imgName = null;
                 if ($frameDesignId) {
                     $imgStmt = $conn->prepare("SELECT image_name FROM tbl_frame_design_images WHERE frame_design_id=? AND is_primary=1 LIMIT 1");
                     $imgStmt->bind_param("i", $frameDesignId);
                     $imgStmt->execute();
-                    $imgRow = $imgStmt->get_result()->fetch_assoc();
+                    $imgRow  = $imgStmt->get_result()->fetch_assoc();
                     $imgName = $imgRow['image_name'] ?? null;
                 }
 
@@ -332,9 +339,8 @@ $psClass = match($payment_status) { 'FULL'=>'cst-ord-dtls-ps-full', 'PARTIAL'=>'
                 $typeLabel = $isPrintOnly ? 'Print only' : ($itemIsCustom ? 'Custom Frame' : 'Ready-made');
                 $typeClass = $isPrintOnly ? 'cst-ord-tag-service' : ($itemIsCustom ? 'cst-ord-tag-custom' : 'cst-ord-tag-readymade');
 
-                // Sizes
-                $sw = $itemIsReady ? ($item['width'] ?? null)        : ($item['custom_width']  ?? null);
-                $sh = $itemIsReady ? ($item['height'] ?? null)       : ($item['custom_height'] ?? null);
+                $sw = $itemIsReady ? ($item['width'] ?? null) : ($item['custom_width']  ?? null);
+                $sh = $itemIsReady ? ($item['height'] ?? null) : ($item['custom_height'] ?? null);
             ?>
             <tr>
                 <td>
@@ -351,7 +357,7 @@ $psClass = match($payment_status) { 'FULL'=>'cst-ord-dtls-ps-full', 'PARTIAL'=>'
                             <?php if ($sw && $sh): ?>
                             <span class="item-spec">
                                 <span class="item-spec-key">Frame Size</span>
-                                <span class="item-spec-val"><?= $sw ?>" × <?= $sh ?>" (<?= (int)$sw * (int)$sh ?> total inches)</span>
+                                <span class="item-spec-val"><?= $sw ?>" × <?= $sh ?>"</span>
                             </span>
                             <?php endif; ?>
                             <?php if (!empty($item['design_name'])): ?>
@@ -366,16 +372,16 @@ $psClass = match($payment_status) { 'FULL'=>'cst-ord-dtls-ps-full', 'PARTIAL'=>'
                                 <span class="item-spec-val"><?= htmlspecialchars($item['color_name']) ?></span>
                             </span>
                             <?php endif; ?>
-                            <?php if (!empty($item['frame_type'])): ?>
+                            <?php if (!empty($item['type_name'])): ?>
                             <span class="item-spec">
                                 <span class="item-spec-key">Frame Type</span>
-                                <span class="item-spec-val"><?= htmlspecialchars($item['frame_type']) ?></span>
+                                <span class="item-spec-val"><?= htmlspecialchars($item['type_name']) ?></span>
                             </span>
                             <?php endif; ?>
-                            <?php if (!empty($item['mount_type'])): ?>
+                            <?php if (!empty($item['mount_name'])): ?>
                             <span class="item-spec">
                                 <span class="item-spec-key">Mount</span>
-                                <span class="item-spec-val"><?= htmlspecialchars($item['mount_type']) ?></span>
+                                <span class="item-spec-val"><?= htmlspecialchars($item['mount_name']) ?></span>
                             </span>
                             <?php endif; ?>
                             <?php if (!empty($item['matboard_color_name'])): ?>
@@ -384,10 +390,10 @@ $psClass = match($payment_status) { 'FULL'=>'cst-ord-dtls-ps-full', 'PARTIAL'=>'
                                 <span class="item-spec-val"><?= htmlspecialchars($item['matboard_color_name']) ?></span>
                             </span>
                             <?php endif; ?>
-                            <?php if ($itemHasPrint && !empty($item['dimension'])): ?>
+                            <?php if ($itemHasPrint && !empty($item['print_width']) && !empty($item['print_height'])): ?>
                             <span class="item-spec">
-                                <span class="item-spec-key">Print size</span>
-                                <span class="item-spec-val"><?= htmlspecialchars($item['dimension']) ?></span>
+                                <span class="item-spec-key">Print Size</span>
+                                <span class="item-spec-val"><?= $item['print_width'] ?>" × <?= $item['print_height'] ?>"</span>
                             </span>
                             <?php endif; ?>
                             <?php if ($itemHasPrint && !empty($item['paper_name'])): ?>
@@ -430,7 +436,7 @@ $psClass = match($payment_status) { 'FULL'=>'cst-ord-dtls-ps-full', 'PARTIAL'=>'
         }
         foreach ($items as $idx => $item) {
             if (!empty($item['image_path'])) {
-                $docs[] = ['src' => '../'.$item['image_path'], 'label' => 'Wedding Photo (Item '.($idx+1).')'];
+                $docs[] = ['src' => '../'.$item['image_path'], 'label' => 'Customer Image (Item '.($idx+1).')'];
             }
         }
         ?>
@@ -454,13 +460,14 @@ $psClass = match($payment_status) { 'FULL'=>'cst-ord-dtls-ps-full', 'PARTIAL'=>'
 
 </div><!-- /.cst-ord-dtls-page -->
 
-<!-- Proof Viewer Modal -->
+<!-- ── Proof Viewer Modal ── -->
 <?php if (!empty($proofs)): ?>
 <div id="cst-proof-modal" class="cst-upload-modal-overlay" style="display:none;">
     <div class="cst-upload-modal" style="max-width:520px;">
         <div class="cst-upload-modal-header">
             <span><i class="fas fa-receipt"></i> Proof of Payment</span>
-            <button onclick="document.getElementById('cst-proof-modal').style.display='none'" class="cst-upload-modal-close"><i class="fas fa-times"></i></button>
+            <button onclick="document.getElementById('cst-proof-modal').style.display='none'"
+                    class="cst-upload-modal-close"><i class="fas fa-times"></i></button>
         </div>
         <div class="cst-upload-modal-body">
             <?php foreach ($proofs as $idx => $proof):
@@ -476,7 +483,8 @@ $psClass = match($payment_status) { 'FULL'=>'cst-ord-dtls-ps-full', 'PARTIAL'=>'
                     <span class="cst-ord-dtls-vs-badge <?= $vsClass ?>"><?= $proof['verification_status'] ?></span>
                     <span class="cst-ord-dtls-proof-date"><?= date('M d, Y g:i A', strtotime($proof['upload_date'])) ?></span>
                 </div>
-                <img src="../<?= htmlspecialchars($proof['payment_proof']) ?>" alt="Receipt #<?= $idx + 1 ?>"
+                <img src="../<?= htmlspecialchars($proof['payment_proof']) ?>"
+                     alt="Receipt #<?= $idx + 1 ?>"
                      style="width:100%;border-radius:10px;margin-top:0.5rem;">
             </div>
             <?php endforeach; ?>
@@ -485,12 +493,13 @@ $psClass = match($payment_status) { 'FULL'=>'cst-ord-dtls-ps-full', 'PARTIAL'=>'
 </div>
 <?php endif; ?>
 
-<!-- Document Viewer Modal -->
+<!-- ── Document Viewer Modal ── -->
 <div id="cst-doc-modal" class="cst-upload-modal-overlay" style="display:none;">
     <div class="cst-upload-modal" style="max-width:620px;">
         <div class="cst-upload-modal-header">
             <span id="cst-doc-modal-label">Document</span>
-            <button onclick="document.getElementById('cst-doc-modal').style.display='none'" class="cst-upload-modal-close"><i class="fas fa-times"></i></button>
+            <button onclick="document.getElementById('cst-doc-modal').style.display='none'"
+                    class="cst-upload-modal-close"><i class="fas fa-times"></i></button>
         </div>
         <div class="cst-upload-modal-body" style="text-align:center;">
             <img id="cst-doc-modal-img" src="" alt="" style="max-width:100%;border-radius:10px;">
@@ -498,7 +507,7 @@ $psClass = match($payment_status) { 'FULL'=>'cst-ord-dtls-ps-full', 'PARTIAL'=>'
     </div>
 </div>
 
-<!-- Upload Receipt Modal -->
+<!-- ── Upload Receipt Modal ── -->
 <?php if ($isGcash && $isPending): ?>
 <div id="cst-upload-modal" class="cst-upload-modal-overlay" style="display:none;">
     <div class="cst-upload-modal">
@@ -523,12 +532,13 @@ $psClass = match($payment_status) { 'FULL'=>'cst-ord-dtls-ps-full', 'PARTIAL'=>'
             <input type="file" id="cst-upload-file" accept="image/jpeg,image/png,image/webp"
                    style="display:none;" onchange="previewFile(this)">
             <div id="cst-upload-preview" style="display:none;margin-top:0.75rem;">
-                <img id="cst-upload-preview-img" src="" alt="Preview" style="max-width:100%;border-radius:10px;">
+                <img id="cst-upload-preview-img" src="" alt="Preview"
+                     style="max-width:100%;border-radius:10px;">
             </div>
         </div>
         <div class="cst-upload-modal-footer">
             <button onclick="closeUploadModal()" class="cst-upload-cancel-btn">Cancel</button>
-            <button onclick="submitReceipt(<?= $order_id ?>, <?= $payment_id ?>)" class="cst-upload-submit-btn">
+            <button onclick="submitReceipt()" class="cst-upload-submit-btn">
                 <i class="fas fa-upload"></i> Submit Receipt
             </button>
         </div>
@@ -536,79 +546,15 @@ $psClass = match($payment_status) { 'FULL'=>'cst-ord-dtls-ps-full', 'PARTIAL'=>'
 </div>
 <?php endif; ?>
 
-
 <?php include __DIR__ . '/../includes/idx_footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ── Pass PHP vars to JS ── -->
 <script>
-function openProofViewer()  { document.getElementById('cst-proof-modal').style.display = 'flex'; }
-function openUploadModal()  { document.getElementById('cst-upload-modal').style.display = 'flex'; }
-function closeUploadModal() { document.getElementById('cst-upload-modal').style.display = 'none'; }
-
-function openDocViewer(src, label) {
-    document.getElementById('cst-doc-modal-img').src           = src;
-    document.getElementById('cst-doc-modal-label').textContent = label;
-    document.getElementById('cst-doc-modal').style.display     = 'flex';
-}
-
-function previewFile(input) {
-    if (!input.files?.[0]) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-        document.getElementById('cst-upload-preview-img').src  = e.target.result;
-        document.getElementById('cst-upload-preview').style.display  = 'block';
-        document.getElementById('cst-upload-dropzone').style.display = 'none';
-    };
-    reader.readAsDataURL(input.files[0]);
-}
-
-const dz = document.getElementById('cst-upload-dropzone');
-if (dz) {
-    dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('dragging'); });
-    dz.addEventListener('dragleave', () => dz.classList.remove('dragging'));
-    dz.addEventListener('drop', e => {
-        e.preventDefault(); dz.classList.remove('dragging');
-        const file = e.dataTransfer.files[0];
-        if (file) {
-            const dt = new DataTransfer(); dt.items.add(file);
-            const inp = document.getElementById('cst-upload-file');
-            inp.files = dt.files; previewFile(inp);
-        }
-    });
-}
-
-async function submitReceipt(orderId, paymentId) {
-    const amount = parseFloat(document.getElementById('cst-upload-amount').value);
-    const file   = document.getElementById('cst-upload-file').files[0];
-    if (!amount || amount <= 0) { Swal.fire('Missing Amount','Please enter the amount on your receipt.','warning'); return; }
-    if (!file)                  { Swal.fire('No File','Please select your receipt image.','warning'); return; }
-    const fd = new FormData();
-    fd.append('order_id', orderId);
-    fd.append('payment_id', paymentId);
-    fd.append('uploaded_amount', amount);
-    fd.append('receipt', file);
-    const btn = document.querySelector('.cst-upload-submit-btn');
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
-    try {
-        const res  = await fetch('../process/upload_receipt.php', { method:'POST', body:fd });
-        const data = await res.json();
-        if (data.success) {
-            Swal.fire({ icon:'success', title:'Receipt Uploaded!', text:'We will verify your receipt shortly.', confirmButtonColor:'#0F473A' })
-                .then(() => location.reload());
-        } else {
-            Swal.fire('Error', data.message || 'Something went wrong.', 'error');
-            btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> Submit Receipt';
-        }
-    } catch(e) {
-        Swal.fire('Error','Network error. Please try again.','error');
-        btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> Submit Receipt';
-    }
-}
-
-['cst-proof-modal','cst-doc-modal','cst-upload-modal'].forEach(id => {
-    document.getElementById(id)?.addEventListener('click', e => {
-        if (e.target.id === id) e.target.style.display = 'none';
-    });
-});
+    const ORDER_ID    = <?= $order_id ?>;
+    const PAYMENT_ID  = <?= $payment_id ?>;
+    const BALANCE_DUE = <?= $balance_due ?>;
 </script>
+<script src="../assets/js/customer_order_details.js"></script>
 </body>
 </html>
