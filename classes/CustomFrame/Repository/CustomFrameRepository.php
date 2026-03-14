@@ -16,15 +16,50 @@ class CustomFrameRepository {
     }
 
     public function getActiveFrameDesigns(): array {
+        // Fetch ALL images per design — primary first, then the rest
         $r = $this->conn->query("
-            SELECT fd.*, fdi.image_name AS primary_image
+            SELECT fd.*,
+                   fdi.image_name,
+                   fdi.is_primary
             FROM tbl_frame_designs fd
             LEFT JOIN tbl_frame_design_images fdi
-                ON fd.frame_design_id = fdi.frame_design_id AND fdi.is_primary = 1
+                ON fd.frame_design_id = fdi.frame_design_id
             WHERE fd.is_active = 1
-            ORDER BY fd.design_name
+            ORDER BY fd.design_name, fdi.is_primary DESC, fdi.image_id ASC
         ");
-        return $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+        if (!$r) return [];
+
+        // Group rows by design, collect all images into an array
+        $designs = [];
+        foreach ($r->fetch_all(MYSQLI_ASSOC) as $row) {
+            $id = $row['frame_design_id'];
+            if (!isset($designs[$id])) {
+                $designs[$id] = [
+                    'frame_design_id' => $row['frame_design_id'],
+                    'design_name'     => $row['design_name'],
+                    'price'           => $row['price'],
+                    'is_active'       => $row['is_active'],
+                    'primary_image'   => null,
+                    'all_images'      => [],
+                ];
+            }
+            if (!empty($row['image_name'])) {
+                $designs[$id]['all_images'][] = $row['image_name'];
+                // First image marked is_primary wins
+                if ($row['is_primary'] && !$designs[$id]['primary_image']) {
+                    $designs[$id]['primary_image'] = $row['image_name'];
+                }
+            }
+        }
+
+        // Fallback: if no image is marked primary, use the first one
+        foreach ($designs as &$d) {
+            if (!$d['primary_image'] && !empty($d['all_images'])) {
+                $d['primary_image'] = $d['all_images'][0];
+            }
+        }
+
+        return array_values($designs);
     }
 
     public function getActiveFrameColors(): array {
@@ -177,7 +212,7 @@ class CustomFrameRepository {
                  quantity, base_price, extra_price, sub_total)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $stmt->bind_param("siiisiiiiiidddd",
+        $stmt->bind_param("siisiisiiiiiddd",
             $frameCategory, $rProductId, $cProductId, $sourceType,
             $cartId, $orderId, $serviceType, $printingOrderItemId,
             $primaryMatboardId, $secondaryMatboardId, $mountTypeId,

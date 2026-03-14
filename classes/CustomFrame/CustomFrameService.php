@@ -58,11 +58,10 @@ class CustomFrameService {
         $primaryId   = (int)($data['primary_matboard_id']   ?? 0);
         $secondaryId = (int)($data['secondary_matboard_id'] ?? 0);
 
+        // Only charge when BOTH primary and secondary are selected — charge once using primary price
         if ($primaryId > 0 && $secondaryId > 0) {
             $mc1 = $this->repo->getMatboardById($primaryId);
-            $mc2 = $this->repo->getMatboardById($secondaryId);
             $extraPrice += $mc1 ? (float)$mc1['base_price'] : 0;
-            $extraPrice += $mc2 ? (float)$mc2['base_price'] : 0;
         }
 
         if (!empty($data['mount_type_id'])) {

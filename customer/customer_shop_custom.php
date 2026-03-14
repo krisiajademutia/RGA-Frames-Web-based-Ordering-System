@@ -126,32 +126,53 @@ if ($customerId > 0) {
                     </div>
                 </div>
 
-                <!-- 3. FRAME TYPE & DESIGN -->
+                <!-- 3. FRAME TYPE -->
                 <div class="csc-section mb-4">
-                    <div class="csc-section-header">FRAME TYPE & DESIGN</div>
+                    <div class="csc-section-header">FRAME TYPE</div>
                     <div class="csc-section-body">
-                        <!-- Frame Type -->
-                        <div class="csc-type-grid mb-4">
+                        <div class="csc-type-grid">
                             <?php foreach ($frameTypes as $ft): ?>
-                                <label class="csc-type-option" data-value="<?= $ft['frame_type_id'] ?>" data-price="<?= $ft['type_price'] ?>">
+                                <label class="csc-type-option" data-value="<?= $ft['frame_type_id'] ?>" data-price="<?= $ft['type_price'] ?>"
+                                       style="flex-direction:column; align-items:center; text-align:center; gap:0.5rem; padding:0.75rem;">
                                     <input type="radio" name="frame_type" value="<?= $ft['frame_type_id'] ?>" hidden>
+                                    <?php if (!empty($ft['image_name'])): ?>
+                                        <div class="csc-design-img-wrap"
+                                             data-images="<?= htmlspecialchars(json_encode(['../uploads/' . $ft['image_name']])) ?>"
+                                             data-name="<?= htmlspecialchars($ft['type_name']) ?>"
+                                             style="width:100%; border-radius:8px; overflow:hidden;">
+                                            <img src="../uploads/<?= htmlspecialchars($ft['image_name']) ?>"
+                                                 alt="<?= htmlspecialchars($ft['type_name']) ?>"
+                                                 class="csc-design-img"
+                                                 style="width:100%; height:120px; object-fit:cover; display:block;">
+                                            <div class="csc-design-view-overlay">
+                                                <i class="fas fa-expand"></i>
+                                                <span>View</span>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
                                     <span class="csc-type-name"><?= htmlspecialchars($ft['type_name']) ?></span>
                                     <span class="csc-type-price">₱<?= number_format($ft['type_price'], 2) ?></span>
                                 </label>
                             <?php endforeach; ?>
                         </div>
+                    </div>
+                </div>
 
+                <!-- 4. FRAME DESIGN -->
+                <div class="csc-section mb-4">
+                    <div class="csc-section-header">FRAME DESIGN</div>
+                    <div class="csc-section-body">
                         <!-- Frame Designs Grid -->
                         <div class="csc-design-grid">
                             <?php foreach ($frameDesigns as $fd): ?>
-                                <?php $imgs = !empty($fd['images']) ? $fd['images'] : []; ?>
+                                <?php $imgs = !empty($fd['all_images']) ? $fd['all_images'] : (!empty($fd['primary_image']) ? [$fd['primary_image']] : []); ?>
                                 <label class="csc-design-card" data-value="<?= $fd['frame_design_id'] ?>" data-price="<?= $fd['price'] ?>">
                                     <input type="radio" name="frame_design" value="<?= $fd['frame_design_id'] ?>" hidden>
                                     <?php if (!empty($fd['primary_image'])): ?>
                                         <div class="csc-design-img-wrap"
-                                             data-images="<?= htmlspecialchars(json_encode(array_map(fn($i) => '../assets/img/' . $i, $imgs))) ?>"
+                                             data-images="<?= htmlspecialchars(json_encode(array_map(fn($i) => '../uploads/' . $i, $imgs))) ?>"
                                              data-name="<?= htmlspecialchars($fd['design_name']) ?>">
-                                            <img src="../assets/img/<?= htmlspecialchars($fd['primary_image']) ?>"
+                                            <img src="../uploads/<?= htmlspecialchars($fd['primary_image']) ?>"
                                                  alt="<?= htmlspecialchars($fd['design_name']) ?>"
                                                  class="csc-design-img">
                                             <div class="csc-design-view-overlay">
@@ -188,7 +209,7 @@ if ($customerId > 0) {
                     </div>
                 </div>
 
-                <!-- 4. FRAME COLOR -->
+                <!-- 5. FRAME COLOR -->
                 <div class="csc-section mb-4">
                     <div class="csc-section-header">FRAME COLOR</div>
                     <div class="csc-section-body">
@@ -197,9 +218,17 @@ if ($customerId > 0) {
                                 <label class="csc-color-card" data-value="<?= $fc['frame_color_id'] ?>">
                                     <input type="radio" name="frame_color" value="<?= $fc['frame_color_id'] ?>" hidden>
                                     <?php if ($fc['color_image']): ?>
-                                        <img src="../assets/img/<?= htmlspecialchars($fc['color_image']) ?>"
-                                             alt="<?= htmlspecialchars($fc['color_name']) ?>"
-                                             class="csc-color-swatch">
+                                        <div class="csc-design-img-wrap"
+                                             data-images="<?= htmlspecialchars(json_encode(['../uploads/' . $fc['color_image']])) ?>"
+                                             data-name="<?= htmlspecialchars($fc['color_name']) ?>">
+                                            <img src="../uploads/<?= htmlspecialchars($fc['color_image']) ?>"
+                                                 alt="<?= htmlspecialchars($fc['color_name']) ?>"
+                                                 class="csc-color-swatch">
+                                            <div class="csc-design-view-overlay">
+                                                <i class="fas fa-expand"></i>
+                                                <span>View</span>
+                                            </div>
+                                        </div>
                                     <?php else:
                                         $colorMap = ['gold'=>'#c9a84c','silver'=>'#e8e8e8','white'=>'#ffffff','walnut'=>'#7b3f00','navy'=>'#0a0e2b','red'=>'#cc0000','black'=>'#111111'];
                                         $bgColor  = $colorMap[strtolower($fc['color_name'])] ?? '#cccccc';
@@ -215,7 +244,7 @@ if ($customerId > 0) {
                     </div>
                 </div>
 
-                <!-- 5. FRAME SIZE -->
+                <!-- 6. FRAME SIZE -->
                 <div class="csc-section mb-4">
                     <div class="csc-section-header">FRAME SIZE</div>
                     <div class="csc-section-body">
@@ -250,7 +279,7 @@ if ($customerId > 0) {
                     </div>
                 </div>
 
-                <!-- 6. MAT-BOARD COLOR -->
+                <!-- 7. MAT-BOARD COLOR -->
                 <div class="csc-section mb-4">
                     <div class="csc-section-header">MAT-BOARD COLOR</div>
                     <div class="csc-section-body">
@@ -266,15 +295,23 @@ if ($customerId > 0) {
                                 <label class="csc-matboard-card" data-value="<?= $mc['matboard_color_id'] ?>" data-price="<?= $mc['base_price'] ?>">
                                     <input type="radio" name="primary_matboard" value="<?= $mc['matboard_color_id'] ?>" hidden>
                                     <?php if ($mc['image_name']): ?>
-                                        <img src="../assets/img/<?= htmlspecialchars($mc['image_name']) ?>"
-                                             class="csc-matboard-swatch" alt="">
+                                        <div class="csc-design-img-wrap"
+                                             data-images="<?= htmlspecialchars(json_encode(['../uploads/' . $mc['image_name']])) ?>"
+                                             data-name="<?= htmlspecialchars($mc['matboard_color_name']) ?>">
+                                            <img src="../uploads/<?= htmlspecialchars($mc['image_name']) ?>"
+                                                 class="csc-matboard-swatch" alt="">
+                                            <div class="csc-design-view-overlay">
+                                                <i class="fas fa-expand"></i>
+                                                <span>View</span>
+                                            </div>
+                                        </div>
                                     <?php else:
                                         $mbMap = ['white'=>'#ffffff','cream'=>'#f5e6c8','black'=>'#111111','navy'=>'#0a0e2b','forest green'=>'#1a4731'];
                                         $mbBg  = $mbMap[strtolower($mc['matboard_color_name'])] ?? '#cccccc';
                                     ?>
                                         <div class="csc-matboard-swatch" style="background:<?= $mbBg ?>;"></div>
                                     <?php endif; ?>
-                                    <span><?= htmlspecialchars($mc['matboard_color_name']) ?></span>
+                                    <span class="csc-matboard-name"><?= htmlspecialchars($mc['matboard_color_name']) ?></span>
                                 </label>
                             <?php endforeach; ?>
                         </div>
@@ -285,28 +322,36 @@ if ($customerId > 0) {
                             <label class="csc-matboard-card selected" data-value="0">
                                 <input type="radio" name="secondary_matboard" value="0" checked hidden>
                                 <div class="csc-matboard-swatch csc-matboard-none"></div>
-                                <span>None</span>
+                                <span class="csc-matboard-name">None</span>
                             </label>
                             <?php foreach ($matboardColors as $mc): ?>
                                 <label class="csc-matboard-card" data-value="<?= $mc['matboard_color_id'] ?>" data-price="<?= $mc['base_price'] ?>">
                                     <input type="radio" name="secondary_matboard" value="<?= $mc['matboard_color_id'] ?>" hidden>
                                     <?php if ($mc['image_name']): ?>
-                                        <img src="../assets/img/<?= htmlspecialchars($mc['image_name']) ?>"
-                                             class="csc-matboard-swatch" alt="">
+                                        <div class="csc-design-img-wrap"
+                                             data-images="<?= htmlspecialchars(json_encode(['../uploads/' . $mc['image_name']])) ?>"
+                                             data-name="<?= htmlspecialchars($mc['matboard_color_name']) ?>">
+                                            <img src="../uploads/<?= htmlspecialchars($mc['image_name']) ?>"
+                                                 class="csc-matboard-swatch" alt="">
+                                            <div class="csc-design-view-overlay">
+                                                <i class="fas fa-expand"></i>
+                                                <span>View</span>
+                                            </div>
+                                        </div>
                                     <?php else:
                                         $mbMap = ['white'=>'#ffffff','cream'=>'#f5e6c8','black'=>'#111111','navy'=>'#0a0e2b','forest green'=>'#1a4731'];
                                         $mbBg  = $mbMap[strtolower($mc['matboard_color_name'])] ?? '#cccccc';
                                     ?>
                                         <div class="csc-matboard-swatch" style="background:<?= $mbBg ?>;"></div>
                                     <?php endif; ?>
-                                    <span><?= htmlspecialchars($mc['matboard_color_name']) ?></span>
+                                    <span class="csc-matboard-name"><?= htmlspecialchars($mc['matboard_color_name']) ?></span>
                                 </label>
                             <?php endforeach; ?>
                         </div>
                     </div>
                 </div>
 
-                <!-- 7. MOUNT TYPE -->
+                <!-- 8. MOUNT TYPE -->
                 <div class="csc-section mb-4">
                     <div class="csc-section-header">MOUNT TYPE</div>
                     <div class="csc-section-body">
