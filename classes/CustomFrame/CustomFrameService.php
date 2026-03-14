@@ -26,7 +26,7 @@ class CustomFrameService {
         ];
     }
 
-    // ── Server-side price calculation (Kuya's Logic) ─────
+    // ── Server-side price calculation ────────────────────
     public function calculatePrice(array $data): array {
         $basePrice  = 0.0;
         $extraPrice = 0.0;
@@ -35,7 +35,6 @@ class CustomFrameService {
         $w = (float)($data['custom_width'] ?? 0);
         $h = (float)($data['custom_height'] ?? 0);
 
-        // If user selected a preset size from the dropdown UI, override the custom W & H
         if (!empty($data['frame_size_id']) && $data['frame_size_id'] !== 'OTHER') {
             $fs = $this->repo->getFrameSizeById((int)$data['frame_size_id']);
             if ($fs) {
@@ -44,15 +43,11 @@ class CustomFrameService {
             }
         }
 
-        // --- 1. FRAME MATH ---
         if ($w > 0 && $h > 0) {
-            // Frame Type base fee (if applicable)
             if (!empty($data['frame_type_id'])) {
                 $ft = $this->repo->getFrameTypeById((int)$data['frame_type_id']);
                 $basePrice += $ft ? (float)$ft['type_price'] : 0;
             }
-
-            // Kuya's Frame Design Logic: ((Width + Height) / 6) * Design Price
             if (!empty($data['frame_design_id'])) {
                 $fd = $this->repo->getFrameDesignById((int)$data['frame_design_id']);
                 $designPrice = $fd ? (float)$fd['price'] : 0;
@@ -60,7 +55,6 @@ class CustomFrameService {
             }
         }
 
-        // --- 2. EXTRAS (Matboards & Mounts) ---
         $primaryId   = (int)($data['primary_matboard_id']   ?? 0);
         $secondaryId = (int)($data['secondary_matboard_id'] ?? 0);
 
@@ -76,21 +70,16 @@ class CustomFrameService {
             $extraPrice += $mt ? (float)$mt['additional_fee'] : 0;
         }
 
-        // --- 3. PRINT MATH ---
         if (!empty($data['service_type']) && $data['service_type'] === 'FRAME&PRINT' && $w > 0 && $h > 0) {
             $paperTypeId = (int)($data['paper_type_id'] ?? 0);
-            
             if ($paperTypeId > 0) {
-                // Step A: Check Menu (Fixed Prices) first
                 $fixedPriceItem = $this->repo->getFixedPrintPrice($paperTypeId, $w, $h);
                 if ($fixedPriceItem) {
                     $printPrice = (float)$fixedPriceItem['fixed_price'];
                 } else {
-                    // Step B: Custom Math using Multiplier (W x H x Multiplier)
                     $pt = $this->repo->getPaperTypeById($paperTypeId);
                     if ($pt) {
-                        $multiplier = (float)$pt['multiplier'];
-                        $printPrice = ($w * $h) * $multiplier;
+                        $printPrice = ($w * $h) * (float)$pt['multiplier'];
                     }
                 }
             }
@@ -118,7 +107,6 @@ class CustomFrameService {
         try {
             $prices = $this->calculatePrice($data);
 
-            // 1. Insert custom frame product (No frame_size_id parameter anymore!)
             $cProductId = $this->repo->insertCustomFrameProduct(
                 !empty($data['frame_type_id'])   ? (int)$data['frame_type_id']   : null,
                 !empty($data['frame_design_id']) ? (int)$data['frame_design_id'] : null,
@@ -128,36 +116,28 @@ class CustomFrameService {
                 $prices['base_price']
             );
 
-            // 2. Get or create cart
             $cartId = $this->repo->getOrCreateCart($customerId);
 
-            // 3. Handle print if Frame & Print
             $printingItemId = null;
             $serviceType    = 'FRAME_ONLY';
 
             if (!empty($data['service_type']) && $data['service_type'] === 'FRAME&PRINT') {
-                $serviceType = 'FRAME&PRINT';
-                $imagePath   = $data['image_path'] ?? '';
-                $paperTypeId = (int)($data['paper_type_id'] ?? 0);
-                $width       = $prices['width'];
-                $height      = $prices['height'];
-                $qty         = max(1, (int)($data['quantity'] ?? 1));
-
+                $serviceType    = 'FRAME&PRINT';
                 $printingItemId = $this->repo->insertPrintingOrderItem(
-                    $cartId, null, $paperTypeId,
-                    $imagePath,
-                    $width, $height,
-                    $qty,
+                    $cartId, null,
+                    (int)($data['paper_type_id'] ?? 0),
+                    $data['image_path'] ?? '',
+                    $prices['width'], $prices['height'],
+                    max(1, (int)($data['quantity'] ?? 1)),
                     $prices['print_price']
                 );
             }
 
-            // 4. Insert frame order item
             $this->repo->insertFrameOrderItem(
                 'CUSTOM', null, $cProductId,
                 'CART', $cartId, null,
                 $serviceType, $printingItemId,
-                (!empty($data['primary_matboard_id']) && (int)$data['primary_matboard_id'] > 0)   ? (int)$data['primary_matboard_id']   : null,
+                (!empty($data['primary_matboard_id'])   && (int)$data['primary_matboard_id']   > 0) ? (int)$data['primary_matboard_id']   : null,
                 (!empty($data['secondary_matboard_id']) && (int)$data['secondary_matboard_id'] > 0) ? (int)$data['secondary_matboard_id'] : null,
                 !empty($data['mount_type_id']) ? (int)$data['mount_type_id'] : null,
                 max(1, (int)($data['quantity'] ?? 1)),
@@ -175,13 +155,13 @@ class CustomFrameService {
         }
     }
 
-    // ── Buy Now (direct order) ───────────────────────────
+    // ── Buy Now ──────────────────────────────────────────
+    // Now accepts discount_amount and final_total injected by checkout_process.php
     public function buyNow(int $customerId, array $data): array {
         $this->conn->begin_transaction();
         try {
             $prices = $this->calculatePrice($data);
 
-            // 1. Insert custom frame product
             $cProductId = $this->repo->insertCustomFrameProduct(
                 !empty($data['frame_type_id'])   ? (int)$data['frame_type_id']   : null,
                 !empty($data['frame_design_id']) ? (int)$data['frame_design_id'] : null,
@@ -191,47 +171,41 @@ class CustomFrameService {
                 $prices['base_price']
             );
 
-            // 2. Generate reference number
-            $refNo = 'RGA-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
-
-            // 3. Create order
-            $qty          = max(1, (int)($data['quantity'] ?? 1));
-            $grandTotal   = $prices['grand_total'];
-            $paymentMethod = strtoupper($data['payment_method'] ?? 'CASH');
+            $refNo          = 'RGA-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
+            $qty            = max(1, (int)($data['quantity'] ?? 1));
+            $subTotal       = $prices['grand_total'];
+            $discountAmount = (float)($data['discount_amount'] ?? 0.00);
+            $finalTotal     = isset($data['final_total']) ? (float)$data['final_total'] : $subTotal;
+            $paymentMethod  = strtoupper($data['payment_method']  ?? 'CASH');
             $deliveryOption = strtoupper($data['delivery_option'] ?? 'PICKUP');
             $deliveryAddress = $data['delivery_address'] ?? null;
 
             $orderId = $this->repo->insertOrder(
-                $customerId, $refNo, $grandTotal,
+                $customerId, $refNo,
+                $subTotal, $discountAmount, $finalTotal,
                 $paymentMethod, $deliveryOption, $deliveryAddress
             );
 
-            // 4. Handle print if Frame & Print
             $printingItemId = null;
             $serviceType    = 'FRAME_ONLY';
 
             if (!empty($data['service_type']) && $data['service_type'] === 'FRAME&PRINT') {
-                $serviceType = 'FRAME&PRINT';
-                $imagePath   = $data['image_path'] ?? '';
-                $paperTypeId = (int)($data['paper_type_id'] ?? 0);
-                $width       = $prices['width'];
-                $height      = $prices['height'];
-
+                $serviceType    = 'FRAME&PRINT';
                 $printingItemId = $this->repo->insertPrintingOrderItem(
-                    null, $orderId, $paperTypeId,
-                    $imagePath,
-                    $width, $height,
+                    null, $orderId,
+                    (int)($data['paper_type_id'] ?? 0),
+                    $data['image_path'] ?? '',
+                    $prices['width'], $prices['height'],
                     $qty,
                     $prices['print_price']
                 );
             }
 
-            // 5. Insert frame order item
             $this->repo->insertFrameOrderItem(
                 'CUSTOM', null, $cProductId,
                 'ORDER', null, $orderId,
                 $serviceType, $printingItemId,
-                (!empty($data['primary_matboard_id']) && (int)$data['primary_matboard_id'] > 0)   ? (int)$data['primary_matboard_id']   : null,
+                (!empty($data['primary_matboard_id'])   && (int)$data['primary_matboard_id']   > 0) ? (int)$data['primary_matboard_id']   : null,
                 (!empty($data['secondary_matboard_id']) && (int)$data['secondary_matboard_id'] > 0) ? (int)$data['secondary_matboard_id'] : null,
                 !empty($data['mount_type_id']) ? (int)$data['mount_type_id'] : null,
                 $qty,
@@ -240,8 +214,7 @@ class CustomFrameService {
                 $prices['sub_total']
             );
 
-            // Insert payment record
-            $this->repo->insertPayment($orderId, $grandTotal);
+            $this->repo->insertPayment($orderId, $finalTotal);
 
             $this->conn->commit();
             return [

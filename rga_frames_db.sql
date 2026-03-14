@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 13, 2026 at 12:58 AM
+-- Generation Time: Mar 14, 2026 at 11:18 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -43,7 +43,7 @@ CREATE TABLE `tbl_admin` (
 --
 
 INSERT INTO `tbl_admin` (`admin_id`, `first_name`, `last_name`, `username`, `email`, `password`, `created_at`, `last_login`) VALUES
-(1, 'Admin', 'User', 'admin', 'mutiakrisiaj@gmail.com', '$2y$10$kd9FoZ0japdSk3mzS96QmeYSUH1Pbqm/0SdIRHO57r9NoMUuMQZia', '2026-02-18 12:57:20', '2026-03-13 01:47:02'),
+(1, 'Admin', 'User', 'admin', 'mutiakrisiaj@gmail.com', '$2y$10$kd9FoZ0japdSk3mzS96QmeYSUH1Pbqm/0SdIRHO57r9NoMUuMQZia', '2026-02-18 12:57:20', '2026-03-14 14:17:11'),
 (2, 'Calise', 'Sav', 'calise', 'savvcalise@gmail.com', '$2y$10$LyY134gbnwtwvLUchKeOHesA.5lmBNfBSFQt1kF8cLnyzcDd2xiLu', '2026-03-06 01:25:46', '2026-03-06 01:26:43');
 
 -- --------------------------------------------------------
@@ -107,6 +107,27 @@ CREATE TABLE `tbl_custom_frame_product` (
   `custom_height` decimal(5,2) NOT NULL,
   `calculated_price` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tbl_custom_frame_product`
+--
+
+INSERT INTO `tbl_custom_frame_product` (`c_product_id`, `frame_type_id`, `frame_design_id`, `frame_color_id`, `custom_width`, `custom_height`, `calculated_price`) VALUES
+(1, 1, 1, 1, 8.00, 10.00, 650.00),
+(2, 2, 2, 2, 12.00, 16.00, 1200.00),
+(3, 1, 3, 1, 5.00, 7.00, 450.00),
+(4, 3, 1, 2, 10.00, 12.00, 1850.00),
+(5, 2, 4, 1, 8.00, 8.00, 900.00),
+(6, 1, 5, 2, 16.00, 20.00, 800.00),
+(7, 1, 6, 1, 6.00, 8.00, 600.00),
+(8, 3, 4, 2, 8.00, 10.00, 1800.00),
+(9, 3, 4, 2, 8.00, 10.00, 1800.00),
+(10, 3, 4, 2, 8.00, 10.00, 1800.00),
+(11, 3, 4, 2, 8.00, 10.00, 1800.00),
+(12, 3, 4, 2, 8.00, 10.00, 1800.00),
+(13, 3, 4, 2, 8.00, 10.00, 1800.00),
+(14, 3, 4, 2, 8.00, 10.00, 1800.00),
+(15, 3, 4, 2, 8.00, 10.00, 1800.00);
 
 -- --------------------------------------------------------
 
@@ -208,6 +229,43 @@ CREATE TABLE `tbl_frame_order_items` (
   `extra_price` decimal(10,2) NOT NULL,
   `sub_total` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tbl_frame_order_items`
+--
+
+INSERT INTO `tbl_frame_order_items` (`item_id`, `frame_category`, `r_product_id`, `c_product_id`, `source_type`, `cart_id`, `order_id`, `service_type`, `printing_order_item_id`, `primary_matboard_id`, `secondary_matboard_id`, `mount_type_id`, `quantity`, `base_price`, `extra_price`, `sub_total`) VALUES
+(1, 'READY_MADE', 1, NULL, 'ORDER', NULL, 1, 'FRAME_ONLY', NULL, 1, NULL, 1, 1, 350.00, 0.00, 350.00),
+(2, 'READY_MADE', 2, NULL, 'ORDER', NULL, 2, 'FRAME_ONLY', NULL, 2, NULL, 2, 1, 550.00, 0.00, 550.00),
+(3, 'CUSTOM', NULL, 1, 'ORDER', NULL, 3, 'FRAME_ONLY', NULL, 1, NULL, 1, 1, 650.00, 0.00, 650.00),
+(4, 'CUSTOM', NULL, 2, 'ORDER', NULL, 4, 'FRAME_ONLY', NULL, 2, NULL, 2, 1, 1200.00, 0.00, 1200.00),
+(5, 'READY_MADE', 1, NULL, 'ORDER', NULL, 5, 'FRAME&PRINT', 1, 1, NULL, 1, 1, 350.00, 320.00, 670.00),
+(6, 'CUSTOM', NULL, 3, 'ORDER', NULL, 6, 'FRAME&PRINT', 2, 2, NULL, 2, 1, 450.00, 180.00, 1520.00),
+(7, 'READY_MADE', 3, NULL, 'ORDER', NULL, 8, 'FRAME_ONLY', NULL, 1, NULL, 1, 1, 450.00, 0.00, 450.00),
+(8, 'CUSTOM', NULL, 5, 'ORDER', NULL, 9, 'FRAME_ONLY', NULL, 1, NULL, 2, 1, 900.00, 0.00, 900.00),
+(9, 'READY_MADE', 5, NULL, 'ORDER', NULL, 10, 'FRAME_ONLY', NULL, 2, NULL, 1, 1, 200.00, 0.00, 200.00),
+(10, 'CUSTOM', NULL, 4, 'ORDER', NULL, 11, 'FRAME_ONLY', NULL, 1, NULL, 1, 1, 1850.00, 0.00, 1850.00),
+(11, 'CUSTOM', NULL, 6, 'ORDER', NULL, 12, 'FRAME&PRINT', 3, 1, 2, 1, 1, 800.00, 560.00, 1560.00),
+(12, 'READY_MADE', 4, NULL, 'ORDER', NULL, 14, 'FRAME_ONLY', NULL, 2, NULL, 2, 1, 1200.00, 0.00, 1200.00),
+(13, 'READY_MADE', 2, NULL, 'ORDER', NULL, 15, 'FRAME&PRINT', 5, 1, NULL, 1, 1, 550.00, 320.00, 870.00),
+(14, 'CUSTOM', NULL, 6, 'ORDER', NULL, 16, 'FRAME_ONLY', NULL, 2, NULL, 2, 1, 800.00, 0.00, 800.00),
+(15, 'READY_MADE', 1, NULL, 'ORDER', NULL, 18, 'FRAME_ONLY', NULL, 1, NULL, 1, 1, 350.00, 0.00, 350.00),
+(16, 'CUSTOM', NULL, 7, 'ORDER', NULL, 19, 'FRAME_ONLY', NULL, 2, NULL, 1, 1, 600.00, 0.00, 600.00),
+(17, 'READY_MADE', 5, NULL, 'ORDER', NULL, 20, 'FRAME_ONLY', NULL, 1, NULL, 1, 1, 200.00, 0.00, 200.00),
+(18, 'READY_MADE', 1, NULL, 'ORDER', NULL, 21, 'FRAME&PRINT', 4, 1, NULL, 2, 1, 350.00, 150.00, 520.00),
+(19, 'CUSTOM', NULL, 2, 'ORDER', NULL, 22, 'FRAME_ONLY', NULL, 2, NULL, 1, 1, 1200.00, 0.00, 1200.00),
+(20, 'CUSTOM', NULL, 1, 'ORDER', NULL, 24, 'FRAME&PRINT', 6, 1, 2, 2, 1, 650.00, 380.00, 1220.00),
+(21, 'READY_MADE', 2, NULL, 'ORDER', NULL, 25, 'FRAME_ONLY', NULL, 2, NULL, 1, 1, 550.00, 0.00, 550.00),
+(22, 'CUSTOM', NULL, 1, 'ORDER', NULL, 26, 'FRAME_ONLY', NULL, 1, NULL, 2, 1, 650.00, 0.00, 650.00),
+(23, 'READY_MADE', 6, NULL, 'ORDER', NULL, 27, 'FRAME_ONLY', NULL, 1, NULL, 1, 1, 240.00, 0.00, 240.00),
+(24, 'CUSTOM', NULL, 8, '', 1, NULL, '', NULL, 1, 2, 2, 1, 1800.00, 0.00, 1800.00),
+(25, 'CUSTOM', NULL, 9, '', 1, NULL, '', NULL, 2, 1, 2, 1, 1800.00, 0.00, 1800.00),
+(26, 'CUSTOM', NULL, 10, '', 1, NULL, '', NULL, 2, 1, 2, 1, 1800.00, 0.00, 1800.00),
+(27, 'CUSTOM', NULL, 11, '', NULL, 28, '', NULL, 2, 1, 2, 1, 1800.00, 0.00, 1800.00),
+(28, 'CUSTOM', NULL, 12, '', 1, NULL, '', NULL, NULL, NULL, 2, 1, 1800.00, 0.00, 1800.00),
+(29, 'CUSTOM', NULL, 13, '', 1, NULL, '', NULL, 2, 2, 2, 1, 1800.00, 0.00, 1800.00),
+(30, 'CUSTOM', NULL, 14, '', NULL, 29, '', NULL, 2, 1, 2, 1, 1800.00, 0.00, 1800.00),
+(31, 'CUSTOM', NULL, 15, '', NULL, 30, '', NULL, 2, 1, 2, 1, 1800.00, 0.00, 1800.00);
 
 -- --------------------------------------------------------
 
@@ -337,6 +395,8 @@ CREATE TABLE `tbl_orders` (
   `order_id` int(11) NOT NULL,
   `customer_id` int(11) NOT NULL,
   `order_reference_no` varchar(50) NOT NULL,
+  `sub_total` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `discount_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
   `total_price` decimal(10,2) NOT NULL,
   `payment_method` enum('CASH','GCASH') NOT NULL,
   `order_status` enum('PENDING','PROCESSING','READY_FOR_PICKUP','FOR_DELIVERY','COMPLETED','REJECTED','CANCELLED') DEFAULT 'PENDING',
@@ -344,6 +404,42 @@ CREATE TABLE `tbl_orders` (
   `delivery_address` text DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tbl_orders`
+--
+
+INSERT INTO `tbl_orders` (`order_id`, `customer_id`, `order_reference_no`, `sub_total`, `discount_amount`, `total_price`, `payment_method`, `order_status`, `delivery_option`, `delivery_address`, `created_at`) VALUES
+(1, 1, 'RGA-2026-0001', 0.00, 0.00, 350.00, 'CASH', 'PENDING', 'PICKUP', NULL, '2026-03-01 08:00:00'),
+(2, 1, 'RGA-2026-0002', 0.00, 0.00, 550.00, 'GCASH', 'PENDING', 'DELIVERY', '123 Rizal St, Davao City', '2026-03-01 09:00:00'),
+(3, 1, 'RGA-2026-0003', 0.00, 0.00, 650.00, 'CASH', 'PROCESSING', 'PICKUP', NULL, '2026-03-02 09:00:00'),
+(4, 1, 'RGA-2026-0004', 0.00, 0.00, 1200.00, 'GCASH', 'PROCESSING', 'DELIVERY', '456 Quimpo Blvd, Davao City', '2026-03-02 10:00:00'),
+(5, 1, 'RGA-2026-0005', 0.00, 0.00, 670.00, 'CASH', 'READY_FOR_PICKUP', 'PICKUP', NULL, '2026-03-03 10:00:00'),
+(6, 1, 'RGA-2026-0006', 0.00, 0.00, 1520.00, 'GCASH', 'FOR_DELIVERY', 'DELIVERY', '789 Magsaysay Ave, Davao City', '2026-03-03 11:00:00'),
+(7, 1, 'RGA-2026-0007', 0.00, 0.00, 320.00, 'CASH', 'COMPLETED', 'PICKUP', NULL, '2026-03-04 11:00:00'),
+(8, 1, 'RGA-2026-0008', 0.00, 0.00, 450.00, 'GCASH', 'CANCELLED', 'PICKUP', NULL, '2026-03-04 12:00:00'),
+(9, 1, 'RGA-2026-0009', 0.00, 0.00, 900.00, 'CASH', 'REJECTED', 'DELIVERY', '321 Ilustre St, Davao City', '2026-03-04 13:00:00'),
+(10, 2, 'RGA-2026-0010', 0.00, 0.00, 200.00, 'GCASH', 'PENDING', 'PICKUP', NULL, '2026-03-05 08:00:00'),
+(11, 2, 'RGA-2026-0011', 0.00, 0.00, 1850.00, 'CASH', 'PENDING', 'DELIVERY', '55 Tulip St, Davao City', '2026-03-05 09:00:00'),
+(12, 2, 'RGA-2026-0012', 0.00, 0.00, 1560.00, 'GCASH', 'PROCESSING', 'PICKUP', NULL, '2026-03-06 09:00:00'),
+(13, 2, 'RGA-2026-0013', 0.00, 0.00, 180.00, 'CASH', 'PROCESSING', 'DELIVERY', '77 Lakewood Rd, Davao City', '2026-03-06 10:00:00'),
+(14, 2, 'RGA-2026-0014', 0.00, 0.00, 1200.00, 'GCASH', 'READY_FOR_PICKUP', 'PICKUP', NULL, '2026-03-07 10:00:00'),
+(15, 2, 'RGA-2026-0015', 0.00, 0.00, 870.00, 'CASH', 'FOR_DELIVERY', 'DELIVERY', '99 Claveria St, Davao City', '2026-03-07 11:00:00'),
+(16, 2, 'RGA-2026-0016', 0.00, 0.00, 800.00, 'GCASH', 'COMPLETED', 'PICKUP', NULL, '2026-03-08 08:00:00'),
+(17, 2, 'RGA-2026-0017', 0.00, 0.00, 560.00, 'CASH', 'COMPLETED', 'DELIVERY', '44 Ponciano St, Davao City', '2026-03-08 09:00:00'),
+(18, 2, 'RGA-2026-0018', 0.00, 0.00, 350.00, 'CASH', 'CANCELLED', 'PICKUP', NULL, '2026-03-09 08:00:00'),
+(19, 2, 'RGA-2026-0019', 0.00, 0.00, 600.00, 'GCASH', 'REJECTED', 'DELIVERY', '11 Anda St, Davao City', '2026-03-09 09:00:00'),
+(20, 9, 'RGA-2026-0020', 0.00, 0.00, 200.00, 'CASH', 'PENDING', 'PICKUP', NULL, '2026-03-10 08:00:00'),
+(21, 9, 'RGA-2026-0021', 0.00, 0.00, 520.00, 'GCASH', 'PROCESSING', 'DELIVERY', '88 Bolton St, Davao City', '2026-03-10 09:00:00'),
+(22, 9, 'RGA-2026-0022', 0.00, 0.00, 1200.00, 'CASH', 'PROCESSING', 'PICKUP', NULL, '2026-03-11 09:00:00'),
+(23, 9, 'RGA-2026-0023', 0.00, 0.00, 420.00, 'GCASH', 'READY_FOR_PICKUP', 'PICKUP', NULL, '2026-03-11 10:00:00'),
+(24, 9, 'RGA-2026-0024', 0.00, 0.00, 1220.00, 'CASH', 'FOR_DELIVERY', 'DELIVERY', '33 Km4 Diversion Rd, Davao', '2026-03-12 10:00:00'),
+(25, 9, 'RGA-2026-0025', 0.00, 0.00, 550.00, 'GCASH', 'COMPLETED', 'DELIVERY', '22 Buhangin Rd, Davao City', '2026-03-12 11:00:00'),
+(26, 9, 'RGA-2026-0026', 0.00, 0.00, 650.00, 'CASH', 'CANCELLED', 'PICKUP', NULL, '2026-03-13 08:00:00'),
+(27, 9, 'RGA-2026-0027', 0.00, 0.00, 240.00, 'GCASH', 'REJECTED', 'DELIVERY', '15 Mac Arthur Hwy, Davao', '2026-03-13 09:00:00'),
+(28, 1, 'RGA-20260314-E70CD7', 0.00, 0.00, 1800.00, 'CASH', 'PENDING', 'PICKUP', NULL, '2026-03-14 16:09:34'),
+(29, 1, 'RGA-20260314-D326D0', 0.00, 0.00, 1800.00, 'CASH', 'PENDING', 'PICKUP', NULL, '2026-03-14 16:46:21'),
+(30, 1, 'RGA-20260314-D6F429', 0.00, 0.00, 1800.00, 'CASH', 'PENDING', 'PICKUP', NULL, '2026-03-14 16:58:37');
 
 -- --------------------------------------------------------
 
@@ -409,6 +505,41 @@ CREATE TABLE `tbl_payment` (
   `date_paid` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `tbl_payment`
+--
+
+INSERT INTO `tbl_payment` (`payment_id`, `order_id`, `total_amount`, `payment_status`, `date_paid`) VALUES
+(1, 1, 350.00, 'PENDING', NULL),
+(2, 2, 550.00, 'PENDING', NULL),
+(3, 3, 650.00, 'PARTIAL', '2026-03-02 00:00:00'),
+(4, 4, 1200.00, 'PENDING', NULL),
+(5, 5, 670.00, 'FULL', '2026-03-03 00:00:00'),
+(6, 6, 1520.00, 'PARTIAL', '2026-03-03 00:00:00'),
+(7, 7, 320.00, 'FULL', '2026-03-04 00:00:00'),
+(8, 8, 450.00, 'PENDING', NULL),
+(9, 9, 900.00, 'PENDING', NULL),
+(10, 10, 200.00, 'PENDING', NULL),
+(11, 11, 1850.00, 'PENDING', NULL),
+(12, 12, 1560.00, 'PARTIAL', '2026-03-06 00:00:00'),
+(13, 13, 180.00, 'FULL', '2026-03-06 00:00:00'),
+(14, 14, 1200.00, 'FULL', '2026-03-07 00:00:00'),
+(15, 15, 870.00, 'FULL', '2026-03-07 00:00:00'),
+(16, 16, 800.00, 'FULL', '2026-03-08 00:00:00'),
+(17, 17, 560.00, 'FULL', '2026-03-08 00:00:00'),
+(18, 18, 350.00, 'PENDING', NULL),
+(19, 19, 600.00, 'PENDING', NULL),
+(20, 20, 200.00, 'PENDING', NULL),
+(21, 21, 520.00, 'PENDING', NULL),
+(22, 22, 1200.00, 'PARTIAL', '2026-03-11 00:00:00'),
+(23, 23, 420.00, 'FULL', '2026-03-11 00:00:00'),
+(24, 24, 1220.00, 'PARTIAL', '2026-03-12 00:00:00'),
+(25, 25, 550.00, 'FULL', '2026-03-12 00:00:00'),
+(26, 26, 650.00, 'PENDING', NULL),
+(27, 27, 240.00, 'PENDING', NULL),
+(28, 29, 1800.00, 'PENDING', '2026-03-14 16:46:21'),
+(29, 30, 1800.00, 'PENDING', '2026-03-14 16:58:37');
+
 -- --------------------------------------------------------
 
 --
@@ -423,6 +554,26 @@ CREATE TABLE `tbl_payment_proof_uploads` (
   `verification_status` varchar(50) DEFAULT 'Pending',
   `upload_date` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tbl_payment_proof_uploads`
+--
+
+INSERT INTO `tbl_payment_proof_uploads` (`upload_id`, `payment_id`, `uploaded_amount`, `payment_proof`, `verification_status`, `upload_date`) VALUES
+(1, 2, 300.00, 'uploads/uploaded_receipts/gcash_receipt_2.jpg', 'Pending Verification', '2026-03-01 10:00:00'),
+(2, 4, 600.00, 'uploads/uploaded_receipts/gcash_receipt_4.jpg', 'Pending Verification', '2026-03-02 11:00:00'),
+(3, 6, 760.00, 'uploads/uploaded_receipts/gcash_receipt_6a.jpg', 'Verified', '2026-03-03 12:00:00'),
+(4, 6, 760.00, 'uploads/uploaded_receipts/gcash_receipt_6b.jpg', 'Verified', '2026-03-03 14:00:00'),
+(5, 8, 200.00, 'uploads/uploaded_receipts/gcash_receipt_8.jpg', 'Pending Verification', '2026-03-04 13:00:00'),
+(6, 12, 780.00, 'uploads/uploaded_receipts/gcash_receipt_12.jpg', 'Verified', '2026-03-06 10:00:00'),
+(7, 14, 600.00, 'uploads/uploaded_receipts/gcash_receipt_14a.jpg', 'Verified', '2026-03-07 09:00:00'),
+(8, 14, 600.00, 'uploads/uploaded_receipts/gcash_receipt_14b.jpg', 'Verified', '2026-03-07 10:00:00'),
+(9, 16, 800.00, 'uploads/uploaded_receipts/gcash_receipt_16.jpg', 'Verified', '2026-03-08 08:30:00'),
+(10, 19, 300.00, 'uploads/uploaded_receipts/gcash_receipt_19.jpg', 'Rejected', '2026-03-09 10:00:00'),
+(11, 21, 260.00, 'uploads/uploaded_receipts/gcash_receipt_21.jpg', 'Pending Verification', '2026-03-10 10:00:00'),
+(12, 23, 420.00, 'uploads/uploaded_receipts/gcash_receipt_23.jpg', 'Verified', '2026-03-11 11:00:00'),
+(13, 25, 550.00, 'uploads/uploaded_receipts/gcash_receipt_25.jpg', 'Verified', '2026-03-12 12:00:00'),
+(14, 27, 120.00, 'uploads/uploaded_receipts/gcash_receipt_27.jpg', 'Rejected', '2026-03-13 10:00:00');
 
 -- --------------------------------------------------------
 
@@ -441,6 +592,22 @@ CREATE TABLE `tbl_printing_order_items` (
   `quantity` int(11) DEFAULT NULL,
   `sub_total` decimal(10,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tbl_printing_order_items`
+--
+
+INSERT INTO `tbl_printing_order_items` (`printing_order_item_id`, `cart_id`, `order_id`, `paper_type_id`, `image_path`, `width_inch`, `height_inch`, `quantity`, `sub_total`) VALUES
+(1, NULL, 7, 1, 'uploads/customer_images/sample1.jpg', 8.00, 10.00, 1, 320.00),
+(2, NULL, 13, 2, 'uploads/customer_images/sample2.jpg', 5.00, 7.00, 1, 180.00),
+(3, NULL, 17, 3, 'uploads/customer_images/sample3.jpg', 12.00, 16.00, 2, 560.00),
+(4, NULL, NULL, 1, 'uploads/customer_images/sample4.jpg', 4.00, 6.00, 1, 150.00),
+(5, NULL, NULL, 2, 'uploads/customer_images/sample5.jpg', 8.00, 10.00, 1, 320.00),
+(6, NULL, NULL, 1, 'uploads/customer_images/sample6.jpg', 10.00, 12.00, 1, 380.00),
+(7, NULL, NULL, 3, 'uploads/customer_images/sample7.jpg', 5.00, 7.00, 2, 360.00),
+(8, NULL, NULL, 2, 'uploads/customer_images/sample8.jpg', 8.00, 10.00, 1, 320.00),
+(9, NULL, 23, 1, 'uploads/customer_images/sample9.jpg', 12.00, 16.00, 1, 420.00),
+(10, NULL, 27, 2, 'uploads/customer_images/sample10.jpg', 6.00, 8.00, 1, 240.00);
 
 -- --------------------------------------------------------
 
@@ -742,7 +909,7 @@ ALTER TABLE `tbl_customer`
 -- AUTO_INCREMENT for table `tbl_custom_frame_product`
 --
 ALTER TABLE `tbl_custom_frame_product`
-  MODIFY `c_product_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `c_product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `tbl_fixed_print_prices`
@@ -772,7 +939,7 @@ ALTER TABLE `tbl_frame_design_images`
 -- AUTO_INCREMENT for table `tbl_frame_order_items`
 --
 ALTER TABLE `tbl_frame_order_items`
-  MODIFY `item_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `tbl_frame_sizes`
@@ -808,7 +975,7 @@ ALTER TABLE `tbl_notifications`
 -- AUTO_INCREMENT for table `tbl_orders`
 --
 ALTER TABLE `tbl_orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `tbl_otp`
@@ -826,19 +993,19 @@ ALTER TABLE `tbl_paper_type`
 -- AUTO_INCREMENT for table `tbl_payment`
 --
 ALTER TABLE `tbl_payment`
-  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT for table `tbl_payment_proof_uploads`
 --
 ALTER TABLE `tbl_payment_proof_uploads`
-  MODIFY `upload_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `upload_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `tbl_printing_order_items`
 --
 ALTER TABLE `tbl_printing_order_items`
-  MODIFY `printing_order_item_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `printing_order_item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `tbl_ready_made_product`

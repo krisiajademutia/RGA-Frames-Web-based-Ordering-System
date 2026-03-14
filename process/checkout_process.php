@@ -22,22 +22,35 @@ $isBuyNow        = !empty($_POST['is_buy_now']) && isset($_SESSION['buy_now_item
 
 if ($isBuyNow) {
     // ── Buy Now flow ─────────────────────────────────────
-    $cfService  = new CustomFrameService($conn);
-    $itemData   = $_SESSION['buy_now_item'];
-    $prices     = $cfService->calculatePrice($itemData);
+    $cfService = new CustomFrameService($conn);
+    $itemData  = $_SESSION['buy_now_item'];
+    $prices    = $cfService->calculatePrice($itemData);
 
     $delivery_option = strtoupper(trim($_POST['delivery_option'] ?? 'PICKUP'));
     $payment_method  = strtoupper(trim($_POST['payment_method']  ?? 'CASH'));
     $address         = $delivery_option === 'DELIVERY' ? trim($_POST['delivery_address'] ?? '') : null;
-    $delivery_fee    = $delivery_option === 'DELIVERY' ? 150.00 : 0.00;
-    $total_price     = $prices['grand_total'] + $delivery_fee;
 
     if ($delivery_option === 'DELIVERY' && empty($address)) {
         echo json_encode(['success' => false, 'message' => 'Please enter your delivery address.']);
         exit();
     }
 
-    // Handle GCash receipt if needed
+    // Build pseudo cart so discount + delivery unlock checks work consistently
+    $pseudoCart = [['quantity' => max(1, (int)($itemData['quantity'] ?? 1)), 'sub_total' => $prices['grand_total']]];
+
+    // Guard: delivery only when unlocked
+    if ($delivery_option === 'DELIVERY' && !$checkoutService->isDeliveryUnlocked($pseudoCart)) {
+        echo json_encode(['success' => false, 'message' => 'Delivery requires a minimum of 30 frames.']);
+        exit();
+    }
+
+    $customer     = $checkoutService->getCustomerDetails($customer_id);
+    $discount     = $checkoutService->calculateDiscount($customer_id, $customer, $pseudoCart, $prices['grand_total']);
+    $delivery_fee = $delivery_option === 'DELIVERY' ? 150.00 : 0.00;
+    $final_total  = round(($prices['grand_total'] - $discount['discount_amount']) + $delivery_fee, 2);
+    if ($final_total < 0) $final_total = 0.00;
+
+    // Handle GCash receipt
     $paymentProof = null;
     if ($payment_method === 'GCASH') {
         if (!isset($_FILES['receipt_image']) || $_FILES['receipt_image']['error'] !== UPLOAD_ERR_OK) {
@@ -47,7 +60,7 @@ if ($isBuyNow) {
         $uploadDir = __DIR__ . '/../uploads/uploaded_receipts/';
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
         $ext = strtolower(pathinfo($_FILES['receipt_image']['name'], PATHINFO_EXTENSION));
-        if (!in_array($ext, ['jpg','jpeg','png','webp'])) {
+        if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
             echo json_encode(['success' => false, 'message' => 'Invalid receipt format.']);
             exit();
         }
@@ -62,15 +75,17 @@ if ($isBuyNow) {
         ];
     }
 
-    // Place order directly via CustomFrameService buyNow
-    $itemData['payment_method']  = $payment_method;
-    $itemData['delivery_option'] = $delivery_option;
+    // Inject calculated values into itemData for buyNow
+    $itemData['payment_method']   = $payment_method;
+    $itemData['delivery_option']  = $delivery_option;
     $itemData['delivery_address'] = $address;
+    $itemData['discount_amount']  = $discount['discount_amount'];
+    $itemData['final_total']      = $final_total;
 
     $result = $cfService->buyNow($customer_id, $itemData);
 
     if ($result['success']) {
-        // If GCash, also insert payment proof
+        // Insert GCash proof if needed
         if ($paymentProof && !empty($result['order_id'])) {
             $stmt = $conn->prepare("SELECT payment_id FROM tbl_payment WHERE order_id = ?");
             $stmt->bind_param("i", $result['order_id']);
@@ -86,7 +101,6 @@ if ($isBuyNow) {
                 $stmt2->execute();
             }
         }
-        // Clear buy now session
         unset($_SESSION['buy_now_item']);
         echo json_encode(['success' => true, 'message' => 'Order placed successfully!']);
     } else {

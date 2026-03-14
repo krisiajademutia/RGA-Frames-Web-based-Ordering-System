@@ -2,10 +2,21 @@
  * customer_checkout.js
  * Location: assets/js/customer_checkout.js
  *
- * Depends on `subtotal` (number) being declared by PHP before this script loads:
- *   <script>const subtotal = <?= $cartTotal ?>;</script>
- *   <script src="../assets/js/customer_checkout.js"></script>
+ * PHP injects these globals before this script loads:
+ *   const discountedSubtotal = <?= $discountedTotal ?>;   // subtotal after discount, before delivery
+ *   const deliveryUnlocked   = true|false;                // whether 30+ frames threshold is met
  */
+
+const DELIVERY_FEE = 150;
+
+function recalcTotal(withDelivery) {
+    const total = discountedSubtotal + (withDelivery ? DELIVERY_FEE : 0);
+    document.getElementById('summary-total').textContent =
+        '₱' + total.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    const feeRow = document.getElementById('delivery-fee-row');
+    if (feeRow) feeRow.style.display = withDelivery ? 'flex' : 'none';
+}
 
 function onDeliveryChange(radio) {
     document.getElementById('lbl-pickup').classList.remove('selected');
@@ -14,11 +25,7 @@ function onDeliveryChange(radio) {
 
     const isDelivery = radio.value === 'DELIVERY';
     document.getElementById('address_wrapper').style.display = isDelivery ? 'block' : 'none';
-
-    const fee   = isDelivery ? 150 : 0;
-    const total = subtotal + fee;
-    document.getElementById('summary-total').textContent =
-        '₱' + total.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    recalcTotal(isDelivery);
 }
 
 function onPaymentChange(radio) {
@@ -62,6 +69,10 @@ document.getElementById('checkout-form').addEventListener('submit', async e => {
     const delivery = document.querySelector('input[name="delivery_option"]:checked').value;
     const payment  = document.querySelector('input[name="payment_method"]:checked').value;
 
+    if (delivery === 'DELIVERY' && !deliveryUnlocked) {
+        Swal.fire('Not Available', 'Delivery requires a minimum of 30 frames.', 'warning');
+        return;
+    }
     if (delivery === 'DELIVERY' && !document.getElementById('delivery_address').value.trim()) {
         Swal.fire('Missing Address', 'Please enter your delivery address.', 'warning');
         return;

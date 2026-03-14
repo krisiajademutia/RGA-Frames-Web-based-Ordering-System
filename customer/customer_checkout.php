@@ -42,6 +42,12 @@ if ($isBuyNow) {
         $cartTotal += (float)$item['sub_total'];
     }
 }
+
+// ── Discount & delivery eligibility ─────────────────────
+$discount         = $checkoutService->calculateDiscount($customer_id, $customer, $cartItems, $cartTotal);
+$deliveryUnlocked = $checkoutService->isDeliveryUnlocked($cartItems);
+$totalQty         = array_sum(array_column($cartItems, 'quantity'));
+$discountedTotal  = round($cartTotal - $discount['discount_amount'], 2);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -97,10 +103,21 @@ if ($isBuyNow) {
                 <div class="chk-card">
                     <div class="chk-card-header">Fulfillment</div>
                     <div class="chk-card-body">
-                        <div class="chk-free-delivery-badge">
-                            <i class="fas fa-truck"></i> Your order qualifies for free delivery!
-                        </div>
 
+                        <?php if ($deliveryUnlocked): ?>
+                            <div class="chk-free-delivery-badge">
+                                <i class="fas fa-truck"></i> Your order qualifies for delivery!
+                            </div>
+                        <?php else: ?>
+                            <div class="chk-delivery-locked-notice">
+                                <i class="fas fa-info-circle"></i>
+                                Delivery is available for orders of
+                                <strong><?= CheckoutService::BULK_QTY_THRESHOLD ?> or more frames</strong>.
+                                Your order has <strong><?= $totalQty ?></strong> frame<?= $totalQty !== 1 ? 's' : '' ?>.
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Pickup (always available) -->
                         <label class="chk-radio-option selected" id="lbl-pickup">
                             <input type="radio" name="delivery_option" value="PICKUP" checked
                                    onchange="onDeliveryChange(this)">
@@ -110,12 +127,22 @@ if ($isBuyNow) {
                             </div>
                         </label>
 
-                        <label class="chk-radio-option" id="lbl-delivery">
+                        <!-- Delivery (locked until 30+ frames) -->
+                        <label class="chk-radio-option <?= !$deliveryUnlocked ? 'chk-radio-disabled' : '' ?>"
+                               id="lbl-delivery">
                             <input type="radio" name="delivery_option" value="DELIVERY"
+                                   <?= !$deliveryUnlocked ? 'disabled' : '' ?>
                                    onchange="onDeliveryChange(this)">
                             <div>
-                                <div class="chk-radio-title">Delivery (Handled by Owner)</div>
-                                <div class="chk-radio-sub">We'll deliver to your address.</div>
+                                <div class="chk-radio-title">
+                                    Delivery (Handled by Owner)
+                                    <?php if (!$deliveryUnlocked): ?>
+                                        <span class="chk-radio-lock">
+                                            <i class="fas fa-lock"></i> 30+ frames required
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="chk-radio-sub">We'll deliver to your address. +₱150.00</div>
                             </div>
                         </label>
 
@@ -160,7 +187,7 @@ if ($isBuyNow) {
                             <label class="chk-field-label">Amount Paid (₱)</label>
                             <input type="number" name="gcash_amount" id="gcash_amount"
                                    class="chk-input-field" step="0.01" min="0"
-                                   placeholder="e.g. <?= number_format($cartTotal, 2, '.', '') ?>">
+                                   placeholder="e.g. <?= number_format($discountedTotal, 2, '.', '') ?>">
 
                             <label class="chk-field-label" style="margin-top:1rem;">Upload GCash Receipt</label>
                             <div class="chk-upload-zone" id="receipt-dropzone"
@@ -173,7 +200,6 @@ if ($isBuyNow) {
                                    accept="image/jpeg,image/png,image/jpg,image/webp"
                                    style="display:none;" onchange="onReceiptSelected(this)">
 
-                            <!-- Preview (shown after upload) -->
                             <div class="chk-receipt-preview" id="receipt-preview"
                                  onclick="openReceiptLightbox()">
                                 <img id="receipt-preview-img" src="" alt="Receipt Preview">
@@ -198,6 +224,7 @@ if ($isBuyNow) {
             <div class="chk-summary-card">
                 <div class="chk-summary-header">Order Summary</div>
                 <div class="chk-summary-body">
+
                     <?php foreach ($cartItems as $item):
                         if (!empty($item['is_buy_now'])) {
                             $displayName = $item['display_name'];
@@ -227,16 +254,33 @@ if ($isBuyNow) {
                     </div>
                     <?php endforeach; ?>
 
+                    <!-- Subtotal row -->
                     <div class="chk-subtotal-row">
                         <span>Subtotal</span>
-                        <span>×<?= array_sum(array_column($cartItems, 'quantity')) ?> &nbsp; ₱<?= number_format($cartTotal, 2) ?></span>
+                        <span>×<?= $totalQty ?> &nbsp; ₱<?= number_format($cartTotal, 2) ?></span>
                     </div>
+
+                    <!-- Discount row — only shown when qualified -->
+                    <?php if ($discount['qualified']): ?>
+                    <div class="chk-discount-row">
+                        <span><i class="fas fa-tag"></i> 20% Discount</span>
+                        <span class="chk-discount-val">−₱<?= number_format($discount['discount_amount'], 2) ?></span>
+                    </div>
+                    <?php endif; ?>
+
                 </div>
 
                 <div class="chk-total-section">
+
+                    <!-- Delivery fee (shown dynamically via JS when delivery is selected) -->
+                    <div class="chk-delivery-fee-row" id="delivery-fee-row" style="display:none;">
+                        <span>Delivery Fee</span>
+                        <span>+₱150.00</span>
+                    </div>
+
                     <div class="chk-total-row">
                         <span class="chk-total-label">Total</span>
-                        <span class="chk-total-val" id="summary-total">₱<?= number_format($cartTotal, 2) ?></span>
+                        <span class="chk-total-val" id="summary-total">₱<?= number_format($discountedTotal, 2) ?></span>
                     </div>
                     <button type="submit" form="checkout-form" id="btn-place-order" class="chk-submit-btn">
                         Place Order
@@ -261,8 +305,11 @@ if ($isBuyNow) {
 <?php include __DIR__ . '/../includes/idx_footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Bridge PHP cart total into JS scope, then load external script -->
-<script>const subtotal = <?= $cartTotal ?>;</script>
+<!-- Bridge PHP values into JS -->
+<script>
+    const discountedSubtotal = <?= $discountedTotal ?>;
+    const deliveryUnlocked   = <?= $deliveryUnlocked ? 'true' : 'false' ?>;
+</script>
 <script src="../assets/js/customer_checkout.js"></script>
 </body>
 </html>

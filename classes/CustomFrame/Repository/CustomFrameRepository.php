@@ -57,7 +57,7 @@ class CustomFrameRepository {
         return $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
     }
 
-    // ── Price fetchers (for server-side price calculation) ──
+    // ── Price fetchers ───────────────────────────────────
 
     public function getFrameTypeById(int $id): ?array {
         $stmt = $this->conn->prepare("SELECT * FROM tbl_frame_types WHERE frame_type_id = ? AND is_active = 1");
@@ -187,18 +187,21 @@ class CustomFrameRepository {
         return (int)$this->conn->insert_id;
     }
 
+    // Updated: now accepts sub_total and discount_amount
     public function insertOrder(
-        int $customerId, string $refNo, float $totalPrice,
+        int $customerId, string $refNo,
+        float $subTotal, float $discountAmount, float $totalPrice,
         string $paymentMethod, string $deliveryOption, ?string $deliveryAddress
     ): int {
         $stmt = $this->conn->prepare("
             INSERT INTO tbl_orders
-                (customer_id, order_reference_no, total_price,
-                 payment_method, order_status, delivery_option, delivery_address)
-            VALUES (?, ?, ?, ?, 'PENDING', ?, ?)
+                (customer_id, order_reference_no, sub_total, discount_amount,
+                 total_price, payment_method, order_status, delivery_option, delivery_address)
+            VALUES (?, ?, ?, ?, ?, ?, 'PENDING', ?, ?)
         ");
-        $stmt->bind_param("isdsss",
-            $customerId, $refNo, $totalPrice,
+        $stmt->bind_param("isdddsss",
+            $customerId, $refNo,
+            $subTotal, $discountAmount, $totalPrice,
             $paymentMethod, $deliveryOption, $deliveryAddress
         );
         $stmt->execute();
