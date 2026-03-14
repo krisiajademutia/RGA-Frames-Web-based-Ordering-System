@@ -43,14 +43,41 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                 <i data-lucide="chevron-down" size="18"></i>
             </button>
             <div class="opt-dropdown-menu">
-                <a href="?tab=frame_types">Frame Types</a>
-                <a href="?tab=frame_designs">Frame Designs</a>
-                <a href="?tab=frame_colors">Frame Colors</a>
-                <a href="?tab=frame_sizes">Frame Sizes</a>
-                <a href="?tab=matboard_colors">Matboard Colors</a>
-                <a href="?tab=mount_types">Mount Types</a>
-                <a href="?tab=paper_types">Paper Types</a>
-            </div>
+    <a href="?tab=frame_types" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
+        <i class="fa-regular fa-square" style="color: #004030; font-size: 14px; margin-right: 12px;"></i>
+        Frame Types
+    </a>
+    
+    <a href="?tab=frame_designs" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
+        <i class="fa-regular fa-compass" style="color: #ffffff; font-size: 14px; margin-right: 12px;"></i>
+        Frame Designs
+    </a>
+    
+    <a href="?tab=frame_colors" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
+        <i class="fa-solid fa-eye-dropper" style="color: #004030; font-size: 14px; margin-right: 12px;"></i>
+        Frame Colors
+    </a>
+    
+    <a href="?tab=frame_sizes" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
+        <i class="fa-regular fa-window-maximize" style="color: #ffffff; font-size: 14px; margin-right: 12px;"></i>
+        Frame Sizes
+    </a>
+    
+    <a href="?tab=matboard_colors" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
+        <i class="fa-regular fa-clone" style="color: #004030; font-size: 14px; margin-right: 12px;"></i>
+        Matboard Colors
+    </a>
+    
+    <a href="?tab=mount_types" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
+        <i class="fa-regular fa-object-group" style="color: #ffffff; font-size: 14px; margin-right: 12px;"></i>
+        Mount Types
+    </a>
+    
+    <a href="?tab=paper_types" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
+        <i class="fa-regular fa-file-lines" style="color: #004030; font-size: 14px; margin-right: 12px;"></i>
+        Paper Types
+    </a>
+</div>
         </div>
     </div>
 
