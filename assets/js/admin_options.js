@@ -20,20 +20,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const width = parseFloat(widthInput.value) || 0;
             const height = parseFloat(heightInput.value) || 0;
             
-            // Get the selected option to access its data-multiplier attribute
+            // Fetch multiplier from the data attribute of the selected option
             const selectedOption = paperSelect.options[paperSelect.selectedIndex];
             const multiplier = selectedOption ? parseFloat(selectedOption.getAttribute('data-multiplier')) : 0;
 
-            // Accurate Formula: width * height * multiplier
             if (width > 0 && height > 0 && multiplier > 0) {
                 const total = width * height * multiplier;
                 priceInput.value = total.toFixed(2);
-            } else {
-                priceInput.value = ""; // Clear or leave as 0 if inputs are incomplete
             }
         };
 
-        // Event listeners to trigger calculation on any relevant change
+        // Listen for changes in dimensions or paper selection
         widthInput.addEventListener('input', calculateFpmPrice);
         heightInput.addEventListener('input', calculateFpmPrice);
         paperSelect.addEventListener('change', calculateFpmPrice);
