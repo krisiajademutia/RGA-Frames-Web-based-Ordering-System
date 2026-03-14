@@ -36,6 +36,7 @@
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Post Frames Admin</title>
+            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
             <link rel="stylesheet" href="/rga_frames/assets/css/style.css">
@@ -63,9 +64,9 @@
             
             <div class="post-header-wrapper">
                 <div>
-                    <h1 class="fw-bold m-0" style="font-size: 26px;">Post Frames</h1>
-                    <p class="m-0 mt-1" style="font-size: 16px; color: #555;">Post and manage ready-made frame products</p>
-                </div>
+            <h1 style="color: var(--forest-dark); font-weight: 800; font-size: 28px; margin:0;">Post Frames</h1>
+            <p style="color: #6B7280; margin-top: 5px; font-size: 15px;">Manage your custom framing components.</p>
+        </div>
                 <div class="post-dropdown">
                     <button class="post-dropbtn" type="button">
                         <span><i class="fa-solid fa-circle-plus me-2"></i> <?= ($view == 'posted') ? 'Posted Frames' : (($view == 'edit') ? 'Editing Frame' : 'Post New Frame'); ?></span>
@@ -299,25 +300,28 @@
             <?php endif; ?>
         </div>
 
-        <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content custom-post-modal shadow">
-                    <div class="modal-header border-0 pb-0"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                    <div class="modal-body text-center">
-                        <div class="modal-icon-box mx-auto mb-3" style="width:60px; height:60px; border-radius:50%; background:#fff0f0; color:#d9534f; display:flex; align-items:center; justify-content:center; font-size:24px;"><i class="fa-solid fa-trash-can"></i></div>
-                        <p class="text-muted mb-1">Are you sure you want to delete this product?</p>
-                        <h5 id="deleteProductName" class="fw-bold mb-4"></h5>
-                    </div>
-                    <div class="modal-footer border-0 justify-content-center pb-4">
-                        <button type="button" class="btn border-secondary px-4" data-bs-dismiss="modal" style="border-radius:10px;">Cancel</button>
-                        <a id="confirmDeleteLink" href="#" class="btn btn-danger px-4" style="border-radius:10px; background:#d9534f;">Delete Product</a>
-                    </div>
+ <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content custom-post-modal shadow">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="modal-icon-box mx-auto mb-3" style="width:60px; height:60px; border-radius:50%; background:#e6f0ee; color:#004030; display:flex; align-items:center; justify-content:center; font-size:24px;">
+                    <i class="fa-solid fa-trash-can"></i>
                 </div>
+                <p class="text-muted mb-1">Are you sure you want to delete this product?</p>
+                <h5 id="deleteProductName" class="modal-product-name fw-bold mb-4"></h5>
+            </div>
+            <div class="modal-footer border-0 justify-content-center pb-4">
+                <button type="button" class="btn border-secondary px-4" data-bs-dismiss="modal" style="border-radius:10px;">Cancel</button>
+                <a id="confirmDeleteLink" href="#" class="btn btn-danger px-4" style="border-radius:10px; background:#004030; border-color:#004030; color: #fff;">Delete Product</a>
             </div>
         </div>
+    </div>
+</div>
 
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="/rga_frames/assets/js/post_script.js"></script>
         </body>
         </html>

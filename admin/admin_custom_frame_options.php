@@ -27,7 +27,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
-    <link rel="stylesheet" href="../assets/css/fixed_price_modal.css">
 </head>
 <body>
 <?php include __DIR__ . '/../includes/admin_header.php'; ?>
@@ -438,18 +437,26 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
     </div>
 </div>
 
-<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content text-center">
-            <div class="modal-body p-4">
-                <h5 id="deleteOptionName" class="fw-bold"></h5>
-                <p>Are you sure you want to delete this?</p>
+        <div class="modal-content opt-delete-content shadow">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <div class="opt-delete-icon-box mx-auto mb-3">
+                    <i class="fa-solid fa-trash-can"></i>
+                </div>  
+                <p class="opt-delete-text-muted mb-1">Are you sure you want to delete this?</p>
+                <h5 id="deleteOptionName" class="opt-delete-option-name fw-bold mb-4"></h5>
                 <form id="deleteOptionForm" method="POST" action="../process/posting_options.php">
                     <input type="hidden" name="action" value="delete">
                     <input type="hidden" name="tab" id="deleteOptionTab">
                     <input type="hidden" name="option_id" id="deleteOptionId">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Delete</button>
+                    <div class="d-flex justify-content-center gap-3">
+                        <button type="button" class="opt-delete-btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="opt-delete-btn-confirm">Delete Option</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -475,7 +482,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
         </div>
     </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../assets/js/admin_options.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <script>

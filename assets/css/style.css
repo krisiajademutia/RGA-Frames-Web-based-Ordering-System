@@ -1181,18 +1181,18 @@ html {
 
 /* --- Custom Delete Modal Styling --- */
 
-/* The main modal container */
+/* The post option delete modalcontainer */
 .custom-post-modal {
-    border: 2px solid #ADADAD !important;
+    border: 1.5px solid #ADADAD !important;
     border-radius: 20px !important;
     overflow: hidden;
     background-color: #ffffff;
-    box-shadow: 0 15px 50px rgba(0,0,0,0.15) !important;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.1) !important;
 }
 
 .custom-post-modal .modal-header {
     padding: 20px 35px;
-    border-bottom: 1.5px solid #ADADAD;
+    border-bottom: none; /* Kept clean like your other headers */
     background-color: #ffffff;
 }
 
@@ -1205,42 +1205,41 @@ html {
 }
 
 .custom-post-modal .modal-body {
-    padding: 40px 30px;
+    padding: 30px 30px 10px 30px;
 }
 
 .modal-icon-box {
     width: 65px;
     height: 65px;
-    background-color: #fff0f0;
-    color: #d9534f;
+    background-color: #e6f0ee; 
+    color: #004030;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 26px;
     margin: 0 auto 20px auto;
-    border: 1px solid #d9534f33;
+    border: 1px solid rgba(0, 64, 48, 0.1);
 }
 
 .modal-text-muted {
     font-family: var(--font-secondary);
     font-size: 15px;
-    color: #555;
+    color: #666;
     margin-bottom: 5px;
 }
 
 .modal-product-name {
     color: #004030;
     font-weight: 700;
-    font-size: 18px;
+    font-size: 20px;
     word-break: break-word;
 }
 
-/* Modal Footer - Matching your footer styling */
 .custom-post-modal .modal-footer {
-    padding: 20px 30px;
-    background-color: #EEEEEE;
-    border-top: 1.5px solid #ADADAD;
+    padding: 20px 30px 30px 30px;
+    background-color: #ffffff;
+    border-top: none; 
     display: flex;
     justify-content: center;
     gap: 15px;
@@ -1270,10 +1269,42 @@ html {
 }
 
 /* Delete Button - Specialized Danger Button */
-.modal-btn-delete {
+.opt-delete-content {
+    border: 1.5px solid #ADADAD !important;
+    border-radius: 20px !important;
+    overflow: hidden;
+    background-color: #ffffff;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.15) !important;
+}
+
+.opt-delete-icon-box {
+    width: 65px;
+    height: 65px;
+    background-color: #e6f0ee; 
+    color: #004030; 
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    margin: 0 auto 20px auto;
+    border: 1px solid rgba(0, 64, 48, 0.1);
+}
+
+.opt-delete-text-muted {
+    font-size: 15px;
+    color: #666;
+}
+
+.opt-delete-option-name {
+    color: #004030;
+    font-weight: 700;
+    font-size: 18px;
+}
+.opt-delete-btn-confirm {
     width: 180px;
     height: 44px;
-    background: #d9534f;
+    background: #004030;
     color: white;
     border: none;
     border-radius: 10px;
@@ -1286,18 +1317,31 @@ html {
     transition: all 0.2s ease;
 }
 
-.modal-btn-delete:hover {
-    background: #b52b27;
+.opt-delete-btn-confirm:hover {
+    background: #063a32;
     color: white;
-    box-shadow: 0 4px 12px rgba(217, 83, 79, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 64, 48, 0.2);
+}
+.opt-delete-btn-cancel {
+    width: 120px;
+    height: 44px;
+    background: transparent;
+    color: #666;
+    border: 1.5px solid #ADADAD;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s ease;
 }
 
-/* Fix for Close Button */
+.opt-delete-btn-cancel:hover {
+    background: #f8f9fa;
+    color: #333;
+}
 .btn-close:focus {
     box-shadow: none;
     outline: none;
 }
-
 
 
 /* --- Admin Custom Frame Options Styles --- */
@@ -1315,7 +1359,7 @@ html {
 }
 
 .opt-dropdown {
-    position: relative;
+  position: relative;
     z-index: 1050;
 }
 
@@ -1816,6 +1860,7 @@ color: #DC2626;
     font-weight: 700;
     padding: 0.6rem 1rem;
     transition: background-color 0.2s;
+    background-color: #004030;
 }
 
 .fpm-btn-cancel {
@@ -1826,7 +1871,7 @@ color: #DC2626;
 }
 
 .fpm-btn-cancel:hover {
-    color: #157347;
+    color: #004030;
     text-decoration: underline;
 }
 .fpm-table-container::-webkit-scrollbar {
