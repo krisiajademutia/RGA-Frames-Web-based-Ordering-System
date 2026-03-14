@@ -8,8 +8,41 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
+
+    // --- Automatic Price Calculation Logic ---
+    const widthInput = document.getElementById('fpm_width');
+    const heightInput = document.getElementById('fpm_height');
+    const paperSelect = document.getElementById('fpm_paper_type');
+    const priceInput = document.getElementById('fpm_price');
+
+    if (widthInput && heightInput && paperSelect && priceInput) {
+        const calculateFpmPrice = () => {
+            const width = parseFloat(widthInput.value) || 0;
+            const height = parseFloat(heightInput.value) || 0;
+            
+            // Get the selected option to access its data-multiplier attribute
+            const selectedOption = paperSelect.options[paperSelect.selectedIndex];
+            const multiplier = selectedOption ? parseFloat(selectedOption.getAttribute('data-multiplier')) : 0;
+
+            // Accurate Formula: width * height * multiplier
+            if (width > 0 && height > 0 && multiplier > 0) {
+                const total = width * height * multiplier;
+                priceInput.value = total.toFixed(2);
+            } else {
+                priceInput.value = ""; // Clear or leave as 0 if inputs are incomplete
+            }
+        };
+
+        // Event listeners to trigger calculation on any relevant change
+        widthInput.addEventListener('input', calculateFpmPrice);
+        heightInput.addEventListener('input', calculateFpmPrice);
+        paperSelect.addEventListener('change', calculateFpmPrice);
+    }
 });
 
+/**
+ * STANDARD DELETE (For Frame Types, Colors, etc.)
+ */
 function confirmDelete(id, name, tab) {
     document.getElementById('deleteOptionName').textContent = name;
     document.getElementById('deleteOptionId').value = id;
@@ -17,6 +50,28 @@ function confirmDelete(id, name, tab) {
     const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
     modal.show();
 }
+
+/**
+ * FIXED PRICE DELETE (Nested Modal Logic)
+ */
+function confirmDeleteFpm(id) {
+    // Set the ID in the hidden input of the small delete modal
+    document.getElementById('delete_fpm_id').value = id;
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteFixedPriceModal'));
+    deleteModal.show();
+}
+
+// Fix for Bootstrap scroll lock issue when closing nested modals
+document.addEventListener('DOMContentLoaded', () => {
+    const deleteFpmModalEl = document.getElementById('deleteFixedPriceModal');
+    if (deleteFpmModalEl) {
+        deleteFpmModalEl.addEventListener('hidden.bs.modal', function () {
+            if (document.querySelector('#fixedPriceModal.show')) {
+                document.body.classList.add('modal-open');
+            }
+        });
+    }
+});
 
 /**
  * SHOW EXISTING IMAGE (Used during Edit Mode for single uploads)
@@ -56,7 +111,6 @@ function showExistingImage(imgUrl, containerId, textId, inputId) {
  */
 function loadExistingPhotos(images, containerId, textId, inputId) {
     images.forEach(img => {
-        // We push a "Proxy" object into the array
         selectedFiles.push({
             isExisting: true,
             image_name: img.image_name,
@@ -145,12 +199,10 @@ function renderPreviews(containerId, textId, inputId) {
             wrapper.className = "preview-wrapper";
             wrapper.style.cssText = "width: 80px; height: 80px; position: relative; display: inline-block; margin: 8px; border: 1px solid #ccc; border-radius: 6px; background: white; pointer-events: auto;";
 
-            // Determine if it's the primary image
             const isPrimary = file.isExisting ? file.is_primary : (index === 0 && !selectedFiles.some(f => f.is_primary));
             const primaryBadge = isPrimary ? 
                 `<span style="position:absolute; bottom:0; left:0; right:0; background:rgba(6,58,50,0.9); color:white; font-size:10px; text-align:center; padding:2px 0; z-index:5; border-radius: 0 0 6px 6px;">Primary</span>` : '';
 
-            // If existing image, add hidden input for the PHP backend
             const hiddenInput = file.isExisting ? `<input type="hidden" name="existing_images[]" value="${file.image_name}">` : '';
 
             wrapper.innerHTML = `
@@ -166,7 +218,6 @@ function renderPreviews(containerId, textId, inputId) {
             
             previewContainer.appendChild(wrapper);
 
-            // If it's a new file, read it
             if (!file.isExisting) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -179,7 +230,6 @@ function renderPreviews(containerId, textId, inputId) {
         textElement.innerText = "Click to upload multiple photos";
     }
 
-    // Sync only NEW files to the file input
     const dataTransfer = new DataTransfer();
     selectedFiles.forEach(file => {
         if (!file.isExisting) dataTransfer.items.add(file);
@@ -192,3 +242,50 @@ function removeImage(event, index, containerId, textId, inputId) {
     selectedFiles.splice(index, 1);
     renderPreviews(containerId, textId, inputId);
 }
+
+/**
+ * Populates the Fixed Price Management form (Edit mode)
+ */
+function editFpm(data) {
+    document.getElementById('fpm_action').value = 'update_fixed_price';
+    document.getElementById('fpm_id').value = data.fixed_price_id;
+    
+    document.getElementById('fpm_paper_type').value = data.paper_type_id;
+    document.getElementById('fpm_dimension').value = data.dimension;
+    document.getElementById('fpm_width').value = data.width_inch;
+    document.getElementById('fpm_height').value = data.height_inch;
+    document.getElementById('fpm_price').value = data.fixed_price;
+    
+    document.getElementById('form_title').innerText = 'Edit Pricing Record';
+    document.getElementById('fpm_submit_btn').innerText = 'Update Price';
+    document.getElementById('fpm_cancel_btn').style.display = 'block';
+    
+    document.getElementById('fixedPriceForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+/**
+ * Resets the Fixed Price Management form
+ */
+function resetFpmForm() {
+    document.getElementById('fixedPriceForm').reset();
+    document.getElementById('fpm_action').value = 'add_fixed_price';
+    document.getElementById('fpm_id').value = '';
+    
+    document.getElementById('form_title').innerText = 'Add New Pricing';
+    document.getElementById('fpm_submit_btn').innerText = 'Add Entry';
+    document.getElementById('fpm_cancel_btn').style.display = 'none';
+}
+
+/**
+ * URL Cleanup: Removes success/error params from the address bar
+ */
+window.addEventListener('DOMContentLoaded', (event) => {
+    if (window.history.replaceState) {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('success') || url.searchParams.has('error')) {
+            url.searchParams.delete('success');
+            url.searchParams.delete('error');
+            window.history.replaceState(null, null, url.href);
+        }
+    }
+});

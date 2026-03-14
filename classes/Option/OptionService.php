@@ -48,4 +48,11 @@ class OptionService {
     public function deleteOption($key, int $id): bool {
         return isset($this->repositories[$key]) ? $this->repositories[$key]->delete($id) : false;
     }
+
+    /**
+     * Gets a repository by key
+     */
+    public function getRepository(string $key) {
+        return $this->repositories[$key] ?? null;
+    }
 }

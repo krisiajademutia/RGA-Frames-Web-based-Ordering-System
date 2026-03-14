@@ -123,24 +123,43 @@ class PaperTypeRepository implements OptionRepositoryInterface {
     /**
      * Creates a new entry in tbl_fixed_print_prices
      */
-    public function createFixedPrice(array $data): bool {
-        $paperTypeId = (int)$data['paper_type_id'];
-        $width       = (float)$data['width_inch'];
-        $height      = (float)$data['height_inch'];
-        $price       = (float)$data['fixed_price'];
-        $dimension   = $width . "x" . $height;
+    public function createFixedPrice($data) {
+        // Validate required fields (add more validation as needed)
+        if (!isset($data['paper_type_id']) || !isset($data['price'])) {
+            return false;
+        }
+        
+        $stmt = $this->db->prepare("INSERT INTO fixed_prices (paper_type_id, price) VALUES (?, ?)");
+        $stmt->bind_param("id", $data['paper_type_id'], $data['price']);
+        $result = $stmt->execute();
+        $stmt->close();
+        return $result;
+    }
 
-        $stmt = $this->db->prepare("INSERT INTO tbl_fixed_print_prices (paper_type_id, dimension, width_inch, height_inch, fixed_price) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("isddd", $paperTypeId, $dimension, $width, $height, $price);
-        return $stmt->execute();
+    /**
+     * Updates an existing fixed price entry
+     */
+    public function updateFixedPrice($id, $data) {
+        // Validate required fields
+        if (!isset($data['price'])) {
+            return false;
+        }
+        
+        $stmt = $this->db->prepare("UPDATE fixed_prices SET price = ? WHERE id = ?");
+        $stmt->bind_param("di", $data['price'], $id);
+        $result = $stmt->execute();
+        $stmt->close();
+        return $result;
     }
 
     /**
      * Deletes a fixed price entry
      */
-    public function deleteFixedPrice(int $fixedPriceId): bool {
-        $stmt = $this->db->prepare("DELETE FROM tbl_fixed_print_prices WHERE fixed_price_id = ?");
-        $stmt->bind_param("i", $fixedPriceId);
-        return $stmt->execute();
+    public function deleteFixedPrice($id) {
+        $stmt = $this->db->prepare("DELETE FROM fixed_prices WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $result = $stmt->execute();
+        $stmt->close();
+        return $result;
     }
 }

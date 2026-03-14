@@ -122,11 +122,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                         <?php endif; ?>
                     </div>
 
-                 <?php elseif($active_tab == 'frame_designs'): ?>
-                    <div>
-                        <label class="opt-label">Design Name <span>*</span></label>
-                        <input type="text" name="design_name" class="opt-input" required value="<?= htmlspecialchars($edit_data['design_name'] ?? '') ?>">
-                    </div>
+                    <?php elseif($active_tab == 'frame_designs'): ?>
+                        <div>
+                            <label class="opt-label">Design Name <span>*</span></label>
+                            <input type="text" name="design_name" class="opt-input" required value="<?= htmlspecialchars($edit_data['design_name'] ?? '') ?>">
+                        </div>
                     <div>
                         <label class="opt-label">Price (₱) <span>*</span></label>
                         <input type="number" step="0.01" name="price" class="opt-input" required value="<?= $edit_data['price'] ?? '' ?>">
@@ -148,8 +148,14 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                                 <p class="m-0" id="opt_img_text">Click to upload multiple photos</p>
                             </div>
                         </div>
+                        <?php if($is_editing && !empty($edit_data['images'])): ?>
+                            <script>
+                                window.addEventListener('load', () => { loadExistingPhotos(<?= json_encode($edit_data['images']) ?>, 'image_preview_container', 'opt_img_text', 'add_design_imgs'
+                                    ); 
+                                });
+                            </script>
+                        <?php endif; ?>
                     </div>
-
 
                    <?php elseif($active_tab == 'frame_colors'): ?>
                     <div>
@@ -324,55 +330,72 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
 
 <div class="modal fade" id="fixedPriceModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content fixed-price-modal-content">
-            <div class="modal-header bg-forest-dark text-white">
-                <h5 class="modal-title"><i class="fa-solid fa-tags me-2"></i> Fixed Print Price Management</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-content fpm-modal-content">
+            
+            <div class="modal-header fpm-header text-white">
+                <h5 class="modal-title fpm-title">
+                    <i class="fa-solid fa-tags me-2"></i> Fixed Print Price Management
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+
             <div class="modal-body p-4">
-                <form action="../process/posting_options.php?tab=paper_types" method="POST">
-                    <input type="hidden" name="action" value="add_fixed_price">
-                    <h6 class="fw-bold mb-3 text-uppercase small text-muted">Add New Pricing</h6>
-                    <div class="row g-3 bg-light p-3 rounded mb-4">
-                        <div class="col-md-6">
-                            <label class="small fw-bold">Select Paper Type</label>
-                            <select name="paper_type_id" class="form-select" required>
-                                <?php 
-                                $papers = $conn->query("SELECT paper_type_id, paper_name FROM tbl_paper_type");
-                                while($p = $papers->fetch_assoc()): ?>
-                                    <option value="<?= $p['paper_type_id'] ?>"><?= htmlspecialchars($p['paper_name']) ?></option>
-                                <?php endwhile; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="small fw-bold">Dimension Name</label>
-                            <input type="text" name="dimension" class="form-control" placeholder="e.g. 8x10" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="small fw-bold">Width (in)</label>
-                            <input type="number" step="0.01" name="width_inch" class="form-control" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="small fw-bold">Height (in)</label>
-                            <input type="number" step="0.01" name="height_inch" class="form-control" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="small fw-bold">Price (₱)</label>
-                            <input type="number" step="0.01" name="fixed_price" class="form-control" required>
-                        </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button type="submit" class="btn btn-forest-submit w-100">Add</button>
+                
+                <form id="fixedPriceForm" action="../process/posting_options.php?tab=paper_types" method="POST">
+                    <input type="hidden" name="action" id="fpm_action" value="add_fixed_price">
+                    <input type="hidden" name="fixed_price_id" id="fpm_id" value="">
+                    
+                    <span class="fpm-section-label" id="form_title">Add New Pricing</span>
+                    
+                    <div class="fpm-form-container">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="fpm-label">Select Paper Type</label>
+                                <select name="paper_type_id" id="fpm_paper_type" class="fpm-select" required>
+                                    <option value="" disabled selected>Choose paper...</option>
+                                    <?php 
+                                    // Added 'multiplier' to the SELECT query
+                                    $papers = $conn->query("SELECT paper_type_id, paper_name, multiplier FROM tbl_paper_type");
+                                    while($p = $papers->fetch_assoc()): ?>
+                                        <option value="<?= $p['paper_type_id'] ?>" data-multiplier="<?= $p['multiplier'] ?>">
+                                            <?= htmlspecialchars($p['paper_name']) ?>
+                                        </option>
+                                    <?php endwhile; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="fpm-label">Dimension Name</label>
+                                <input type="text" name="dimension" id="fpm_dimension" class="fpm-input" placeholder="e.g. 8x10" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="fpm-label">Width (in)</label>
+                                <input type="number" step="0.01" name="width_inch" id="fpm_width" class="fpm-input" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="fpm-label">Height (in)</label>
+                                <input type="number" step="0.01" name="height_inch" id="fpm_height" class="fpm-input" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="fpm-label">Price (₱)</label>
+                                <input type="number" step="0.01" name="fixed_price" id="fpm_price" class="fpm-input" required>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end gap-2">
+                                <button type="submit" id="fpm_submit_btn" class="fpm-btn-add w-100">Add Entry</button>
+                                <button type="button" id="fpm_cancel_btn" class="btn btn-outline-secondary" style="display:none; height: 44px; border-radius: 10px;" onclick="resetFpmForm()">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </form>
 
-                <h6 class="fw-bold mb-3 text-uppercase small text-muted">Existing Prices</h6>
-                <div class="table-responsive" style="max-height: 300px;">
-                    <table class="table table-hover table-sm">
-                        <thead class="table-dark">
+                <span class="fpm-section-label">Existing Price Records</span>
+                <div class="fpm-table-container">
+                    <table class="table fpm-table">
+                        <thead>
                             <tr>
-                                <th>Paper</th>
-                                <th>Size</th>
+                                <th>Paper Type</th>
+                                <th>Dimensions</th>
                                 <th>Price</th>
                                 <th class="text-center">Action</th>
                             </tr>
@@ -383,23 +406,33 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                             if($prices && $prices->num_rows > 0):
                                 while($pr = $prices->fetch_assoc()): ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($pr['paper_name']) ?></td>
-                                    <td><?= $pr['dimension'] ?> (<?= $pr['width_inch'] ?>x<?= $pr['height_inch'] ?>")</td>
-                                    <td class="text-success fw-bold">₱<?= number_format($pr['fixed_price'], 2) ?></td>
+                                    <td class="fpm-row-paper"><?= htmlspecialchars($pr['paper_name']) ?></td>
+                                    <td>
+                                        <span class="fw-bold"><?= $pr['dimension'] ?></span> 
+                                        <small class="text-muted d-block"><?= $pr['width_inch'] ?> x <?= $pr['height_inch'] ?> inches</small>
+                                    </td>
+                                    <td class="fpm-row-price">₱<?= number_format($pr['fixed_price'], 2) ?></td>
                                     <td class="text-center">
-                                        <form action="../process/posting_options.php?tab=paper_types" method="POST" onsubmit="return confirm('Delete this price?');">
-                                            <input type="hidden" name="action" value="delete_fixed_price">
-                                            <input type="hidden" name="fixed_price_id" value="<?= $pr['fixed_price_id'] ?>">
-                                            <button type="submit" class="btn btn-link text-danger p-0"><i class="fa-solid fa-trash-can"></i></button>
-                                        </form>
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <button type="button" class="opt-btn-edit action-icon-btn" onclick='editFpm(<?= json_encode($pr) ?>)'>
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+                                            
+                                            <button type="button" class="fpm-btn-delete action-icon-btn" onclick="confirmDeleteFpm(<?= $pr['fixed_price_id'] ?>)">
+                                               <i class="fa-solid fa-trash-can"></i>
+                                           </button>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endwhile; else: ?>
-                                <tr><td colspan="4" class="text-center text-muted py-3">No fixed prices set.</td></tr>
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">No fixed prices found in the database.</td>
+                                </tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
+
             </div>
         </div>
     </div>
@@ -422,7 +455,26 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
         </div>
     </div>
 </div>
-
+<div class="modal fade" id="deleteFixedPriceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered fpm-delete-dialog">
+        <div class="modal-content fpm-delete-content">
+            <div class="modal-body text-center p-4">
+                <h6 class="fw-bold mb-2">Delete fixed paper price</h6>
+                <p class="text-muted small mb-4">This action cannot be undone.</p>
+                
+                <form action="../process/posting_options.php?tab=paper_types" method="POST">
+                    <input type="hidden" name="action" value="delete_fixed_price">
+                    <input type="hidden" name="fixed_price_id" id="delete_fpm_id" value="">
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success fpm-btn-confirm">Yes, Delete</button>
+                        <button type="button" class="btn btn-link fpm-btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../assets/js/admin_options.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>

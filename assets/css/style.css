@@ -870,6 +870,7 @@ html {
     justify-content: space-between !important;
     align-items: center !important;
     margin-bottom: 60px !important;
+    margin-top: 200px !important;
 }
 
 .post-dropdown {
@@ -1594,7 +1595,6 @@ color: #DC2626;
         box-sizing: border-box;
     }
 
-    /* Stack header items vertically */
     .opt-header-wrapper {
         flex-direction: column;
         align-items: flex-start !important;
@@ -1602,12 +1602,10 @@ color: #DC2626;
         gap: 15px;
     }
 
-    /* Make dropdown full width */
     .opt-dropdown, .opt-dropbtn {
         width: 100%;
     }
 
-    /* Force the form grid to 1 column and shrink */
     .opt-form-grid {
         grid-template-columns: 1fr; 
         padding: 20px;
@@ -1616,24 +1614,21 @@ color: #DC2626;
         box-sizing: border-box;
     }
 
-    /* Shrink the upload zone */
     .opt-upload-zone {
         width: 100%;
         margin-top: 10px;
         box-sizing: border-box;
     }
 
-    /* Shrink buttons */
+
     .opt-btn-submit, .opt-btn-clear {
         width: 100%;
     }
 
-    /* Adjust Card Headers for smaller screens */
     .opt-card-header, .opted-header-bar {
         padding: 15px 20px;
     }
 
-    /* Shrink the list rows */
     .opted-list-wrapper {
         padding: 15px;
         width: 100%;
@@ -1646,7 +1641,7 @@ color: #DC2626;
     }
 
     .opted-row-inner {
-        flex-direction: column; /* Stack name and buttons */
+        flex-direction: column;
         height: auto;
         padding: 15px;
         align-items: flex-start;
@@ -1657,6 +1652,189 @@ color: #DC2626;
         width: 100%;
         justify-content: flex-end;
     }
+}
+/* Fixed Price Management Modal Custom Styles */
+.fpm-modal-content {
+    border: none !important;
+    border-radius: 20px !important;
+    overflow: hidden;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+}
+
+.fpm-header {
+    background-color: #063a32 !important;
+    padding: 20px 30px !important;
+    border-bottom: none !important;
+}
+
+.fpm-title {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.fpm-section-label {
+    font-family: var(--font-secondary);
+    font-size: 12px;
+    font-weight: 700;
+    color: #6B7280;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+    display: block;
+}
+
+.fpm-form-container {
+    background-color: #f9f9f9;
+    border-radius: 15px;
+    padding: 25px;
+    border: 1.5px solid #ADADAD;
+    margin-bottom: 30px;
+}
+
+.fpm-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #004030;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.fpm-input, .fpm-select {
+    width: 100%;
+    height: 44px;
+    background-color: #EEEEEE;
+    border: 2px solid rgba(0, 64, 48, 0.2);
+    border-radius: 10px;
+    padding: 0 15px;
+    font-size: 14px;
+    color: #374151;
+    transition: border-color 0.2s;
+}
+
+.fpm-input:focus, .fpm-select:focus {
+    border-color: #559688;
+    outline: none;
+    background-color: #fff;
+}
+
+.fpm-btn-add {
+    height: 44px;
+    background: #063a32;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.fpm-btn-add:hover {
+    background: #0a5247;
+}
+.fpm-table-container {
+    max-height: 350px;
+    overflow-y: auto;
+    border-radius: 12px;
+    border: 1.5px solid #ADADAD;
+}
+
+.fpm-table {
+    margin-bottom: 0 !important;
+}
+
+.fpm-table thead th {
+    background-color: #063a32;
+    color: white;
+    font-size: 12px;
+    text-transform: uppercase;
+    padding: 12px 15px;
+    border: none;
+}
+
+.fpm-table tbody td {
+    vertical-align: middle;
+    padding: 12px 15px;
+    font-size: 14px;
+    background-color: #fff;
+    border-bottom: 1px solid #EEEEEE;
+}
+
+.fpm-row-paper {
+    font-weight: 700;
+    color: #004030;
+}
+
+.fpm-row-price {
+    color: #059669;
+    font-weight: 700;
+}
+
+#deleteFixedPriceModal {
+    z-index: 1070;
+}
+
+.fpm-delete-dialog {
+    max-width: 300px;
+}
+
+.fpm-delete-content {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+}
+
+.fpm-delete-content h6 {
+    letter-spacing: -0.01em;
+    line-height: 1.4;
+}
+
+.fpm-delete-content p {
+    line-height: 1.5;
+    margin-bottom: 1.5rem !important;
+}
+.fpm-btn-delete {
+    width: 36px;
+    height: 36px;
+    background: #FECACA;
+    color: #DC2626;
+    border: none;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.fpm-btn-delete:hover {
+    background: #FEE2E2;
+    color: #b91c1c;
+    transform: scale(1.05);
+}
+
+.fpm-btn-confirm {
+    border-radius: 8px;
+    font-weight: 700;
+    padding: 0.6rem 1rem;
+    transition: background-color 0.2s;
+}
+
+.fpm-btn-cancel {
+    color: #198754;
+    text-decoration: none;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.fpm-btn-cancel:hover {
+    color: #157347;
+    text-decoration: underline;
+}
+.fpm-table-container::-webkit-scrollbar {
+    width: 6px;
+}
+.fpm-table-container::-webkit-scrollbar-thumb {
+    background: #ADADAD;
+    border-radius: 10px;
 }
 /* =========================================
    4. GUEST HEADER STYLES (gst-)
