@@ -414,10 +414,10 @@ if ($customerId > 0) {
 
                         <!-- Buttons -->
                         <div class="csc-summary-actions">
-                            <button class="csc-btn-cart" id="csc-add-to-cart">
+                            <button type="button" class="csc-btn-cart" id="csc-add-to-cart">
                                 <i class="fas fa-cart-shopping"></i> Add to Cart
                             </button>
-                            <button class="csc-btn-buy" id="csc-buy-now">Buy Now</button>
+                            <button type="button" class="csc-btn-buy" id="csc-buy-now">Buy Now</button>
                         </div>
                     </div>
                 </div>
@@ -453,6 +453,6 @@ const CSC_DATA = {
     ], $builderData['fixed_print_prices'])) ?>
 };
 </script>
-<script src="../assets/js/customer_shop_custom.js"></script>
+<script src="../assets/js/customer_shop_custom.js?v=<?= time() ?>"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <?php include __DIR__ . '/../includes/idx_footer.php'; ?>

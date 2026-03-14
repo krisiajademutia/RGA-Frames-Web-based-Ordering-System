@@ -204,4 +204,14 @@ class CustomFrameRepository {
         $stmt->execute();
         return (int)$this->conn->insert_id;
     }
+
+    public function insertPayment(int $orderId, float $totalAmount): int {
+        $stmt = $this->conn->prepare("
+            INSERT INTO tbl_payment (order_id, total_amount, payment_status)
+            VALUES (?, ?, 'PENDING')
+        ");
+        $stmt->bind_param("id", $orderId, $totalAmount);
+        $stmt->execute();
+        return (int)$this->conn->insert_id;
+    }
 }
