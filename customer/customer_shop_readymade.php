@@ -13,22 +13,21 @@ $posted_frames = $frameService->getAllFrames();
 <link rel="stylesheet" href="../assets/css/customer_shop.css">
 
 <style>
-    /* BRUTE FORCE FIX: If Bootstrap gets stuck, this ensures the page is clickable */
     body.modal-open { 
         overflow: auto !important; 
         padding-right: 0 !important; 
     }
-    /* Hide any "ghost" backdrops that aren't properly removed */
+    
     .modal-backdrop.show:nth-of-type(n+2) {
         display: none !important;
     }
 </style>
 
 <div class="post-admin-container animate-fade-in-up" style="margin-top: 120px; padding-bottom: 60px;">
-    <div class="post-header-wrapper mb-5 d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div class="csc-title-wrap mb-5 d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
-            <h1 class="fw-bold m-0" style="font-size: 26px;">Ready-Made Frames</h1>
-            <p class="m-0 mt-1" style="font-size: 16px; color: #555;">Browse our collection of crafted frames</p>
+            <h1 class="csc-title">Ready-Made Frames</h1>
+            <p class="csc-subtitle">Browse our collection of crafted frames</p>
         </div>
 
         <div class="shop-search-filter-group">
@@ -175,6 +174,8 @@ $posted_frames = $frameService->getAllFrames();
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
     // 1. POPULATE MODAL ON OPEN
