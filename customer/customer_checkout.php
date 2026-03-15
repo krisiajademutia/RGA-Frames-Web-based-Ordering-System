@@ -18,32 +18,90 @@ $cartItems       = [];
 $cartTotal       = 0;
 
 if ($isBuyNow) {
-    $cfService = new CustomFrameService($conn);
-    $itemData  = $_SESSION['buy_now_item'];
-    $prices    = $cfService->calculatePrice($itemData);
-    $qty       = (int)($itemData['quantity'] ?? 1);
-    $svcLabel  = $itemData['service_type'] === 'FRAME&PRINT' ? 'Frame & Print' : 'Frame only';
-    $cartItems[] = [
-        'is_buy_now'   => true,
-        'item_data'    => $itemData,
-        'display_name' => 'Custom Frame (' . $itemData['width'] . '" × ' . $itemData['height'] . '")',
-        'display_meta' => $svcLabel . ' | Qty: ' . $qty,
-        'quantity'     => $qty,
-        'sub_total'    => $prices['grand_total'],
-    ];
-    $cartTotal = $prices['grand_total'];
+    // ── OMNI-CHANNEL BUY NOW FLOW ──
+    $itemData = $_SESSION['buy_now_item'];
+    $itemType = $itemData['item_type'] ?? 'CUSTOM_FRAME'; // Default fallback
+
+    if ($itemType === 'CUSTOM_FRAME') {
+        $cfService = new CustomFrameService($conn);
+        $prices    = $cfService->calculatePrice($itemData);
+        $qty       = (int)($itemData['quantity'] ?? 1);
+        $svcLabel  = $itemData['service_type'] === 'FRAME&PRINT' ? 'Frame & Print' : 'Frame only';
+        
+        $cartItems[] = [
+            'is_buy_now'   => true,
+            'item_data'    => $itemData,
+            'display_name' => 'Custom Frame (' . ($itemData['width'] ?? 0) . '" × ' . ($itemData['height'] ?? 0) . '")',
+            'display_meta' => $svcLabel . ' | Qty: ' . $qty,
+            'quantity'     => $qty,
+            'sub_total'    => $prices['grand_total'],
+        ];
+        $cartTotal = $prices['grand_total'];
+
+    } elseif ($itemType === 'PRINTING') {
+        $qty      = (int)($itemData['quantity'] ?? 1);
+        $subTotal = (float)($itemData['total_price'] ?? $itemData['price'] ?? 0);
+        
+        $cartItems[] = [
+            'is_buy_now'   => true,
+            'item_data'    => $itemData,
+            'display_name' => 'Photo Print (' . ($itemData['width'] ?? 0) . '" × ' . ($itemData['height'] ?? 0) . '")',
+            'display_meta' => 'Paper: ' . ($itemData['paper_name'] ?? 'Standard') . ' | Qty: ' . $qty,
+            'quantity'     => $qty,
+            'sub_total'    => $subTotal,
+        ];
+        $cartTotal = $subTotal;
+
+    } elseif ($itemType === 'READY_MADE') {
+        $qty      = (int)($itemData['quantity'] ?? 1);
+        $subTotal = (float)($itemData['total_price'] ?? 0);
+        
+        $cartItems[] = [
+            'is_buy_now'   => true,
+            'item_data'    => $itemData,
+            'display_name' => 'Ready Made: ' . ($itemData['product_name'] ?? 'Frame'),
+            'display_meta' => 'Qty: ' . $qty,
+            'quantity'     => $qty,
+            'sub_total'    => $subTotal,
+        ];
+        $cartTotal = $subTotal;
+    }
 } else {
-    $cartItems = $checkoutService->getCartItems($customer_id);
-    if (empty($cartItems)) {
+    // ── OMNI-CHANNEL CART FLOW ──
+    $rawCartItems = $checkoutService->getCartItems($customer_id);
+    if (empty($rawCartItems)) {
         header("Location: customer_shop_custom.php");
         exit();
     }
-    foreach ($cartItems as $item) {
+
+    foreach ($rawCartItems as $item) {
+        if (isset($item['category_type']) && $item['category_type'] === 'FRAME') {
+            $isCustom = !empty($item['c_product_id']);
+            $dimensions = $isCustom ? "({$item['width']}\" × {$item['height']}\")" : "";
+            $namePrefix = $isCustom ? "Custom: " . $item['custom_design_name'] : "Ready Made: " . $item['ready_name'];
+            
+            $itemName = trim($namePrefix . ' ' . $dimensions);
+            $itemMeta = "Qty: " . $item['quantity'];
+        } else {
+            $dimensions = "({$item['width_inch']}\" × {$item['height_inch']}\")";
+            $itemName = "Photo Print " . $dimensions;
+            $itemMeta = "Paper: " . ($item['paper_name'] ?? 'Standard') . " | Qty: " . $item['quantity'];
+        }
+        
+        $cartItems[] = [
+            'is_buy_now'   => false,
+            'display_name' => $itemName,
+            'display_meta' => $itemMeta,
+            'quantity'     => $item['quantity'],
+            'sub_total'    => $item['sub_total'],
+            'raw_data'     => $item
+        ];
         $cartTotal += (float)$item['sub_total'];
     }
 }
 
 // ── Discount & delivery eligibility ─────────────────────
+// The CheckoutService calculateDiscount function perfectly handles our unified cartItems format!
 $discount         = $checkoutService->calculateDiscount($customer_id, $customer, $cartItems, $cartTotal);
 $deliveryUnlocked = $checkoutService->isDeliveryUnlocked($cartItems);
 $totalQty         = array_sum(array_column($cartItems, 'quantity'));
@@ -71,14 +129,12 @@ $discountedTotal  = round($cartTotal - $discount['discount_amount'], 2);
 
     <div class="chk-layout">
 
-        <!-- ── LEFT COLUMN ── -->
         <div>
             <form id="checkout-form" enctype="multipart/form-data">
                 <?php if ($isBuyNow): ?>
                 <input type="hidden" name="is_buy_now" value="1">
                 <?php endif; ?>
 
-                <!-- Customer Details -->
                 <div class="chk-card">
                     <div class="chk-card-header">Customer Details</div>
                     <div class="chk-card-body">
@@ -99,7 +155,6 @@ $discountedTotal  = round($cartTotal - $discount['discount_amount'], 2);
                     </div>
                 </div>
 
-                <!-- Fulfillment -->
                 <div class="chk-card">
                     <div class="chk-card-header">Fulfillment</div>
                     <div class="chk-card-body">
@@ -112,12 +167,11 @@ $discountedTotal  = round($cartTotal - $discount['discount_amount'], 2);
                             <div class="chk-delivery-locked-notice">
                                 <i class="fas fa-info-circle"></i>
                                 Delivery is available for orders of
-                                <strong><?= CheckoutService::BULK_QTY_THRESHOLD ?> or more frames</strong>.
-                                Your order has <strong><?= $totalQty ?></strong> frame<?= $totalQty !== 1 ? 's' : '' ?>.
+                                <strong><?= CheckoutService::BULK_QTY_THRESHOLD ?> or more frames/prints</strong>.
+                                Your order has <strong><?= $totalQty ?></strong> item<?= $totalQty !== 1 ? 's' : '' ?>.
                             </div>
                         <?php endif; ?>
 
-                        <!-- Pickup (always available) -->
                         <label class="chk-radio-option selected" id="lbl-pickup">
                             <input type="radio" name="delivery_option" value="PICKUP" checked
                                    onchange="onDeliveryChange(this)">
@@ -127,7 +181,6 @@ $discountedTotal  = round($cartTotal - $discount['discount_amount'], 2);
                             </div>
                         </label>
 
-                        <!-- Delivery (locked until 30+ frames) -->
                         <label class="chk-radio-option <?= !$deliveryUnlocked ? 'chk-radio-disabled' : '' ?>"
                                id="lbl-delivery">
                             <input type="radio" name="delivery_option" value="DELIVERY"
@@ -138,7 +191,7 @@ $discountedTotal  = round($cartTotal - $discount['discount_amount'], 2);
                                     Delivery (Handled by Owner)
                                     <?php if (!$deliveryUnlocked): ?>
                                         <span class="chk-radio-lock">
-                                            <i class="fas fa-lock"></i> 30+ frames required
+                                            <i class="fas fa-lock"></i> 30+ items required
                                         </span>
                                     <?php endif; ?>
                                 </div>
@@ -155,7 +208,6 @@ $discountedTotal  = round($cartTotal - $discount['discount_amount'], 2);
                     </div>
                 </div>
 
-                <!-- Payment Method -->
                 <div class="chk-card">
                     <div class="chk-card-header">Payment Method</div>
                     <div class="chk-card-body">
@@ -219,48 +271,29 @@ $discountedTotal  = round($cartTotal - $discount['discount_amount'], 2);
             </form>
         </div>
 
-        <!-- ── RIGHT COLUMN — Order Summary ── -->
         <div>
             <div class="chk-summary-card">
                 <div class="chk-summary-header">Order Summary</div>
                 <div class="chk-summary-body">
 
-                    <?php foreach ($cartItems as $item):
-                        if (!empty($item['is_buy_now'])) {
-                            $displayName = $item['display_name'];
-                            $displayMeta = $item['display_meta'];
-                            $qty         = $item['quantity'];
-                            $subtotal    = (float)$item['sub_total'];
-                        } else {
-                            $isCustom    = !empty($item['c_product_id']);
-                            $displayName = $isCustom
-                                ? ($item['custom_design_name'] ?? 'Custom Frame')
-                                : ($item['ready_name'] ?? 'Frame');
-                            $svcType     = $item['service_type'] === 'FRAME&PRINT' ? 'Frame & Print' : 'Frame only';
-                            $displayMeta = $svcType;
-                            $qty         = (int)$item['quantity'];
-                            $subtotal    = (float)$item['sub_total'];
-                        }
-                    ?>
+                    <?php foreach ($cartItems as $item): ?>
                     <div class="chk-item-row">
                         <div style="flex:1;">
-                            <div class="chk-item-name"><?= htmlspecialchars($displayName) ?></div>
-                            <div class="chk-item-meta"><?= htmlspecialchars($displayMeta) ?></div>
+                            <div class="chk-item-name"><?= htmlspecialchars($item['display_name']) ?></div>
+                            <div class="chk-item-meta"><?= htmlspecialchars($item['display_meta']) ?></div>
                         </div>
                         <div style="display:flex; align-items:center;">
-                            <span class="chk-item-qty">×<?= $qty ?></span>
-                            <span class="chk-item-price">₱<?= number_format($subtotal, 2) ?></span>
+                            <span class="chk-item-qty">×<?= $item['quantity'] ?></span>
+                            <span class="chk-item-price">₱<?= number_format($item['sub_total'], 2) ?></span>
                         </div>
                     </div>
                     <?php endforeach; ?>
 
-                    <!-- Subtotal row -->
                     <div class="chk-subtotal-row">
                         <span>Subtotal</span>
                         <span>×<?= $totalQty ?> &nbsp; ₱<?= number_format($cartTotal, 2) ?></span>
                     </div>
 
-                    <!-- Discount row — only shown when qualified -->
                     <?php if ($discount['qualified']): ?>
                     <div class="chk-discount-row">
                         <span><i class="fas fa-tag"></i> 20% Discount</span>
@@ -272,7 +305,6 @@ $discountedTotal  = round($cartTotal - $discount['discount_amount'], 2);
 
                 <div class="chk-total-section">
 
-                    <!-- Delivery fee (shown dynamically via JS when delivery is selected) -->
                     <div class="chk-delivery-fee-row" id="delivery-fee-row" style="display:none;">
                         <span>Delivery Fee</span>
                         <span>+₱150.00</span>
@@ -292,7 +324,6 @@ $discountedTotal  = round($cartTotal - $discount['discount_amount'], 2);
     </div>
 </div>
 
-<!-- Receipt Lightbox -->
 <div class="chk-lightbox" id="chk-lightbox">
     <div class="chk-lightbox-inner">
         <button class="chk-lightbox-close" onclick="closeReceiptLightbox()">
@@ -305,7 +336,6 @@ $discountedTotal  = round($cartTotal - $discount['discount_amount'], 2);
 <?php include __DIR__ . '/../includes/idx_footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Bridge PHP values into JS -->
 <script>
     const discountedSubtotal = <?= $discountedTotal ?>;
     const deliveryUnlocked   = <?= $deliveryUnlocked ? 'true' : 'false' ?>;

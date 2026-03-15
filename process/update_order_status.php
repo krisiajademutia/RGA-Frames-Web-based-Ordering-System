@@ -20,11 +20,20 @@ if (!$order_id || !in_array($new_status, $allowed)) {
     exit();
 }
 
+// Update order status
 $stmt = $conn->prepare("UPDATE tbl_orders SET order_status = ? WHERE order_id = ?");
 $stmt->bind_param("si", $new_status, $order_id);
 
-if ($stmt->execute()) {
-    echo json_encode(['success' => true]);
-} else {
+if (!$stmt->execute()) {
     echo json_encode(['success' => false, 'message' => 'DB error: ' . $conn->error]);
+    exit();
 }
+
+// If completed — mark payment as FULL
+if ($new_status === 'COMPLETED') {
+    $stmtFull = $conn->prepare("UPDATE tbl_payment SET payment_status = 'FULL' WHERE order_id = ?");
+    $stmtFull->bind_param("i", $order_id);
+    $stmtFull->execute();
+}
+
+echo json_encode(['success' => true]);

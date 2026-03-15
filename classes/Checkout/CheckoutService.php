@@ -25,13 +25,13 @@ class CheckoutService {
      * Discount engine — flat 20% if ANY one rule is satisfied. No stacking.
      *
      * Rules:
-     *  1. BULK_ORDER      — total qty >= 30 frames
-     *  2. REPEAT_CUSTOMER — customer has at least 1 COMPLETED past order
-     *  3. PHOTOGRAPHER    — customer_type = 'PHOTOGRAPHER'
+     * 1. BULK_ORDER      — total qty >= 30 frames
+     * 2. REPEAT_CUSTOMER — customer has at least 1 COMPLETED past order
+     * 3. PHOTOGRAPHER    — customer_type = 'PHOTOGRAPHER'
      *
      * Returns:
-     *   discount_amount (float) — peso amount off (0.00 if no rule fires)
-     *   qualified       (bool)  — whether any rule was met
+     * discount_amount (float) — peso amount off (0.00 if no rule fires)
+     * qualified       (bool)  — whether any rule was met
      */
     public function calculateDiscount(int $customer_id, array $customer, array $cartItems, float $subtotal): array {
         $totalQty = array_sum(array_column($cartItems, 'quantity'));
@@ -67,7 +67,8 @@ class CheckoutService {
         return array_sum(array_column($cartItems, 'quantity')) >= self::BULK_QTY_THRESHOLD;
     }
 
-    public function processCheckout(int $customer_id, array $post, array $files, array $cartItems, float $cartTotal): array {
+    // UPGRADED: Now accepts $isBuyNow and $buyNowItemData
+    public function processCheckout(int $customer_id, array $post, array $files, array $cartItems, float $cartTotal, bool $isBuyNow = false, ?array $buyNowItemData = null): array {
         if (empty($cartItems)) {
             return ['success' => false, 'message' => 'Your cart is empty!'];
         }
@@ -139,7 +140,8 @@ class CheckoutService {
             ];
         }
 
-        $success = $this->repo->placeOrder($customer_id, $orderData, $cartItems, $paymentProof);
+        // UPGRADED: Passes $isBuyNow and $buyNowItemData into the repository
+        $success = $this->repo->placeOrder($customer_id, $orderData, $cartItems, $paymentProof, $isBuyNow, $buyNowItemData);
 
         return $success
             ? ['success' => true,  'message' => 'Order placed successfully!', 'ref_no' => $orderData['reference_no']]

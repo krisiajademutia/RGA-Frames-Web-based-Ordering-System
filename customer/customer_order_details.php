@@ -100,8 +100,13 @@ $serviceLabel  = $hasFrame ? ($hasPrint ? 'Frame & Print' : 'Frame only') : 'Pri
 $categoryLabel = $isCustom ? 'Custom Frame' : ($hasFrame ? 'Ready-made' : 'Print');
 
 /* ── Payment status ── */
-$psLabel = match($payment_status) { 'FULL'=>'Fully Paid', 'PARTIAL'=>'Partial Payment', default=>'Unpaid' };
-$psClass = match($payment_status) { 'FULL'=>'cst-ord-dtls-ps-full', 'PARTIAL'=>'cst-ord-dtls-ps-partial', default=>'cst-ord-dtls-ps-unpaid' };
+if ($isErr) {
+    $psLabel = 'Order ' . ucfirst(strtolower($order['order_status']));
+    $psClass = 'cst-ord-dtls-ps-unpaid';
+} else {
+    $psLabel = match($payment_status) { 'FULL'=>'Fully Paid', 'PARTIAL'=>'Partial Payment', default=>'Unpaid' };
+    $psClass = match($payment_status) { 'FULL'=>'cst-ord-dtls-ps-full', 'PARTIAL'=>'cst-ord-dtls-ps-partial', default=>'cst-ord-dtls-ps-unpaid' };
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -268,10 +273,12 @@ $psClass = match($payment_status) { 'FULL'=>'cst-ord-dtls-ps-full', 'PARTIAL'=>'
             <div class="cst-ord-dtls-payment-divider"></div>
             <div class="cst-ord-dtls-pay-row balance">
                 <span class="cst-ord-dtls-pay-label">Balance Due</span>
-                <span class="cst-ord-dtls-pay-val balance-val">₱<?= number_format($balance_due, 2) ?></span>
+                <span class="cst-ord-dtls-pay-val balance-val">
+                    <?= $isErr ? '—' : '₱' . number_format($balance_due, 2) ?>
+                </span>
             </div>
 
-            <?php if (!empty($proofs)): ?>
+            <?php if (!$isErr && !empty($proofs)): ?>
             <div class="cst-ord-dtls-proof-btns">
                 <button class="cst-ord-dtls-view-proof-btn" onclick="openProofViewer()">
                     View Proof of Payment
@@ -281,7 +288,7 @@ $psClass = match($payment_status) { 'FULL'=>'cst-ord-dtls-ps-full', 'PARTIAL'=>'
                     <i class="fas fa-download"></i> Download Proof of Payment
                 </a>
             </div>
-            <?php elseif ($isGcash && $isPending): ?>
+            <?php elseif (!$isErr && $isGcash && $isPending): ?>
             <div class="cst-ord-dtls-upload-wrap">
                 <p class="cst-ord-dtls-upload-note">
                     <i class="fas fa-info-circle"></i>
@@ -318,10 +325,14 @@ $psClass = match($payment_status) { 'FULL'=>'cst-ord-dtls-ps-full', 'PARTIAL'=>'
                 $itemHasPrint = $item['service_type'] === 'FRAME&PRINT' || !empty($item['image_path']);
                 $isPrintOnly  = empty($item['r_product_id']) && empty($item['c_product_id']);
 
-                // Fetch frame image
+                // Fetch frame image — use aliased columns from fixed OrderItemRepository
                 $frameDesignId = $itemIsCustom
                     ? ($item['cfp_frame_design_id'] ?? null)
                     : ($item['rm_frame_design_id']  ?? null);
+                // Fallback: use fd.design join result if aliases not set
+                if (!$frameDesignId) {
+                    $frameDesignId = $item['frame_design_id'] ?? null;
+                }
                 $imgName = null;
                 if ($frameDesignId) {
                     $imgStmt = $conn->prepare("SELECT image_name FROM tbl_frame_design_images WHERE frame_design_id=? AND is_primary=1 LIMIT 1");
@@ -347,7 +358,7 @@ $psClass = match($payment_status) { 'FULL'=>'cst-ord-dtls-ps-full', 'PARTIAL'=>'
                     <div class="cst-ord-dtls-item-cell">
                         <div class="cst-ord-dtls-item-thumb">
                             <?php if ($imgName): ?>
-                            <img src="../uploads/designs/<?= htmlspecialchars($imgName) ?>" alt="">
+                            <img src="../uploads/<?= htmlspecialchars($imgName) ?>" alt="">
                             <?php else: ?>
                             <i class="fas fa-border-all"></i>
                             <?php endif; ?>
@@ -386,8 +397,14 @@ $psClass = match($payment_status) { 'FULL'=>'cst-ord-dtls-ps-full', 'PARTIAL'=>'
                             <?php endif; ?>
                             <?php if (!empty($item['matboard_color_name'])): ?>
                             <span class="item-spec">
-                                <span class="item-spec-key">Matboard</span>
+                                <span class="item-spec-key">Matboard (Primary)</span>
                                 <span class="item-spec-val"><?= htmlspecialchars($item['matboard_color_name']) ?></span>
+                            </span>
+                            <?php endif; ?>
+                            <?php if (!empty($item['secondary_matboard_color_name'])): ?>
+                            <span class="item-spec">
+                                <span class="item-spec-key">Matboard (Secondary)</span>
+                                <span class="item-spec-val"><?= htmlspecialchars($item['secondary_matboard_color_name']) ?></span>
                             </span>
                             <?php endif; ?>
                             <?php if ($itemHasPrint && !empty($item['print_width']) && !empty($item['print_height'])): ?>

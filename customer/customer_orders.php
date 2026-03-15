@@ -86,7 +86,7 @@ $statusBadge = [
                         <i class="fas fa-search cst-ord-search-icon"></i>
                         <input type="text" name="search" value="<?= htmlspecialchars($search) ?>"
                                class="cst-ord-search-input"
-                               placeholder="Search by Order ID, Ref No., Customer Name or Phone...">
+                               placeholder="Search by Order ID or Reference No...">
                         <?php if ($search): ?>
                         <a href="customer_orders.php?status=<?= $activeTab ?>" class="cst-ord-search-clear">
                             <i class="fas fa-times"></i>

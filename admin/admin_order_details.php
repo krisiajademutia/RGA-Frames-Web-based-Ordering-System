@@ -67,13 +67,18 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
         <?php foreach ($status_steps as $i => $step):
             $stepKey   = $step['key'];
             $stepIndex = ($stepKey === 'PICKUP_DELIVERY') ? 2 : ($status_order[$stepKey] ?? $i);
-            $isDone    = $current_step > $stepIndex;
-            $isActive  = $current_step === $stepIndex;
-            $stepNum   = $i + 1;
+            $isFailed  = $isRejected && $i === 3;
+
+            // When rejected/cancelled — don't mark any step as done, just show X on last
+            $isDone   = !$isRejected && ($current_step > $stepIndex);
+            $isActive = !$isRejected && ($current_step === $stepIndex);
+            $stepNum  = $i + 1;
         ?>
-            <div class="admn-ordr-dtls-step <?= ($isDone || $isActive) ? 'done' : '' ?> <?= ($isRejected && $i === 3) ? 'cancelled' : '' ?>">
+            <div class="admn-ordr-dtls-step <?= $isDone ? 'done' : '' ?> <?= $isActive ? 'done' : '' ?> <?= $isFailed ? 'cancelled' : '' ?>">
                 <div class="admn-ordr-dtls-step-circle">
-                    <?php if ($isDone || ($isActive && $i < 3)): ?>
+                    <?php if ($isFailed): ?>
+                        <i class="fas fa-times"></i>
+                    <?php elseif ($isDone || ($isActive && $i < 3)): ?>
                         <i class="fas fa-check"></i>
                     <?php else: ?>
                         <?= $stepNum ?>
@@ -82,7 +87,7 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
                 <span class="admn-ordr-dtls-step-label"><?= $step['label'] ?></span>
             </div>
             <?php if ($i < count($status_steps) - 1): ?>
-                <div class="admn-ordr-dtls-step-line <?= $current_step > $stepIndex ? 'done' : '' ?>"></div>
+                <div class="admn-ordr-dtls-step-line <?= (!$isRejected && $current_step > $stepIndex) ? 'done' : '' ?>"></div>
             <?php endif; ?>
         <?php endforeach; ?>
     </div>
@@ -213,16 +218,22 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
                         <span class="admn-ordr-dtls-value">
                             <?php
                             $ps = $payment_status ?? 'PENDING';
-                            $psClass = match($ps) {
-                                'FULL'    => 'admn-ordr-dtls-pay-full',
-                                'PARTIAL' => 'admn-ordr-dtls-pay-partial',
-                                default   => 'admn-ordr-dtls-pay-pending',
-                            };
-                            $psLabel = match($ps) {
-                                'FULL'    => 'Fully Paid',
-                                'PARTIAL' => '⚠ Partial Payment',
-                                default   => 'Pending',
-                            };
+                            // If order is rejected/cancelled, override payment display
+                            if ($isRejected) {
+                                $psClass = 'admn-ordr-dtls-pay-pending';
+                                $psLabel = '— Order ' . ucfirst(strtolower($order['order_status']));
+                            } else {
+                                $psClass = match($ps) {
+                                    'FULL'    => 'admn-ordr-dtls-pay-full',
+                                    'PARTIAL' => 'admn-ordr-dtls-pay-partial',
+                                    default   => 'admn-ordr-dtls-pay-pending',
+                                };
+                                $psLabel = match($ps) {
+                                    'FULL'    => 'Fully Paid',
+                                    'PARTIAL' => '⚠ Partial Payment',
+                                    default   => 'Pending',
+                                };
+                            }
                             ?>
                             <span class="admn-ordr-dtls-pay-badge <?= $psClass ?>"><?= $psLabel ?></span>
                         </span>
@@ -243,7 +254,9 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
                     <?php endif; ?>
                     <div class="admn-ordr-dtls-row admn-ordr-dtls-balance-row">
                         <span class="admn-ordr-dtls-balance-label">Balance Due</span>
-                        <span class="admn-ordr-dtls-balance-amount">₱<?= number_format($balance_due, 2) ?></span>
+                        <span class="admn-ordr-dtls-balance-amount">
+                            <?= $isRejected ? '—' : '₱' . number_format($balance_due, 2) ?>
+                        </span>
                     </div>
 
                     <!-- Payment Proof Uploads -->
@@ -467,9 +480,15 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
                             <span><?= htmlspecialchars($item['mount_name'] ?? '—') ?></span>
                         </div>
                         <div class="admn-ordr-dtls-spec-row">
-                            <span>Matboard</span>
+                            <span>Matboard (Primary)</span>
                             <span><?= htmlspecialchars($item['matboard_color_name'] ?? 'None') ?></span>
                         </div>
+                        <?php if (!empty($item['secondary_matboard_color_name'])): ?>
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Matboard (Secondary)</span>
+                            <span><?= htmlspecialchars($item['secondary_matboard_color_name']) ?></span>
+                        </div>
+                        <?php endif; ?>
                         <?php if ($hasPrint): ?>
                         <div class="admn-ordr-dtls-spec-row">
                             <span>Paper Size</span>
@@ -483,8 +502,15 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
                         <div class="admn-ordr-dtls-spec-row">
                             <span>Pricing</span>
                             <span>
-                                Frame | ₱<?= number_format($item['calculated_price'] ?? $item['base_price'] ?? 0, 2) ?><br>
-                                Matboard | ₱<?= number_format($item['matboard_base_price'] ?? 0, 2) ?><br>
+                                Frame | ₱<?= number_format($item['calculated_price'] ?? 0, 2) ?><br>
+                                <?php
+                                $hasPrimaryMat   = !empty($item['matboard_color_name']);
+                                $hasSecondaryMat = !empty($item['secondary_matboard_color_name']);
+                                $matCharge       = ($hasPrimaryMat && $hasSecondaryMat)
+                                    ? (float)($item['matboard_base_price'] ?? 0)
+                                    : 0;
+                                ?>
+                                Matboard | ₱<?= number_format($matCharge, 2) ?><?= ($hasPrimaryMat && $hasSecondaryMat) ? ' (double-matting)' : '' ?><br>
                                 Mount | ₱<?= number_format($item['mount_extra'] ?? 0, 2) ?>
                                 <?php if ($hasPrint): ?>
                                     <br>Print | ₱<?= number_format($item['print_sub_total'] ?? 0, 2) ?>
