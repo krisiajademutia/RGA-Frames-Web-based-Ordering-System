@@ -2450,7 +2450,109 @@ color: #DC2626;
     font-weight: 600;
     font-family: var(--font-primary);
 }
+/* =========================================
+   LOGIN PAGE — MOBILE IMPROVEMENT
+   ========================================= */
+@media (max-width: 768px) {
 
+    /* Full page uses the frame image as background with green overlay */
+    .log-body {
+        min-height: 100vh;
+        background:
+            linear-gradient(160deg, rgba(15,61,51,0.92) 0%, rgba(26,107,88,0.85) 100%),
+            url('../img/frame_index.png') center/cover no-repeat fixed;
+    }
+
+    .log-container {
+        margin-top: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .log-split-layout {
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    /* Hide image side — it's now the background */
+    .log-image-side { display: none; }
+
+    /* Form side takes full screen over the background */
+    .log-form-side {
+        flex: 1;
+        padding: 0;
+        background: transparent;
+        align-items: flex-start;
+        justify-content: flex-start;
+    }
+
+    .log-form-wrapper {
+        width: 100%;
+        max-width: 100%;
+        animation: none;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    /* Welcome section — text over the green background */
+    .log-welcome-section {
+        background: transparent;
+        padding: 3.5rem 2rem 2rem;
+        margin-bottom: 0;
+        text-align: center;
+    }
+
+    .log-icon-badge {
+        background: rgba(255,255,255,0.15);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        border: 1.5px solid rgba(255,255,255,0.2);
+        margin-bottom: 1.25rem;
+    }
+
+    .log-title {
+        font-size: 1.85rem;
+        color: #ffffff;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .log-subtitle {
+        font-size: 0.875rem;
+        color: rgba(255,255,255,0.8);
+    }
+
+    /* Form card — glass effect over the background */
+    .log-form {
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        margin: 1.5rem 1.25rem 0;
+        padding: 1.75rem 1.25rem;
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        border: 1px solid rgba(255,255,255,0.6);
+    }
+
+    .log-form-group { margin-bottom: 1.25rem; }
+    .log-label       { font-size: 0.875rem; }
+    .log-input       { height: 50px; font-size: 0.9rem; }
+    .log-btn-submit  { height: 52px; font-size: 0.95rem; margin-top: 0.75rem; }
+
+    /* Footer text — white over the dark background */
+    .log-footer-text {
+        text-align: center;
+        padding: 1.25rem 1.25rem 2.5rem;
+        margin-top: 0;
+        color: rgba(255,255,255,0.85);
+    }
+
+    .log-register-link {
+        color: #ffffff;
+        text-decoration: underline;
+    }
+}
 /* =========================================
    6. REGISTER PAGE STYLES (reg-)
    ========================================= */
@@ -2560,7 +2662,94 @@ color: #DC2626;
     background-position: center;
     background-image: url('../img/frame_index.png'); 
 }
+/* =========================================
+   REGISTER PAGE — MOBILE IMPROVEMENT
+   Mirrors login mobile design exactly
+   ========================================= */
+@media (max-width: 992px) {
 
+    /* Full page — frame image with green overlay */
+    .reg-body-reset {
+        min-height: 100vh;
+        background:
+            linear-gradient(160deg, rgba(15,61,51,0.92) 0%, rgba(26,107,88,0.85) 100%),
+            url('assets/img/frame_index.png') center/cover no-repeat fixed;
+    }
+
+    /* Image side hidden — it's the background now */
+    .reg-image-side { display: none !important; }
+
+    /* Form column — full width, transparent */
+    .reg-form-col {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+        padding: 0 !important;
+        background: transparent !important;
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 100vh !important;
+        align-items: unset !important;
+        justify-content: unset !important;
+    }
+
+    /* Welcome section — title/subtitle float over the background */
+    .reg-welcome-section {
+        padding: 3rem 2rem 2rem;
+        text-align: center;
+    }
+
+    .reg-brand-wrapper {
+        color: rgba(255,255,255,0.75);
+        justify-content: center;
+        font-size: 0.85rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .reg-title {
+        font-size: 1.85rem !important;
+        color: #ffffff !important;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        margin-bottom: 0.5rem;
+    }
+
+    .reg-subtitle {
+        font-size: 0.875rem !important;
+        color: rgba(255,255,255,0.8) !important;
+        padding: 0 !important;
+    }
+
+    /* Form container — glass card like login */
+    .reg-form-container {
+        max-width: 100% !important;
+        width: auto !important;
+        margin: 0 1.25rem !important;
+        background: rgba(255,255,255,0.95) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        padding: 1.75rem 1.25rem !important;
+        border-radius: 20px !important;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2) !important;
+        border: 1px solid rgba(255,255,255,0.6) !important;
+    }
+
+    .reg-input      { height: 46px; font-size: 0.875rem; }
+    .reg-label      { font-size: 0.875rem; color: #0f3d33; }
+    .reg-btn-submit { height: 50px; font-size: 0.95rem; }
+
+    /* Footer text — white over background */
+    .reg-footer-text {
+        text-align: center !important;
+        padding: 1.25rem 1.25rem 2.5rem !important;
+        margin-top: 0.5rem !important;
+        color: rgba(255,255,255,0.85) !important;
+    }
+
+    .reg-login-link {
+        color: #ffffff !important;
+        text-decoration: underline !important;
+    }
+}
 /* =========================================
    7. FORGOT PASSWORD STYLES (fgt-)
    ========================================= */
