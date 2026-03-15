@@ -1022,7 +1022,18 @@ html {
     justify-content: center;
     text-decoration: none;
 }
+  .post-alert-content {
+     border-radius: 15px !important;
+     border: none !important; }
 
+  .post-alert-icon {
+    font-size: 60px;
+    color: #004030; }
+
+  .post-alert-title {
+    color: #4B5563;
+    line-height: 1.6;
+    font-weight: 400; }
 .posted-main-container {
     background: white !important;
     border: 2px solid #adadad9f !important;
