@@ -143,6 +143,7 @@ $posted_frames = $frameService->getAllFrames();
         <div class="post-card-header">EDIT READY-MADE FRAME</div>
         <form action="/rga_frames/process/postframe_process.php" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="r_product_id" value="<?= $edit_data['r_product_id'] ?>">
+            <input type="hidden" name="removed_images" id="removed_images" value="">
             <div class="post-form-grid">
                 <div>
                     <label class="post-label">PRODUCT NAME <span class="text-danger">*</span></label>
@@ -192,19 +193,22 @@ $posted_frames = $frameService->getAllFrames();
                     <input type="number" name="stock_quantity" class="post-input" value="<?= $edit_data['quantity'] ?>" required>
                 </div>
                 <div class="post-upload-container">
-                    <label class="post-label">ADD PHOTOS (Replaces current)</label>
-                    <div class="post-upload-zone position-relative" onclick="document.getElementById('post_img_input').click();">
-                        <input type="file" name="images[]" id="post_img_input" style="display:none;" multiple onchange="handleMultipleFilePreview(this)">
-                        <div id="image_preview_container" class="preview-overlay">
-                            <?php foreach($edit_images as $img): ?>
-                                <img src="/rga_frames/uploads/<?= $img['image_name'] ?>" class="preview-thumb">
-                            <?php endforeach; ?>
-                        </div>
+                    <label class="post-label">PRODUCT PHOTOS <span class="text-danger">*</span></label>
+                    <div class="post-upload-zone position-relative" onclick="document.getElementById('edit_design_imgs').click();">
+                        <input type="file" name="images[]" id="edit_design_imgs" style="display:none;" multiple onchange="handleMultipleFilePreview(this, 'image_preview_container', 'post_img_text')">
+                        <div id="image_preview_container" class="preview-overlay"></div>
                         <div class="upload-content text-center">
                             <i class="fa-solid fa-images"></i>
-                            <p class="m-0" id="post_img_text">Click to update photos</p>
+                            <p class="m-0" id="post_img_text">Click to upload photos</p>
                         </div>
                     </div>
+                    <?php if(!empty($edit_images)): ?>
+                        <script>
+                            window.addEventListener('load', () => { 
+                                loadExistingPhotos(<?= json_encode($edit_images) ?>, 'image_preview_container', 'post_img_text', 'edit_design_imgs'); 
+                            });
+                        </script>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="d-flex justify-content-center gap-3 mb-3">
@@ -272,7 +276,7 @@ $posted_frames = $frameService->getAllFrames();
                 <div class="post-upload-container">
                     <label class="post-label">PRODUCT PHOTOS <span class="text-danger">*</span></label>
                     <div class="post-upload-zone position-relative" onclick="document.getElementById('post_img_input').click();">
-                        <input type="file" name="images[]" id="post_img_input" style="display:none;" required multiple onchange="handleMultipleFilePreview(this)">
+                        <input type="file" name="images[]" id="post_img_input" style="display:none;" required multiple onchange="handleMultipleFilePreview(this, 'image_preview_container', 'post_img_text')">
                         <div id="image_preview_container" class="preview-overlay"></div>
                         <div class="upload-content text-center">
                             <i class="fa-solid fa-images"></i>
@@ -282,7 +286,7 @@ $posted_frames = $frameService->getAllFrames();
                 </div>
             </div>
             <div class="d-flex justify-content-center gap-3 mb-3">
-                <button type="reset" class="post-btn-clear" onclick="document.getElementById('image_preview_container').innerHTML = ''">Clear</button>
+                <button type="reset" class="post-btn-clear" onclick="document.getElementById('image_preview_container').innerHTML = ''; selectedFiles = [];">Clear</button>
                 <button type="submit" name="add_product" class="post-btn-submit">Post Frame</button>
             </div>
         </form>
@@ -310,33 +314,6 @@ $posted_frames = $frameService->getAllFrames();
         </div>
     </div>
 </div>
-<?php if (isset($_SESSION['post_error_modal'])): ?>
-    <div class="modal fade" id="errorOperationModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content post-alert-content shadow">
-                <div class="modal-header border-0 pt-3 pe-3">
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center pb-5">
-                    <div class="mb-4">
-                        <i class="fa-solid fa-circle-xmark post-alert-icon" style="color: #dc3545;"></i>
-                    </div>
-                    <h4 class="fw-bold mb-2"><?= htmlspecialchars($_SESSION['post_error_modal']['title']) ?></h4>
-                    <p class="post-alert-title px-4">
-                        <?= htmlspecialchars($_SESSION['post_error_modal']['message']) ?>
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var myModal = new bootstrap.Modal(document.getElementById('errorOperationModal'));
-            myModal.show();
-        });
-    </script>
-    <?php unset($_SESSION['post_error_modal']); ?>
-<?php endif; ?>
 
 <?php if (isset($_SESSION['post_success_modal'])): ?>
     <div class="modal fade" id="successOperationModal" tabindex="-1" aria-hidden="true">
@@ -362,7 +339,6 @@ $posted_frames = $frameService->getAllFrames();
 <?php endif; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/rga_frames/assets/js/post_script.js"></script>
 </body>
 </html>

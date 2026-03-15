@@ -44,18 +44,24 @@ function confirmDelete(id, name, tab) {
     document.getElementById('deleteOptionName').textContent = name;
     document.getElementById('deleteOptionId').value = id;
     document.getElementById('deleteOptionTab').value = tab;
+    
     const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
     modal.show();
 }
 
 /**
- * FIXED PRICE DELETE (Nested Modal Logic)
+ * FIXED PRICE DELETE (Specific Logic for Fixed Print Prices)
  */
 function confirmDeleteFpm(id) {
-    // Set the ID in the hidden input of the small delete modal
-    document.getElementById('delete_fpm_id').value = id;
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteFixedPriceModal'));
-    deleteModal.show();
+    // Set the ID in the hidden input of the Fixed Price Delete Modal
+    const idInput = document.getElementById('delete_fpm_id');
+    if (idInput) {
+        idInput.value = id;
+    }
+
+    // Trigger the specific Fixed Price Delete Modal
+    const modal = new bootstrap.Modal(document.getElementById('deleteFixedPriceModal'));
+    modal.show();
 }
 
 // Fix for Bootstrap scroll lock issue when closing nested modals
@@ -63,8 +69,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const deleteFpmModalEl = document.getElementById('deleteFixedPriceModal');
     if (deleteFpmModalEl) {
         deleteFpmModalEl.addEventListener('hidden.bs.modal', function () {
+            // If the main management modal is still open, re-apply the scroll class to body
             if (document.querySelector('#fixedPriceModal.show')) {
                 document.body.classList.add('modal-open');
+                document.body.style.overflow = 'hidden';
+                document.body.style.paddingRight = '0px'; 
             }
         });
     }

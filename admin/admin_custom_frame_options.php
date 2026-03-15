@@ -43,55 +43,37 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                 <i data-lucide="chevron-down" size="18"></i>
             </button>
             <div class="opt-dropdown-menu">
-    <a href="?tab=frame_types" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
-        <i class="fa-regular fa-square" style="color: #004030; font-size: 14px; margin-right: 12px;"></i>
-        Frame Types
-    </a>
-    
-    <a href="?tab=frame_designs" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
-        <i class="fa-regular fa-compass" style="color: #ffffff; font-size: 14px; margin-right: 12px;"></i>
-        Frame Designs
-    </a>
-    
-    <a href="?tab=frame_colors" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
-        <i class="fa-solid fa-eye-dropper" style="color: #004030; font-size: 14px; margin-right: 12px;"></i>
-        Frame Colors
-    </a>
-    
-    <a href="?tab=frame_sizes" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
-        <i class="fa-regular fa-window-maximize" style="color: #ffffff; font-size: 14px; margin-right: 12px;"></i>
-        Frame Sizes
-    </a>
-    
-    <a href="?tab=matboard_colors" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
-        <i class="fa-regular fa-clone" style="color: #004030; font-size: 14px; margin-right: 12px;"></i>
-        Matboard Colors
-    </a>
-    
-    <a href="?tab=mount_types" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
-        <i class="fa-regular fa-object-group" style="color: #ffffff; font-size: 14px; margin-right: 12px;"></i>
-        Mount Types
-    </a>
-    
-    <a href="?tab=paper_types" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
-        <i class="fa-regular fa-file-lines" style="color: #004030; font-size: 14px; margin-right: 12px;"></i>
-        Paper Types
-    </a>
-</div>
+                <a href="?tab=frame_types" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
+                    <i class="fa-regular fa-square" style="color: #004030; font-size: 14px; margin-right: 12px;"></i>
+                    Frame Types
+                </a>
+                <a href="?tab=frame_designs" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
+                    <i class="fa-regular fa-compass" style="color: #ffffff; font-size: 14px; margin-right: 12px;"></i>
+                    Frame Designs
+                </a>
+                <a href="?tab=frame_colors" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
+                    <i class="fa-solid fa-eye-dropper" style="color: #004030; font-size: 14px; margin-right: 12px;"></i>
+                    Frame Colors
+                </a>
+                <a href="?tab=frame_sizes" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
+                    <i class="fa-regular fa-window-maximize" style="color: #ffffff; font-size: 14px; margin-right: 12px;"></i>
+                    Frame Sizes
+                </a>
+                <a href="?tab=matboard_colors" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
+                    <i class="fa-regular fa-clone" style="color: #004030; font-size: 14px; margin-right: 12px;"></i>
+                    Matboard Colors
+                </a>
+                <a href="?tab=mount_types" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
+                    <i class="fa-regular fa-object-group" style="color: #ffffff; font-size: 14px; margin-right: 12px;"></i>
+                    Mount Types
+                </a>
+                <a href="?tab=paper_types" style="display: flex; align-items: center; padding: 8px 15px; text-decoration: none;">
+                    <i class="fa-regular fa-file-lines" style="color: #004030; font-size: 14px; margin-right: 12px;"></i>
+                    Paper Types
+                </a>
+            </div>
         </div>
     </div>
-
-    <?php if($status === '1'): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            Operation successful.
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php elseif($status === '0' || $error_msg): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            Operation failed<?= isset($_GET['dberr']) ? ': ' . htmlspecialchars($_GET['dberr']) : '' ?>.
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
 
     <div class="opt-card" id="form-section"> 
         <div class="opt-card-header">
@@ -380,7 +362,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                                 <select name="paper_type_id" id="fpm_paper_type" class="fpm-select" required>
                                     <option value="" disabled selected>Choose paper...</option>
                                     <?php 
-                                    // Added 'multiplier' to the SELECT query
                                     $papers = $conn->query("SELECT paper_type_id, paper_name, multiplier FROM tbl_paper_type");
                                     while($p = $papers->fetch_assoc()): ?>
                                         <option value="<?= $p['paper_type_id'] ?>" data-multiplier="<?= $p['multiplier'] ?>">
@@ -443,7 +424,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                                             <button type="button" class="opt-btn-edit action-icon-btn" onclick='editFpm(<?= json_encode($pr) ?>)'>
                                                 <i class="fa-solid fa-pen-to-square"></i>
                                             </button>
-                                            
                                             <button type="button" class="fpm-btn-delete action-icon-btn" onclick="confirmDeleteFpm(<?= $pr['fixed_price_id'] ?>)">
                                                <i class="fa-solid fa-trash-can"></i>
                                            </button>
@@ -489,6 +469,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
         </div>
     </div>
 </div>
+
 <div class="modal fade" id="deleteFixedPriceModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-sm modal-dialog-centered fpm-delete-dialog">
         <div class="modal-content fpm-delete-content">
@@ -509,10 +490,86 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
         </div>
     </div>
 </div>
+
+<?php if (isset($_SESSION['opt_success_modal'])): ?>
+    <div class="modal fade" id="optSuccessModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content opt-alert-content shadow">
+                <div class="modal-header border-0 pt-3 pe-3">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center pb-5">
+                    <div class="mb-4">
+                        <i class="fa-solid fa-circle-check opt-alert-icon"></i>
+                    </div>
+                   <h5 class="opt-alert-title px-4">
+                        <?php 
+                        // Define label mapping
+                        $typeLabels = [
+                            'fixed'           => 'Fixed Print Price',
+                            'frame_types'     => 'Frame Type',
+                            'frame_designs'   => 'Frame Design',
+                            'frame_colors'    => 'Frame Color',
+                            'matboard_colors' => 'Matboard Color',
+                            'mount_types'     => 'Mount Type',
+                            'paper_types'     => 'Paper Type',
+                            'frame_sizes'     => 'Frame Size'
+                        ];
+                        
+                        // Get the type from session or default to 'Option'
+                        $sessionType = $_SESSION['opt_success_modal']['type'] ?? '';
+                        $label = $typeLabels[$sessionType] ?? 'Custom frame option';
+                        
+                        echo $label; 
+                        ?> 
+                        
+                        <strong style="color: #111827;">
+                            <?= htmlspecialchars($_SESSION['opt_success_modal']['name']) ?>
+                        </strong> 
+                        has been <?= htmlspecialchars($_SESSION['opt_success_modal']['action']) ?> successfully!
+                    </h5>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var optModal = new bootstrap.Modal(document.getElementById('optSuccessModal'));
+            optModal.show();
+        });
+    </script>
+    <?php unset($_SESSION['opt_success_modal']); ?>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['opt_error_modal'])): ?>
+    <div class="modal fade" id="optErrorModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content opt-alert-content shadow">
+                <div class="modal-header border-0 pt-3 pe-3">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center pb-5">
+                    <div class="mb-4">
+                        <i class="fa-solid fa-circle-xmark opt-alert-icon" style="color: #dc3545;"></i>
+                    </div>
+                    <h4 class="fw-bold mb-2"><?= htmlspecialchars($_SESSION['opt_error_modal']['title']) ?></h4>
+                    <p class="opt-alert-title px-4">
+                        <?= htmlspecialchars($_SESSION['opt_error_modal']['message']) ?>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var optErrModal = new bootstrap.Modal(document.getElementById('optErrorModal'));
+            optErrModal.show();
+        });
+    </script>
+    <?php unset($_SESSION['opt_error_modal']); ?>
+<?php endif; ?>
+
 <script src="../assets/js/admin_options.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
-<script>
-    lucide.createIcons();
-</script>
 </body>
 </html>

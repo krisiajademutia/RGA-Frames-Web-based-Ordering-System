@@ -12,29 +12,21 @@ $frameService = new \Classes\Frames\FrameService($repository);
 // DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
     $id = (int)$_GET['id'];
-    
-    // Get product details for the modal and file cleanup before deleting
     $product = $frameService->getFrameById($id);
     $product_name = $product['product_name'] ?? 'Product';
 
     try {
-        if ($product && !empty($product['image_name'])) {
-            @unlink("../uploads/" . $product['image_name']);
+        // Get all images to delete physical files
+        $images = $repository->getProductImages($id);
+        foreach ($images as $img) {
+            @unlink("../uploads/" . $img['image_name']);
         }
 
         if ($frameService->deleteFrame($id)) {
-            // Updated to trigger Success Modal
-            $_SESSION['post_success_modal'] = [
-                'name' => $product_name,
-                'action' => 'deleted'
-            ];
+            $_SESSION['post_success_modal'] = ['name' => $product_name, 'action' => 'deleted'];
         }
     } catch (mysqli_sql_exception $e) {
-        // Updated to trigger Error Modal
-        $_SESSION['post_error_modal'] = [
-            'title' => 'Cannot Delete Product',
-            'message' => 'This product is linked to existing records and cannot be removed.'
-        ];
+        $_SESSION['post_error_modal'] = ['title' => 'Error', 'message' => 'Cannot delete linked product.'];
     }
     header("Location: ../admin/admin_post_frames.php?view=posted");
     exit();
@@ -42,9 +34,6 @@ if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id']))
 
 // ADD PRODUCT ACTION
 if (isset($_POST['add_product'])) {
-    $imageName = time() . "_" . $_FILES['image']['name'];
-    move_uploaded_file($_FILES['image']['tmp_name'], "../uploads/" . $imageName);
-
     $data = [
         'product_name'    => $_POST['product_name'],
         'frame_type_id'   => $_POST['frame_type_id'],
@@ -53,16 +42,22 @@ if (isset($_POST['add_product'])) {
         'width'           => $_POST['width'],
         'height'          => $_POST['height'],
         'product_price'   => $_POST['product_price'],
-        'stock_quantity'  => $_POST['stock_quantity'],
-        'image_name'      => $imageName
+        'stock_quantity'  => $_POST['stock_quantity']
     ];
 
-    if ($frameService->createFrame($data)) {
-        // Updated to trigger Success Modal
-        $_SESSION['post_success_modal'] = [
-            'name' => $_POST['product_name'],
-            'action' => 'posted'
-        ];
+    $new_id = $frameService->createFrame($data);
+    if ($new_id) {
+        // Handle Multiple Images
+        if (!empty($_FILES['images']['name'][0])) {
+            foreach ($_FILES['images']['tmp_name'] as $key => $tmp_name) {
+                $fileName = time() . "_" . $_FILES['images']['name'][$key];
+                if (move_uploaded_file($tmp_name, "../uploads/" . $fileName)) {
+                    $isPrimary = ($key === 0) ? 1 : 0;
+                    $frameService->addFrameImage($new_id, $fileName, $isPrimary);
+                }
+            }
+        }
+        $_SESSION['post_success_modal'] = ['name' => $_POST['product_name'], 'action' => 'posted'];
     }
     header("Location: ../admin/admin_post_frames.php?view=posted");
     exit();
@@ -82,18 +77,33 @@ if (isset($_POST['update_product'])) {
         'stock_quantity'  => $_POST['stock_quantity']
     ];
 
-    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-        $imageName = time() . "_" . $_FILES['image']['name'];
-        move_uploaded_file($_FILES['image']['tmp_name'], "../uploads/" . $imageName);
-        $data['image_name'] = $imageName;
-    }
-
     if ($frameService->updateFrame($id, $data)) {
-        // Updated to trigger Success Modal
-        $_SESSION['post_success_modal'] = [
-            'name' => $_POST['product_name'],
-            'action' => 'updated'
-        ];
+        // 1. Handle removals from the 'x' button in JS
+        if (!empty($_POST['removed_images'])) {
+            $removedImages = json_decode($_POST['removed_images'], true);
+            foreach ($removedImages as $fileName) {
+                $repository->deleteImageByName($fileName);
+                @unlink("../uploads/" . $fileName);
+            }
+        }
+
+        // 2. Handle new additional uploads
+        if (!empty($_FILES['images']['name'][0])) {
+            foreach ($_FILES['images']['tmp_name'] as $key => $tmp_name) {
+                $fileName = time() . "_" . $_FILES['images']['name'][$key];
+                if (move_uploaded_file($tmp_name, "../uploads/" . $fileName)) {
+                    $frameService->addFrameImage($id, $fileName, 0);
+                }
+            }
+        }
+
+        // 3. ENFORCE PRIMARY IMAGE LOGIC
+        // This ensures the database stays in sync with your UI logic 
+        // where the first available image (index 0) is marked as primary.
+        $conn->query("UPDATE tbl_ready_made_product_images SET is_primary = 0 WHERE r_product_id = $id");
+        $conn->query("UPDATE tbl_ready_made_product_images SET is_primary = 1 WHERE r_product_id = $id ORDER BY image_id ASC LIMIT 1");
+
+        $_SESSION['post_success_modal'] = ['name' => $_POST['product_name'], 'action' => 'updated'];
     }
     header("Location: ../admin/admin_post_frames.php?view=posted");
     exit();
