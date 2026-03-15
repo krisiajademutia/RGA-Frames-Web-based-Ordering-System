@@ -16,7 +16,7 @@ $sql = "
     SELECT
         c.customer_id, c.first_name, c.last_name, c.username,
         c.email, c.phone_number, c.customer_type, c.created_at,
-        COUNT(o.order_id) AS total_orders
+        COUNT(DISTINCT o.order_id) AS total_orders
     FROM tbl_customer c
     LEFT JOIN tbl_orders o ON c.customer_id = o.customer_id
     WHERE 1=1
@@ -68,9 +68,14 @@ $counts['ALL'] = array_sum($counts);
 <div class="admn-cust-wrapper">
 
     <!-- Page Header -->
-    <div class="admn-cust-page-header">
-        <h1 class="admn-cust-page-title">Customers</h1>
-        <p class="admn-cust-page-subtitle">Manage customer accounts and photographer status</p>
+    <div class="admn-cust-page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+            <h1 class="admn-cust-page-title">Customers</h1>
+            <p class="admn-cust-page-subtitle">Manage customer accounts and photographer status</p>
+        </div>
+        <a href="admin_customer_reviews.php" class="admn-cust-btn-view-reviews">
+            <i class="fas fa-star"></i> Customer Reviews
+        </a>
     </div>
 
     <!-- Summary Cards -->
@@ -148,8 +153,8 @@ $counts['ALL'] = array_sum($counts);
             </span>
         </div>
 
-        <!-- Table -->
-        <div class="table-responsive mt-2">
+        <!-- Table (desktop) -->
+        <div class="table-responsive mt-2 admn-cust-table-wrap">
             <table class="admn-cust-table">
                 <thead>
                     <tr>
@@ -222,6 +227,69 @@ $counts['ALL'] = array_sum($counts);
                 <?php endif; ?>
                 </tbody>
             </table>
+        </div>
+
+        <!-- Card list (mobile) -->
+        <div class="admn-cust-card-list">
+            <?php if (empty($customers)): ?>
+            <div class="admn-cust-empty">
+                <i class="fas fa-users"></i>
+                <p>No customers found.</p>
+            </div>
+            <?php else: ?>
+            <?php foreach ($customers as $c):
+                $isPhotog = $c['customer_type'] === 'PHOTOGRAPHER';
+                $initial  = strtoupper(substr($c['first_name'], 0, 1));
+            ?>
+            <div class="admn-cust-mob-card">
+                <!-- Top: avatar + name + type badge -->
+                <div class="admn-cust-mob-top">
+                    <div class="admn-cust-avatar"><?= $initial ?></div>
+                    <div class="admn-cust-mob-info">
+                        <div class="admn-cust-mob-name"><?= htmlspecialchars($c['first_name'] . ' ' . $c['last_name']) ?></div>
+                        <div class="admn-cust-mob-username">@<?= htmlspecialchars($c['username']) ?></div>
+                    </div>
+                    <span class="admn-cust-type-badge <?= $isPhotog ? 'photographer' : 'regular' ?>">
+                        <i class="fas fa-<?= $isPhotog ? 'camera' : 'user' ?>"></i>
+                        <?= $isPhotog ? 'Photographer' : 'Regular' ?>
+                    </span>
+                </div>
+                <!-- Details grid -->
+                <div class="admn-cust-mob-details">
+                    <div class="admn-cust-mob-detail-item admn-cust-mob-detail-full">
+                        <i class="fas fa-envelope"></i>
+                        <span><?= htmlspecialchars($c['email']) ?></span>
+                    </div>
+                    <div class="admn-cust-mob-detail-item">
+                        <i class="fas fa-phone"></i>
+                        <span><?= htmlspecialchars($c['phone_number'] ?? '—') ?></span>
+                    </div>
+                    <div class="admn-cust-mob-detail-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span><?= date('M d, Y', strtotime($c['created_at'])) ?></span>
+                    </div>
+                    <div class="admn-cust-mob-detail-item">
+                        <i class="fas fa-shopping-bag"></i>
+                        <span><?= $c['total_orders'] ?> order<?= $c['total_orders'] != 1 ? 's' : '' ?></span>
+                    </div>
+                </div>
+                <!-- Footer: action button -->
+                <div class="admn-cust-mob-footer">
+                    <?php if ($isPhotog): ?>
+                    <button class="admn-cust-btn-revoke"
+                            onclick="changeType(<?= $c['customer_id'] ?>, 'REGULAR', '<?= htmlspecialchars($c['first_name']) ?>')">
+                        <i class="fas fa-user-minus"></i> Revoke Photographer
+                    </button>
+                    <?php else: ?>
+                    <button class="admn-cust-btn-promote"
+                            onclick="changeType(<?= $c['customer_id'] ?>, 'PHOTOGRAPHER', '<?= htmlspecialchars($c['first_name']) ?>')">
+                        <i class="fas fa-camera"></i> Set as Photographer
+                    </button>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endforeach; ?>
+            <?php endif; ?>
         </div>
 
     </div><!-- /.admn-cust-card -->

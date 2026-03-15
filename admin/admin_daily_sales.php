@@ -2,7 +2,6 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-// Call the process file to get the $salesData variable
 require_once '../process/fetch_daily_sales.php';
 ?>
 <!DOCTYPE html>
@@ -27,6 +26,7 @@ require_once '../process/fetch_daily_sales.php';
             <p class="admn-sales-subtitle">Sales breakdown by category per day</p>
         </div>
 
+        <!-- ── DESKTOP: original table (untouched) ── -->
         <div class="admn-sales-table-container">
             <table class="admn-sales-table">
                 <thead>
@@ -57,6 +57,44 @@ require_once '../process/fetch_daily_sales.php';
                 </tbody>
             </table>
         </div>
+
+        <!-- ── MOBILE: card layout (hidden on desktop via CSS) ── -->
+        <div class="ds-mobile-cards">
+            <?php if (empty($salesData)): ?>
+                <div style="text-align:center; padding:3rem 1rem; color:#9ca3af;">
+                    <i class="fas fa-chart-bar" style="font-size:2rem; display:block; margin-bottom:0.75rem; color:#d1d5db;"></i>
+                    <p style="margin:0; font-size:0.9rem;">No sales data available.</p>
+                </div>
+            <?php else: ?>
+                <?php foreach ($salesData as $row): ?>
+                <div class="ds-day-card">
+                    <div class="ds-day-card-date">
+                        <i class="fas fa-calendar-day"></i>
+                        <?= htmlspecialchars($row['date']) ?>
+                    </div>
+                    <div class="ds-day-card-grid">
+                        <div class="ds-day-cell">
+                            <span class="ds-day-cell-label">Ready-Made</span>
+                            <span class="sales-pill pill-rm"><?= $row['ready_made'] ?></span>
+                        </div>
+                        <div class="ds-day-cell">
+                            <span class="ds-day-cell-label">Custom</span>
+                            <span class="sales-pill pill-custom"><?= $row['custom'] ?></span>
+                        </div>
+                        <div class="ds-day-cell">
+                            <span class="ds-day-cell-label">Total Sold</span>
+                            <span class="sales-pill pill-total"><?= $row['total_sold'] ?></span>
+                        </div>
+                        <div class="ds-day-cell">
+                            <span class="ds-day-cell-label">Earnings</span>
+                            <span class="ds-day-cell-earnings">₱<?= htmlspecialchars($row['earnings']) ?></span>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+
     </main>
 
 </body>
