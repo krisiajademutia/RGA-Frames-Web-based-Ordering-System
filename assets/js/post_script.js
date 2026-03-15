@@ -3,8 +3,14 @@ let selectedFiles = [];
 document.addEventListener('DOMContentLoaded', () => {
     const selects = document.querySelectorAll('.post-calc-trigger');
     const priceDisplay = document.getElementById('post_total_display');
+    
+    const isEditMode = document.querySelector('input[name="r_product_id"]') !== null;
 
-    function runCalculation() {
+    function runCalculation(isInitialLoad = false) {
+        if (isEditMode && isInitialLoad) {
+            return;
+        }
+
         let total = 0;
         selects.forEach(s => {
             const selectedOption = s.options[s.selectedIndex];
@@ -18,10 +24,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     selects.forEach(s => {
-        s.addEventListener('change', runCalculation);
+        s.addEventListener('change', () => runCalculation(false));
     });
 
-    runCalculation();
+    runCalculation(true);
+
+    // Trigger Success Modal if the hidden input exists
+    const trigger = document.getElementById('triggerSuccessModal');
+    if (trigger) {
+        const successModal = new bootstrap.Modal(document.getElementById('successOperationModal'));
+        successModal.show();
+    }
 });
 
 function handleMultipleFilePreview(input) {
@@ -69,7 +82,8 @@ function renderPreviews() {
             reader.readAsDataURL(file);
         });
     } else {
-        textElement.innerText = "Click to upload product photo";
+        const isEditMode = document.querySelector('input[name="r_product_id"]') !== null;
+        textElement.innerText = isEditMode ? "Click to update photos" : "Click to upload product photo";
     }
 
     const dataTransfer = new DataTransfer();
@@ -86,9 +100,9 @@ function removeImage(event, index) {
 function confirmDelete(id, name) {
     const modalElement = document.getElementById('deleteConfirmModal');
     if (!modalElement) return;
-
-    const deleteModal = new bootstrap.Modal(modalElement);
     document.getElementById('deleteProductName').innerText = name;
-    document.getElementById('confirmDeleteLink').href = `/rga_frames/process/postframe_process.php?action=delete&id=${id}`;
+    document.getElementById('confirmDeleteLink').href = `../process/postframe_process.php?action=delete&id=${id}`;
+    
+    const deleteModal = new bootstrap.Modal(modalElement);
     deleteModal.show();
 }
