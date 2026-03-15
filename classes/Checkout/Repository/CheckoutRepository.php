@@ -20,14 +20,17 @@ class CheckoutRepository {
         return $stmt->get_result()->fetch_assoc() ?: null;
     }
 
+    // UPGRADED: Unified Cart + Aliased Width/Height
     public function getCartItemsForCheckout(int $customer_id): array {
-        $stmt = $this->conn->prepare("
+        // 1. Fetch Frame Items (with Aliases for width and height!)
+        $stmt1 = $this->conn->prepare("
             SELECT
                 ci.*,
+                'FRAME' as category_type,
                 rm.product_name    AS ready_name,
                 fd.design_name     AS custom_design_name,
-                cfp.custom_width,
-                cfp.custom_height
+                cfp.custom_width   AS width, 
+                cfp.custom_height  AS height
             FROM tbl_frame_order_items ci
             JOIN tbl_cart c                        ON ci.cart_id        = c.cart_id
             LEFT JOIN tbl_ready_made_product rm    ON ci.r_product_id   = rm.r_product_id
@@ -35,12 +38,30 @@ class CheckoutRepository {
             LEFT JOIN tbl_frame_designs fd         ON cfp.frame_design_id = fd.frame_design_id
             WHERE c.customer_id = ? AND ci.source_type = 'CART'
         ");
-        $stmt->bind_param("i", $customer_id);
-        $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt1->bind_param("i", $customer_id);
+        $stmt1->execute();
+        $frames = $stmt1->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        // 2. Fetch Standalone Printing Items
+        $stmt2 = $this->conn->prepare("
+            SELECT 
+                pi.*, 
+                'PRINTING' as category_type,
+                pt.paper_name
+            FROM tbl_printing_order_items pi
+            JOIN tbl_cart c ON pi.cart_id = c.cart_id
+            LEFT JOIN tbl_paper_type pt ON pi.paper_type_id = pt.paper_type_id
+            WHERE c.customer_id = ? AND pi.source_type = 'CART'
+        ");
+        $stmt2->bind_param("i", $customer_id);
+        $stmt2->execute();
+        $prints = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        // 3. Merge them together
+        return array_merge($frames, $prints);
     }
 
-    // Returns count of COMPLETED past orders — used for repeat customer discount
+    // Returns count of COMPLETED past orders
     public function getCompletedOrderCount(int $customer_id): int {
         $stmt = $this->conn->prepare("
             SELECT COUNT(*) AS cnt
@@ -57,7 +78,7 @@ class CheckoutRepository {
         $this->conn->begin_transaction();
 
         try {
-            // 1. Insert order — now includes sub_total and discount_amount
+            // 1. Insert order
             $stmt1 = $this->conn->prepare("
                 INSERT INTO tbl_orders
                     (customer_id, order_reference_no, sub_total, discount_amount,
@@ -102,7 +123,7 @@ class CheckoutRepository {
                 $stmt3->execute();
             }
 
-            // 4. Move cart items → order
+            // 4. Move FRAME cart items → order
             $stmt4 = $this->conn->prepare("
                 UPDATE tbl_frame_order_items
                 SET source_type = 'ORDER', order_id = ?, cart_id = NULL
@@ -121,6 +142,16 @@ class CheckoutRepository {
             ");
             $stmt5->bind_param("ii", $order_id, $order_id);
             $stmt5->execute();
+
+            // 6. UPGRADED: Move STANDALONE PRINTING cart items → order
+            $stmt6 = $this->conn->prepare("
+                UPDATE tbl_printing_order_items
+                SET source_type = 'ORDER', order_id = ?, cart_id = NULL
+                WHERE cart_id = (SELECT cart_id FROM tbl_cart WHERE customer_id = ?)
+                  AND source_type = 'CART'
+            ");
+            $stmt6->bind_param("ii", $order_id, $customer_id);
+            $stmt6->execute();
 
             $this->conn->commit();
             return true;

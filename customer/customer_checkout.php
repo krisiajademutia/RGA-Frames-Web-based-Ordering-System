@@ -26,7 +26,7 @@ if ($isBuyNow) {
     $cartItems[] = [
         'is_buy_now'   => true,
         'item_data'    => $itemData,
-        'display_name' => 'Custom Frame (' . $itemData['custom_width'] . '" × ' . $itemData['custom_height'] . '")',
+        'display_name' => 'Custom Frame (' . $itemData['width'] . '" × ' . $itemData['height'] . '")',
         'display_meta' => $svcLabel . ' | Qty: ' . $qty,
         'quantity'     => $qty,
         'sub_total'    => $prices['grand_total'],

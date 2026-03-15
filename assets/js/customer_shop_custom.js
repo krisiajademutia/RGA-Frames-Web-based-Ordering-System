@@ -388,8 +388,8 @@ async function submitAddToCart() {
     fd.append('frame_design_id',    state.frameDesignId  ?? '');
     fd.append('frame_color_id',     state.frameColorId   ?? '');
     fd.append('frame_size_id',      state.frameSizeId    ?? 'OTHER');
-    fd.append('custom_width',       state.frameWidth     ?? 0);
-    fd.append('custom_height',      state.frameHeight    ?? 0);
+    fd.append('width',       state.frameWidth     ?? 0);
+    fd.append('height',      state.frameHeight    ?? 0);
     fd.append('primary_matboard',   state.primaryMatboard   ?? 0);
     fd.append('secondary_matboard', state.secondaryMatboard ?? 0);
     fd.append('mount_type_id',      state.mountTypeId    ?? '');
@@ -437,8 +437,8 @@ async function submitBuyNow() {
     fd.append('frame_design_id',    state.frameDesignId  ?? '');
     fd.append('frame_color_id',     state.frameColorId   ?? '');
     fd.append('frame_size_id',      state.frameSizeId    ?? 'OTHER');
-    fd.append('custom_width',       state.frameWidth     ?? 0);
-    fd.append('custom_height',      state.frameHeight    ?? 0);
+    fd.append('width',       state.frameWidth     ?? 0);
+    fd.append('height',      state.frameHeight    ?? 0);
     fd.append('primary_matboard',   state.primaryMatboard   ?? 0);
     fd.append('secondary_matboard', state.secondaryMatboard ?? 0);
     fd.append('mount_type_id',      state.mountTypeId    ?? '');
