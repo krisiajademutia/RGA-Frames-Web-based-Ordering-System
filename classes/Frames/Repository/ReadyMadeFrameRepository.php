@@ -32,6 +32,17 @@ class ReadyMadeFrameRepository implements FrameRepositoryInterface {
         return $result ? $result->fetch_assoc() : null;
     }
 
+    /**
+     * Get all images for a specific product
+     */
+    public function getProductImages(int $productId) {
+        $sql = "SELECT image_name, is_primary FROM tbl_ready_made_product_images WHERE r_product_id = ? ORDER BY is_primary DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $productId);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
     public function create(array $data) {
         $sql = "INSERT INTO tbl_ready_made_product 
                 (product_name, frame_type_id, frame_design_id, frame_color_id, width, height, product_price) 
@@ -62,6 +73,16 @@ class ReadyMadeFrameRepository implements FrameRepositoryInterface {
         return $stmt->execute();
     }
 
+    /**
+     * Delete a specific image by its name (Used when clicking 'x' in Edit mode)
+     */
+    public function deleteImageByName(string $fileName) {
+        $sql = "DELETE FROM tbl_ready_made_product_images WHERE image_name = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("s", $fileName);
+        return $stmt->execute();
+    }
+
     public function update(int $id, array $data) {
         $sql = "UPDATE tbl_ready_made_product SET 
                 product_name=?, frame_type_id=?, frame_design_id=?, frame_color_id=?, 
@@ -83,19 +104,19 @@ class ReadyMadeFrameRepository implements FrameRepositoryInterface {
     }
 
     public function delete(int $id) {
-    // 1. Delete image records from the database first
-    $stmt_img = $this->db->prepare("DELETE FROM tbl_ready_made_product_images WHERE r_product_id = ?");
-    $stmt_img->bind_param("i", $id);
-    $stmt_img->execute();
+        // 1. Delete image records
+        $stmt_img = $this->db->prepare("DELETE FROM tbl_ready_made_product_images WHERE r_product_id = ?");
+        $stmt_img->bind_param("i", $id);
+        $stmt_img->execute();
 
-    // 2. Delete stock records
-    $stmt1 = $this->db->prepare("DELETE FROM tbl_ready_made_product_stocks WHERE r_product_id = ?");
-    $stmt1->bind_param("i", $id);
-    $stmt1->execute();
+        // 2. Delete stock records
+        $stmt1 = $this->db->prepare("DELETE FROM tbl_ready_made_product_stocks WHERE r_product_id = ?");
+        $stmt1->bind_param("i", $id);
+        $stmt1->execute();
 
-    // 3. Delete the product itself
-    $stmt2 = $this->db->prepare("DELETE FROM tbl_ready_made_product WHERE r_product_id = ?");
-    $stmt2->bind_param("i", $id);
-    return $stmt2->execute();
-}
+        // 3. Delete the product itself
+        $stmt2 = $this->db->prepare("DELETE FROM tbl_ready_made_product WHERE r_product_id = ?");
+        $stmt2->bind_param("i", $id);
+        return $stmt2->execute();
+    }
 }

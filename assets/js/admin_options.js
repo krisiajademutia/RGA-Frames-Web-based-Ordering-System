@@ -51,11 +51,22 @@ function confirmDelete(id, name, tab) {
 /**
  * FIXED PRICE DELETE (Nested Modal Logic)
  */
-function confirmDeleteFpm(id) {
-    // Set the ID in the hidden input of the small delete modal
-    document.getElementById('delete_fpm_id').value = id;
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteFixedPriceModal'));
-    deleteModal.show();
+function confirmDelete(id, name, tab) {
+    document.getElementById('deleteOptionName').textContent = name;
+    document.getElementById('deleteOptionId').value = id;
+    document.getElementById('deleteOptionTab').value = tab;
+    
+    let nameInput = document.querySelector('input[name="option_name"]');
+    if(!nameInput) {
+        nameInput = document.createElement('input');
+        nameInput.type = 'hidden';
+        nameInput.name = 'option_name';
+        document.getElementById('deleteOptionForm').appendChild(nameInput);
+    }
+    nameInput.value = name;
+
+    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    modal.show();
 }
 
 // Fix for Bootstrap scroll lock issue when closing nested modals

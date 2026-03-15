@@ -81,18 +81,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
         </div>
     </div>
 
-    <?php if($status === '1'): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            Operation successful.
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php elseif($status === '0' || $error_msg): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            Operation failed<?= isset($_GET['dberr']) ? ': ' . htmlspecialchars($_GET['dberr']) : '' ?>.
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-
     <div class="opt-card" id="form-section"> 
         <div class="opt-card-header">
             <?= $is_editing ? 'Edit' : 'Add New' ?> <?= htmlspecialchars($tab_label ?? '') ?>
@@ -509,6 +497,61 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
         </div>
     </div>
 </div>
+<?php if (isset($_SESSION['opt_success_modal'])): ?>
+    <div class="modal fade" id="optSuccessModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content opt-alert-content shadow">
+                <div class="modal-header border-0 pt-3 pe-3">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center pb-5">
+                    <div class="mb-4">
+                        <i class="fa-solid fa-circle-check opt-alert-icon"></i>
+                    </div>
+                    <h5 class="opt-alert-title px-4">
+                        Custom frame option <strong style="color: #111827;"><?= htmlspecialchars($_SESSION['opt_success_modal']['name']) ?></strong> 
+                        has been <?= htmlspecialchars($_SESSION['opt_success_modal']['action']) ?> successfully!
+                    </h5>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var optModal = new bootstrap.Modal(document.getElementById('optSuccessModal'));
+            optModal.show();
+        });
+    </script>
+    <?php unset($_SESSION['opt_success_modal']); ?>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['opt_error_modal'])): ?>
+    <div class="modal fade" id="optErrorModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content opt-alert-content shadow">
+                <div class="modal-header border-0 pt-3 pe-3">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center pb-5">
+                    <div class="mb-4">
+                        <i class="fa-solid fa-circle-xmark opt-alert-icon" style="color: #dc3545;"></i>
+                    </div>
+                    <h4 class="fw-bold mb-2"><?= htmlspecialchars($_SESSION['opt_error_modal']['title']) ?></h4>
+                    <p class="opt-alert-title px-4">
+                        <?= htmlspecialchars($_SESSION['opt_error_modal']['message']) ?>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var optErrModal = new bootstrap.Modal(document.getElementById('optErrorModal'));
+            optErrModal.show();
+        });
+    </script>
+    <?php unset($_SESSION['opt_error_modal']); ?>
+<?php endif; ?>
 <script src="../assets/js/admin_options.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <script>
