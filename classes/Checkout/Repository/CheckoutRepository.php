@@ -74,11 +74,12 @@ class CheckoutRepository {
         return (int)($row['cnt'] ?? 0);
     }
 
-    public function placeOrder(int $customer_id, array $orderData, array $cartItems, ?array $paymentProof): bool {
+    // UPGRADED: Now accepts $isBuyNow and $buyNowItemData to handle the Omni-channel saving!
+    public function placeOrder(int $customer_id, array $orderData, array $cartItems, ?array $paymentProof, bool $isBuyNow = false, ?array $buyNowItemData = null): bool {
         $this->conn->begin_transaction();
 
         try {
-            // 1. Insert order
+            // 1. Insert Base Order
             $stmt1 = $this->conn->prepare("
                 INSERT INTO tbl_orders
                     (customer_id, order_reference_no, sub_total, discount_amount,
@@ -99,7 +100,7 @@ class CheckoutRepository {
             $stmt1->execute();
             $order_id = $this->conn->insert_id;
 
-            // 2. Insert payment record
+            // 2. Insert Payment Record
             $stmt2 = $this->conn->prepare("
                 INSERT INTO tbl_payment (order_id, payment_status, total_amount)
                 VALUES (?, 'PENDING', ?)
@@ -108,7 +109,7 @@ class CheckoutRepository {
             $stmt2->execute();
             $payment_id = $this->conn->insert_id;
 
-            // 3. Insert GCash payment proof if provided
+            // 3. Payment Proof (If GCash)
             if ($paymentProof) {
                 $stmt3 = $this->conn->prepare("
                     INSERT INTO tbl_payment_proof_uploads
@@ -123,35 +124,80 @@ class CheckoutRepository {
                 $stmt3->execute();
             }
 
-            // 4. Move FRAME cart items → order
-            $stmt4 = $this->conn->prepare("
-                UPDATE tbl_frame_order_items
-                SET source_type = 'ORDER', order_id = ?, cart_id = NULL
-                WHERE cart_id = (SELECT cart_id FROM tbl_cart WHERE customer_id = ?)
-                  AND source_type = 'CART'
-            ");
-            $stmt4->bind_param("ii", $order_id, $customer_id);
-            $stmt4->execute();
+            // 4. THE SMART SAVER (Buy Now vs Cart)
+            if ($isBuyNow && $buyNowItemData) {
+                $itemType = $buyNowItemData['item_type'] ?? 'CUSTOM_FRAME';
+                $qty = (int)($buyNowItemData['quantity'] ?? 1);
+                $subTotal = (float)$orderData['sub_total']; 
 
-            // 5. Update linked printing order items
-            $stmt5 = $this->conn->prepare("
-                UPDATE tbl_printing_order_items poi
-                JOIN tbl_frame_order_items foi ON poi.printing_order_item_id = foi.printing_order_item_id
-                SET poi.order_id = ?, poi.cart_id = NULL
-                WHERE foi.order_id = ?
-            ");
-            $stmt5->bind_param("ii", $order_id, $order_id);
-            $stmt5->execute();
+                if ($itemType === 'CUSTOM_FRAME') {
+                    // Create Custom Frame profile
+                    $stmtCF = $this->conn->prepare("
+                        INSERT INTO tbl_custom_frame_product 
+                        (service_type, frame_type_id, frame_design_id, frame_color_id, frame_size_id, custom_width, custom_height, primary_matboard_id, secondary_matboard_id, mount_type_id, paper_type_id, image_path) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ");
+                    $stmtCF->bind_param("siiiidddiiis", 
+                        $buyNowItemData['service_type'], $buyNowItemData['frame_type_id'], $buyNowItemData['frame_design_id'], 
+                        $buyNowItemData['frame_color_id'], $buyNowItemData['frame_size_id'], $buyNowItemData['width'], 
+                        $buyNowItemData['height'], $buyNowItemData['primary_matboard_id'], $buyNowItemData['secondary_matboard_id'], 
+                        $buyNowItemData['mount_type_id'], $buyNowItemData['paper_type_id'], $buyNowItemData['image_path']
+                    );
+                    $stmtCF->execute();
+                    $c_product_id = $this->conn->insert_id;
+                    
+                    // Link to order items
+                    $stmtOrder = $this->conn->prepare("INSERT INTO tbl_frame_order_items (order_id, source_type, c_product_id, quantity, sub_total) VALUES (?, 'ORDER', ?, ?, ?)");
+                    $stmtOrder->bind_param("iiid", $order_id, $c_product_id, $qty, $subTotal);
+                    $stmtOrder->execute();
 
-            // 6. UPGRADED: Move STANDALONE PRINTING cart items → order
-            $stmt6 = $this->conn->prepare("
-                UPDATE tbl_printing_order_items
-                SET source_type = 'ORDER', order_id = ?, cart_id = NULL
-                WHERE cart_id = (SELECT cart_id FROM tbl_cart WHERE customer_id = ?)
-                  AND source_type = 'CART'
-            ");
-            $stmt6->bind_param("ii", $order_id, $customer_id);
-            $stmt6->execute();
+                } elseif ($itemType === 'PRINTING') {
+                    // Save straight to printing table
+                    $stmtPrint = $this->conn->prepare("
+                        INSERT INTO tbl_printing_order_items 
+                        (order_id, source_type, paper_type_id, width_inch, height_inch, image_path, quantity, sub_total) 
+                        VALUES (?, 'ORDER', ?, ?, ?, ?, ?, ?)
+                    ");
+                    $stmtPrint->bind_param("iiddsid", 
+                        $order_id, $buyNowItemData['paper_type_id'], $buyNowItemData['width'], 
+                        $buyNowItemData['height'], $buyNowItemData['image_path'], $qty, $subTotal
+                    );
+                    $stmtPrint->execute();
+
+                } elseif ($itemType === 'READY_MADE') {
+                    // Save straight to frame order table using R_product_id
+                    $stmtRM = $this->conn->prepare("INSERT INTO tbl_frame_order_items (order_id, source_type, r_product_id, quantity, sub_total) VALUES (?, 'ORDER', ?, ?, ?)");
+                    $stmtRM->bind_param("iiid", $order_id, $buyNowItemData['r_product_id'], $qty, $subTotal);
+                    $stmtRM->execute();
+                }
+
+            } else {
+                // It's a CART checkout - Move ALL items from Cart to Order
+                
+                // Move Frame Items
+                $this->conn->query("
+                    UPDATE tbl_frame_order_items 
+                    SET source_type = 'ORDER', order_id = $order_id, cart_id = NULL 
+                    WHERE cart_id = (SELECT cart_id FROM tbl_cart WHERE customer_id = $customer_id) 
+                    AND source_type = 'CART'
+                ");
+                
+                // Update linked printing items (Frame + Print combo)
+                $this->conn->query("
+                    UPDATE tbl_printing_order_items poi 
+                    JOIN tbl_frame_order_items foi ON poi.printing_order_item_id = foi.printing_order_item_id 
+                    SET poi.order_id = $order_id, poi.cart_id = NULL 
+                    WHERE foi.order_id = $order_id
+                ");
+                
+                // Move Standalone Printing Items
+                $this->conn->query("
+                    UPDATE tbl_printing_order_items 
+                    SET source_type = 'ORDER', order_id = $order_id, cart_id = NULL 
+                    WHERE cart_id = (SELECT cart_id FROM tbl_cart WHERE customer_id = $customer_id) 
+                    AND source_type = 'CART'
+                ");
+            }
 
             $this->conn->commit();
             return true;
