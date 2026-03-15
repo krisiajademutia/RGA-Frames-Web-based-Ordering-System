@@ -24,5 +24,9 @@ if ($paper_type_id > 0) {
         echo "<option value='$dim' data-width='$w' data-height='$h'>$dim</option>";
     }
     echo '<option value="Other">Other (Custom Size)</option>';
+    // In your loop while fetching sizes from DB:
+      echo '<option value="'.$row['size_id'].'" 
+      data-width="'.$row['max_width_inch'].'" 
+      data-height="'.$row['max_height_inch'].'">'.$row['size_name'].'</option>';
 }
 ?>

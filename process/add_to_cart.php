@@ -2,7 +2,6 @@
 include_once __DIR__ . '/../config/db_connect.php';
 session_start();
 
-// Use user_id from session (ensure this matches your login logic)
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['success' => false, 'message' => 'Please log in.']);
     exit;
@@ -20,11 +19,32 @@ if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
     $customer_id = $_SESSION['user_id'];
     
     // Inputs from JS
-    $paper_type_id = (int)$_POST['type']; // This is now the ID
+    $paper_type_id = (int)$_POST['type'];
     $w = (float)$_POST['width'];
     $h = (float)$_POST['height'];
     $qty = (int)$_POST['qty'];
     $sub_total = (float)$_POST['total_price'];
+
+    // --- SECURITY CHECK START ---
+    $stmt_check = $conn->prepare("SELECT max_width_inch, max_height_inch FROM tbl_paper_type WHERE paper_type_id = ?");
+    $stmt_check->bind_param("i", $paper_type_id);
+    $stmt_check->execute();
+    $result_check = $stmt_check->get_result();
+    $paper = $result_check->fetch_assoc();
+
+    if ($paper) {
+        $max_w = (float)$paper['max_width_inch'];
+        $max_h = (float)$paper['max_height_inch'];
+
+        // Only enforce if max values are defined (greater than 0)
+        if ($max_w > 0 && ($w > $max_w || $h > $max_h)) {
+            // Delete the uploaded file since the order is invalid
+            unlink($target_file);
+            echo json_encode(['success' => false, 'message' => "Invalid dimensions. Maximum allowed for this paper is {$max_w}\" x {$max_h}\"."]);
+            exit;
+        }
+    }
+    // --- SECURITY CHECK END ---
 
     // 1. Get or Create Cart
     $stmt_cart = $conn->prepare("SELECT cart_id FROM tbl_cart WHERE customer_id = ? LIMIT 1");
@@ -42,7 +62,6 @@ if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
     }
 
     // 2. Insert into tbl_printing_order_items
-    // Removed 'dimension' and 'total_inch' as they are not in your schema
     $insert_sql = "INSERT INTO tbl_printing_order_items 
                    (cart_id, paper_type_id, image_path, width_inch, height_inch, quantity, sub_total) 
                    VALUES (?, ?, ?, ?, ?, ?, ?)";

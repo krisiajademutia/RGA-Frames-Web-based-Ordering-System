@@ -135,23 +135,42 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
 
     // Inline Validation Helper
     function validateForm() {
-        let isValid = true;
-        document.querySelectorAll('.text-danger').forEach(el => el.classList.add('d-none'));
+    let isValid = true;
+    // Reset all error messages
+    document.querySelectorAll('.text-danger').forEach(el => el.classList.add('d-none'));
 
-        if (!fileInput.files[0]) {
-            document.getElementById('file-error').classList.remove('d-none');
-            isValid = false;
-        }
-        if (paperSelect.selectedIndex === 0) {
-            document.getElementById('paper-error').classList.remove('d-none');
-            isValid = false;
-        }
-        if (!customW.value || !customH.value || parseFloat(customW.value) <= 0 || parseFloat(customH.value) <= 0) {
-            document.getElementById('dim-error').classList.remove('d-none');
-            isValid = false;
-        }
-        return isValid;
+    // 1. File validation
+    if (!fileInput.files[0]) {
+        document.getElementById('file-error').classList.remove('d-none');
+        isValid = false;
     }
+
+    // 2. Paper selection validation
+    if (paperSelect.selectedIndex === 0) {
+        document.getElementById('paper-error').classList.remove('d-none');
+        isValid = false;
+    }
+
+    // 3. Combined dimension validation
+    const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+    const maxWidth = parseFloat(selectedOption.getAttribute('data-width')) || 0;
+    const maxHeight = parseFloat(selectedOption.getAttribute('data-height')) || 0;
+    const userW = parseFloat(customW.value);
+    const userH = parseFloat(customH.value);
+    const dimError = document.getElementById('dim-error');
+
+    if (!customW.value || !customH.value || userW <= 0 || userH <= 0) {
+        dimError.innerText = "Please provide valid dimensions.";
+        dimError.classList.remove('d-none');
+        isValid = false;
+    } else if (maxWidth > 0 && (userW > maxWidth || userH > maxHeight)) {
+        dimError.innerText = `Dimensions exceed limit (${maxWidth}" x ${maxHeight}").`;
+        dimError.classList.remove('d-none');
+        isValid = false;
+    }
+
+    return isValid;
+}
 
     // Calculate Area (Total Inch)
     function calculateArea() {
