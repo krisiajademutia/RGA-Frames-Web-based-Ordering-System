@@ -35,22 +35,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'add_fixed_price' || $action === 'update_fixed_price' || $action === 'delete_fixed_price') {
         $success = false;
         $msg_action = "";
+        $displayName = "Pricing record";
+
+        // Fetch the Name/Dimension based on ID if updating or deleting
+        $f_id = (int)($_POST['fixed_price_id'] ?? 0);
+        if ($f_id > 0) {
+            $stmt = $conn->prepare("SELECT dimension FROM tbl_fixed_print_prices WHERE fixed_price_id = ?");
+            $stmt->bind_param("i", $f_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($row = $result->fetch_assoc()) {
+                $displayName = $row['dimension'];
+            }
+        } elseif ($action === 'add_fixed_price') {
+            $displayName = $_POST['dimension'] ?? 'New Pricing';
+        }
 
         if ($action === 'add_fixed_price') {
             $success = $fixedPriceRepo->create($_POST);
             $msg_action = "added";
         } elseif ($action === 'update_fixed_price') {
-            $id = (int)($_POST['fixed_price_id'] ?? 0);
-            $success = ($id > 0) ? $fixedPriceRepo->update($id, $_POST) : false;
+            $success = ($f_id > 0) ? $fixedPriceRepo->update($f_id, $_POST) : false;
             $msg_action = "updated";
         } elseif ($action === 'delete_fixed_price') {
-            $id = (int)($_POST['fixed_price_id'] ?? 0);
-            $success = ($id > 0) ? $fixedPriceRepo->delete($id) : false;
+            $success = ($f_id > 0) ? $fixedPriceRepo->delete($f_id) : false;
             $msg_action = "deleted";
         }
 
         if ($success) {
-            $_SESSION['opt_success_modal'] = ['name' => 'Pricing record', 'action' => $msg_action];
+            $_SESSION['opt_success_modal'] = [
+                'name' => $displayName, 
+                'action' => $msg_action, 
+                'type' => 'fixed' 
+            ];
         } else {
             $_SESSION['opt_error_modal'] = ['title' => 'Operation Failed', 'message' => 'Could not process the pricing record.'];
         }
@@ -63,10 +80,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_option'])) {
     $data = $_POST;
     $data['is_active'] = isset($_POST['is_active']) ? (int)$_POST['is_active'] : 1;
+
+    // Logic to construct display name based on specific tab requirements
+    if ($active_tab === 'frame_sizes') {
+        $displayName = ($_POST['width'] ?? '0') . 'x' . ($_POST['height'] ?? '0');
+    } elseif ($active_tab === 'mount_types') {
+        $displayName = $_POST['generic_name'] ?? 'Mount Type';
+    } elseif ($active_tab === 'matboard_colors') {
+        $displayName = $_POST['matboard_color_name'] ?? 'Matboard Color';
+    } else {
+        $displayName = $_POST['name'] ?? $_POST['type_name'] ?? $_POST['design_name'] ?? $_POST['color_name'] ?? $_POST['paper_name'] ?? 'Option';
+    }
+
     $success = $service->addOption($active_tab, $data, $_FILES);
 
     if ($success) {
-        $_SESSION['opt_success_modal'] = ['name' => $_POST['name'] ?? 'Option', 'action' => 'added'];
+        $_SESSION['opt_success_modal'] = [
+            'name' => $displayName, 
+            'action' => 'added', 
+            'type' => $active_tab 
+        ];
     } else {
         $_SESSION['opt_error_modal'] = ['title' => 'Add Failed', 'message' => 'The item could not be added.'];
     }
@@ -80,10 +113,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_option']) || 
     $data = $_POST;
     $data['is_active'] = isset($_POST['is_active']) ? (int)$_POST['is_active'] : 1;
 
+    $currentRecord = $service->getOptionById($active_tab, $id);
+    
+    // Fetch the name from the database record (works for dimension, names, etc.)
+    $displayName = $currentRecord['dimension'] ?? $currentRecord['type_name'] ?? $currentRecord['design_name'] ?? $currentRecord['color_name'] ?? $currentRecord['matboard_color_name'] ?? $currentRecord['mount_name'] ?? $currentRecord['paper_name'] ?? 'Option';
+
     if ($id > 0 && $active_tab !== '') {
         $success = $service->updateOption($active_tab, $id, $data, $_FILES);
         if ($success) {
-            $_SESSION['opt_success_modal'] = ['name' => $_POST['name'] ?? 'Option', 'action' => 'updated'];
+            $_SESSION['opt_success_modal'] = [
+                'name' => $displayName, 
+                'action' => 'updated', 
+                'type' => $active_tab
+            ];
         } else {
             $_SESSION['opt_error_modal'] = ['title' => 'Update Failed', 'message' => 'Changes could not be saved.'];
         }
@@ -96,11 +138,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_option']) || 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'delete') {
     $tab = $_POST['tab'] ?? $active_tab;
     $id  = (int)($_POST['option_id'] ?? 0);
-    $name = $_POST['option_name'] ?? 'Item';
+    
+    $currentRecord = $service->getOptionById($tab, $id);
+    
+    // Fetch the name from the database record
+    $displayName = $currentRecord['dimension'] ?? $currentRecord['type_name'] ?? $currentRecord['design_name'] ?? $currentRecord['color_name'] ?? $currentRecord['matboard_color_name'] ?? $currentRecord['mount_name'] ?? $currentRecord['paper_name'] ?? 'Item';
 
     try {
         if ($id > 0 && $service->deleteOption($tab, $id)) {
-            $_SESSION['opt_success_modal'] = ['name' => $name, 'action' => 'deleted'];
+            $_SESSION['opt_success_modal'] = [
+                'name' => $displayName, 
+                'action' => 'deleted', 
+                'type' => $tab
+            ];
         } else {
             $_SESSION['opt_error_modal'] = ['title' => 'Delete Failed', 'message' => 'The item could not be removed.'];
         }
