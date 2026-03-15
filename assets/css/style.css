@@ -4367,7 +4367,7 @@ body {
 }
 
 .ps-card-header {
-    background-color: var(--forest-muted);
+    background-color: var(--forest-dark);
     color: #fff;
     padding: 10px 20px;
     font-size: 0.75rem;

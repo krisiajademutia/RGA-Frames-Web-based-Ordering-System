@@ -40,7 +40,10 @@ if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
         if ($max_w > 0 && ($w > $max_w || $h > $max_h)) {
             // Delete the uploaded file since the order is invalid
             unlink($target_file);
-            echo json_encode(['success' => false, 'message' => "Invalid dimensions. Maximum allowed for this paper is {$max_w}\" x {$max_h}\"."]);
+            
+            // REMOVED: The dimension violation message.
+            // We return success false with no message so the JS doesn't trigger a pop-up.
+            echo json_encode(['success' => false, 'message' => '']); 
             exit;
         }
     }

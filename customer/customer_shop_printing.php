@@ -69,17 +69,18 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
                                 <div class="col-4">
                                     <label class="small text-muted">Width (in)</label>
                                     <input type="number" class="form-control" id="custom-width" placeholder="W" step="0.1" readonly>
+                                    <span id="width-error" class="text-danger" style="font-size: 0.7rem; color: #dc3545; display: block; min-height: 1rem; font-weight: bold;"></span>
                                 </div>
                                 <div class="col-4">
                                     <label class="small text-muted">Height (in)</label>
                                     <input type="number" class="form-control" id="custom-height" placeholder="H" step="0.1" readonly>
+                                    <span id="height-error" class="text-danger" style="font-size: 0.7rem; color: #dc3545; display: block; min-height: 1rem; font-weight: bold;"></span>
                                 </div>
                                 <div class="col-4">
                                     <label class="small text-muted">Total Inch</label>
                                     <input type="number" class="form-control" id="total-inch-input" placeholder="Total" step="0.1" readonly style="background-color: #f8f9fa;">
                                 </div>
                             </div>
-                            <span id="dim-error" class="text-danger small d-none">Please provide valid dimensions.</span>
                         </div>
                     </div>
 
@@ -116,63 +117,78 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
     const btnCart = document.querySelector('.ps-btn-cart');
     const uploadArea = document.getElementById('upload-area');
 
-
     function showToast(message, type = 'success') {
-    Swal.fire({
-        toast: true,
-        position: 'bottom-end', 
-        icon: type,
-        title: message,
-        showConfirmButton: false,
-        timer: 4000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer);
-            toast.addEventListener('mouseleave', Swal.resumeTimer);
-        }
-    });
-}
+        Swal.fire({
+            toast: true,
+            position: 'bottom-end', 
+            icon: type,
+            title: message,
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true
+        });
+    }
 
-    // Inline Validation Helper
     function validateForm() {
     let isValid = true;
-    // Reset all error messages
-    document.querySelectorAll('.text-danger').forEach(el => el.classList.add('d-none'));
+    
+    // Select the specific error spans
+    const wErr = document.getElementById('width-error');
+    const hErr = document.getElementById('height-error');
+    const fileErr = document.getElementById('file-error');
+    const paperErr = document.getElementById('paper-error');
 
-    // 1. File validation
+    // 1. Reset all error messages
+    [wErr, hErr, fileErr, paperErr].forEach(el => {
+        el.innerText = "";
+        el.classList.add('d-none');
+    });
+
+    // 2. File validation
     if (!fileInput.files[0]) {
-        document.getElementById('file-error').classList.remove('d-none');
+        fileErr.innerText = "Please select an image.";
+        fileErr.classList.remove('d-none');
         isValid = false;
     }
 
-    // 2. Paper selection validation
+    // 3. Paper selection validation
     if (paperSelect.selectedIndex === 0) {
-        document.getElementById('paper-error').classList.remove('d-none');
+        paperErr.innerText = "Please select a paper type.";
+        paperErr.classList.remove('d-none');
         isValid = false;
     }
 
-    // 3. Combined dimension validation
+    // 4. Dimension validation
     const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
-    const maxWidth = parseFloat(selectedOption.getAttribute('data-width')) || 0;
-    const maxHeight = parseFloat(selectedOption.getAttribute('data-height')) || 0;
+    const maxWidth = parseFloat(selectedOption?.dataset.maxwidth) || 0;
+    const maxHeight = parseFloat(selectedOption?.dataset.maxheight) || 0;
     const userW = parseFloat(customW.value);
     const userH = parseFloat(customH.value);
-    const dimError = document.getElementById('dim-error');
 
-    if (!customW.value || !customH.value || userW <= 0 || userH <= 0) {
-        dimError.innerText = "Please provide valid dimensions.";
-        dimError.classList.remove('d-none');
+    // Width Check
+    if (!customW.value || userW <= 0) {
+        wErr.innerText = "Required";
+        wErr.classList.remove('d-none');
         isValid = false;
-    } else if (maxWidth > 0 && (userW > maxWidth || userH > maxHeight)) {
-        dimError.innerText = `Dimensions exceed limit (${maxWidth}" x ${maxHeight}").`;
-        dimError.classList.remove('d-none');
+    } else if (maxWidth > 0 && userW > maxWidth) {
+        wErr.innerText = `Width must not exceed ${maxWidth}"`;
+        wErr.classList.remove('d-none');
+        isValid = false;
+    }
+
+    // Height Check
+    if (!customH.value || userH <= 0) {
+        hErr.innerText = "Required";
+        hErr.classList.remove('d-none');
+        isValid = false;
+    } else if (maxHeight > 0 && userH > maxHeight) {
+        hErr.innerText = `Height must not exceed ${maxHeight}"`;
+        hErr.classList.remove('d-none');
         isValid = false;
     }
 
     return isValid;
 }
-
-    // Calculate Area (Total Inch)
     function calculateArea() {
         const w = parseFloat(customW.value) || 0;
         const h = parseFloat(customH.value) || 0;
@@ -180,7 +196,6 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
         totalInchInput.value = area > 0 ? area : '';
     }
 
-    // 1. Price Calculation Logic
     function updatePrice() {
         const typeId = paperSelect.value; 
         const size = sizeSelect.value;
@@ -189,7 +204,7 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
         if (!typeId || size === 'Select a paper name first') return;
 
         const formData = new URLSearchParams();
-        formData.append('type', typeId); // Sends ID to get_print_price.php
+        formData.append('type', typeId);
         formData.append('size', size);
         formData.append('width', customW.value || 0);
         formData.append('height', customH.value || 0);
@@ -202,8 +217,7 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
         });
     }
 
-   // 2. Updated Add to Cart 
-        btnCart.addEventListener('click', function() {
+    btnCart.addEventListener('click', function() {
         if (!validateForm()) return;
 
         const formData = new FormData();
@@ -224,7 +238,7 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
         .then(data => {
             if(data.success) {
                 showToast('Item successfully added to cart.');
-
+                // Clear Form
                 fileInput.value = ''; 
                 paperSelect.selectedIndex = 0; 
                 sizeSelect.innerHTML = '<option selected disabled>Select size</option>'; 
@@ -237,9 +251,11 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
                 imagePreview.src = '#';
                 uploadContent.classList.remove('d-none');
                 previewWrapper.classList.add('d-none');
-
             } else {
-                showToast(data.message, 'error');
+                // ONLY show toast if it's NOT a dimension violation (since that's already shown inline)
+                if (data.message && !data.message.includes("dimensions")) {
+                    showToast(data.message, 'error');
+                }
             }
         })
         .catch(() => showToast('A connection error occurred.', 'error'))
@@ -249,16 +265,14 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
         });
     });
 
-    // 3. Event Listeners for Price
     [paperSelect, sizeSelect].forEach(el => el.addEventListener('change', updatePrice));
-    
-    // 4. Dynamic Input for Custom Sizes
     [customW, customH].forEach(el => {
-        el.addEventListener('input', () => {
-            calculateArea();
-            updatePrice();
-        });
+    el.addEventListener('input', () => {
+        calculateArea();
+        validateForm();
+        updatePrice();
     });
+});
 
     document.getElementById('plus-btn').addEventListener('click', () => { 
         qtyInput.value = parseInt(qtyInput.value) + 1; 
@@ -272,7 +286,6 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
         } 
     });
 
-    // 5. Paper Type Selection
     paperSelect.addEventListener('change', function() {
         fetch('../process/fetch_print_sizes.php', {
             method: 'POST',
@@ -283,17 +296,14 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
         .then(html => { 
             sizeSelect.innerHTML = html; 
             sizeSelect.disabled = false; 
-            // Reset dimensions on paper change
             customW.value = '';
             customH.value = '';
             totalInchInput.value = '';
         });
     });
 
-    // 6. Size Selection Logic
     sizeSelect.addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
-        
         if (this.value === 'Other') {
             customW.readOnly = false;
             customH.readOnly = false;
@@ -304,19 +314,13 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
         } else {
             customW.readOnly = true;
             customH.readOnly = true;
-            
-            // Get values from the data attributes in fetch_sizes.php
-            const w = selectedOption.getAttribute('data-width');
-            const h = selectedOption.getAttribute('data-height');
-            
-            customW.value = w || 0;
-            customH.value = h || 0;
+            customW.value = selectedOption.getAttribute('data-width') || 0;
+            customH.value = selectedOption.getAttribute('data-height') || 0;
             calculateArea();
         }
         updatePrice();
     });
 
-    // 7. Image Preview
     fileInput.addEventListener('change', function() {
         const file = this.files[0];
         if (file) {
@@ -330,18 +334,13 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
         }
     });
 
+    uploadArea.addEventListener('click', function(e) {
+        if (e.target !== fileInput) fileInput.click();
+    });
 
-uploadArea.addEventListener('click', function(e) {
-    // Only trigger if we aren't clicking the file input directly
-    if (e.target !== fileInput) {
-        fileInput.click();
-    }
-});
-
-// Prevent the file input's own click from bubbling up to the upload area
-fileInput.addEventListener('click', function(e) {
-    e.stopPropagation();
-});
+    fileInput.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
 </script>
 </body>
 </html>
