@@ -28,7 +28,7 @@ $service->registerRepository('paper_types',     new PaperTypeRepository($conn));
 $fixedPriceRepo = new FixedPriceRepository($conn);
 
 $action = $_POST['action'] ?? '';
-$active_tab = $_GET['tab'] ?? $_POST['tab'] ?? 'frame_types';
+$active_tab = $_POST['tab'] ?? $_GET['tab'] ?? 'frame_types';
 
 // ── FIXED PRINT PRICE ACTIONS ──────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -37,7 +37,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $msg_action = "";
         $displayName = "Pricing record";
 
-        // Fetch the Name/Dimension based on ID if updating or deleting
         $f_id = (int)($_POST['fixed_price_id'] ?? 0);
         if ($f_id > 0) {
             $stmt = $conn->prepare("SELECT dimension FROM tbl_fixed_print_prices WHERE fixed_price_id = ?");
@@ -81,7 +80,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_option'])) {
     $data = $_POST;
     $data['is_active'] = isset($_POST['is_active']) ? (int)$_POST['is_active'] : 1;
 
-    // Logic to construct display name based on specific tab requirements
     if ($active_tab === 'frame_sizes') {
         $displayName = ($_POST['width'] ?? '0') . 'x' . ($_POST['height'] ?? '0');
     } elseif ($active_tab === 'mount_types') {
@@ -115,7 +113,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_option']) || 
 
     $currentRecord = $service->getOptionById($active_tab, $id);
     
-    // Fetch the name from the database record (works for dimension, names, etc.)
     $displayName = $currentRecord['dimension'] ?? $currentRecord['type_name'] ?? $currentRecord['design_name'] ?? $currentRecord['color_name'] ?? $currentRecord['matboard_color_name'] ?? $currentRecord['mount_name'] ?? $currentRecord['paper_name'] ?? 'Option';
 
     if ($id > 0 && $active_tab !== '') {
@@ -140,8 +137,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'delete') {
     $id  = (int)($_POST['option_id'] ?? 0);
     
     $currentRecord = $service->getOptionById($tab, $id);
-    
-    // Fetch the name from the database record
     $displayName = $currentRecord['dimension'] ?? $currentRecord['type_name'] ?? $currentRecord['design_name'] ?? $currentRecord['color_name'] ?? $currentRecord['matboard_color_name'] ?? $currentRecord['mount_name'] ?? $currentRecord['paper_name'] ?? 'Item';
 
     try {

@@ -53,6 +53,7 @@ class FrameDesignRepository implements OptionRepositoryInterface {
         $price = $data['price'] ?? 0;
         $isActive = (int)($data['is_active'] ?? 1);
         $existingImages = $data['existing_images'] ?? []; // Array of image names to KEEP
+        $primaryExistingImage = $data['primary_existing_image'] ?? null; // Specific image name to be primary
 
         // 1. Update design info
         $stmt = $this->db->prepare("UPDATE tbl_frame_designs SET design_name = ?, price = ?, is_active = ? WHERE frame_design_id = ?");
@@ -72,10 +73,23 @@ class FrameDesignRepository implements OptionRepositoryInterface {
             }
         }
 
-        // 3. Upload new images
+        // 3. Reset all images to NOT primary first (to ensure a clean state)
+        $this->db->query("UPDATE tbl_frame_design_images SET is_primary = 0 WHERE frame_design_id = $id");
+
+        // 4. Set the new primary among existing images if one was designated via JavaScript
+        if ($primaryExistingImage) {
+            $stmtPrimary = $this->db->prepare("UPDATE tbl_frame_design_images SET is_primary = 1 WHERE frame_design_id = ? AND image_name = ?");
+            $stmtPrimary->bind_param("is", $id, $primaryExistingImage);
+            $stmtPrimary->execute();
+        }
+
+        // 5. Upload new images
         if (!empty($files['design_images']['name'][0])) {
-            // If no images were kept, the first new one becomes primary
-            $hasPrimary = $this->db->query("SELECT 1 FROM tbl_frame_design_images WHERE frame_design_id = $id AND is_primary = 1")->num_rows > 0;
+            // Check if we still need a primary (if no existing image was set as primary in step 4)
+            $res = $this->db->query("SELECT 1 FROM tbl_frame_design_images WHERE frame_design_id = $id AND is_primary = 1");
+            $hasPrimary = $res->num_rows > 0;
+            
+            // If hasPrimary is false, the first new uploaded image will become primary
             $this->uploadImages($id, $files['design_images'], !$hasPrimary);
         }
 
@@ -109,6 +123,9 @@ class FrameDesignRepository implements OptionRepositoryInterface {
                 $stmt = $this->db->prepare("INSERT INTO tbl_frame_design_images (frame_design_id, image_name, is_primary) VALUES (?, ?, ?)");
                 $stmt->bind_param("isi", $designId, $imageName, $isPrimary);
                 $stmt->execute();
+                
+                // Once we have set one as primary, we don't set any more from this loop
+                if ($isPrimary) $setFirstAsPrimary = false;
             }
         }
     }

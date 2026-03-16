@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const width = parseFloat(widthInput.value) || 0;
             const height = parseFloat(heightInput.value) || 0;
             
-            // Fetch multiplier from the data attribute of the selected option
             const selectedOption = paperSelect.options[paperSelect.selectedIndex];
             const multiplier = selectedOption ? parseFloat(selectedOption.getAttribute('data-multiplier')) : 0;
 
@@ -30,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        // Listen for changes in dimensions or paper selection
         widthInput.addEventListener('input', calculateFpmPrice);
         heightInput.addEventListener('input', calculateFpmPrice);
         paperSelect.addEventListener('change', calculateFpmPrice);
@@ -50,26 +48,21 @@ function confirmDelete(id, name, tab) {
 }
 
 /**
- * FIXED PRICE DELETE (Specific Logic for Fixed Print Prices)
+ * FIXED PRICE DELETE
  */
 function confirmDeleteFpm(id) {
-    // Set the ID in the hidden input of the Fixed Price Delete Modal
     const idInput = document.getElementById('delete_fpm_id');
     if (idInput) {
         idInput.value = id;
     }
-
-    // Trigger the specific Fixed Price Delete Modal
     const modal = new bootstrap.Modal(document.getElementById('deleteFixedPriceModal'));
     modal.show();
 }
 
-// Fix for Bootstrap scroll lock issue when closing nested modals
 document.addEventListener('DOMContentLoaded', () => {
     const deleteFpmModalEl = document.getElementById('deleteFixedPriceModal');
     if (deleteFpmModalEl) {
         deleteFpmModalEl.addEventListener('hidden.bs.modal', function () {
-            // If the main management modal is still open, re-apply the scroll class to body
             if (document.querySelector('#fixedPriceModal.show')) {
                 document.body.classList.add('modal-open');
                 document.body.style.overflow = 'hidden';
@@ -80,12 +73,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * SHOW EXISTING IMAGE (Used during Edit Mode for single uploads)
+ * SINGLE UPLOAD PREVIEW (For single image tabs)
  */
 function showExistingImage(imgUrl, containerId, textId, inputId) {
     const container = document.getElementById(containerId);
     if (!container) return;
-    
     const uploadZone = container.closest('.opt-upload-zone');
     
     container.style.position = 'absolute';
@@ -112,24 +104,6 @@ function showExistingImage(imgUrl, containerId, textId, inputId) {
     if (uploadContent) uploadContent.style.visibility = 'hidden';
 }
 
-/**
- * LOADS EXISTING PHOTOS into the multi-previewer
- */
-function loadExistingPhotos(images, containerId, textId, inputId) {
-    images.forEach(img => {
-        selectedFiles.push({
-            isExisting: true,
-            image_name: img.image_name,
-            url: '../uploads/' + img.image_name,
-            is_primary: img.is_primary == 1
-        });
-    });
-    renderPreviews(containerId, textId, inputId);
-}
-
-/**
- * SINGLE FILE PREVIEW (New Uploads)
- */
 function handleSingleFilePreview(input, containerId, textId) {
     const container = document.getElementById(containerId);
     const uploadZone = container.closest('.opt-upload-zone');
@@ -178,8 +152,20 @@ function removeSingleImage(event, inputId, containerId, textId) {
 }
 
 /**
- * MULTI-FILE PREVIEW (Designs)
+ * MULTI-FILE LOGIC (Frame Designs)
  */
+function loadExistingPhotos(images, containerId, textId, inputId) {
+    images.forEach(img => {
+        selectedFiles.push({
+            isExisting: true,
+            image_name: img.image_name,
+            url: '../uploads/' + img.image_name,
+            is_primary: img.is_primary == 1
+        });
+    });
+    renderPreviews(containerId, textId, inputId);
+}
+
 function handleMultipleFilePreview(input, containerId, textId) {
     if (input.files && input.files.length > 0) {
         const newFiles = Array.from(input.files);
@@ -200,19 +186,32 @@ function renderPreviews(containerId, textId, inputId) {
     if (selectedFiles.length > 0) {
         textElement.innerText = `${selectedFiles.length} images selected`;
         
+        // Determine if any image currently has primary status
+        const hasExistingPrimary = selectedFiles.some(f => f.is_primary === true);
+
         selectedFiles.forEach((file, index) => {
             const wrapper = document.createElement('div');
             wrapper.className = "preview-wrapper";
             wrapper.style.cssText = "width: 80px; height: 80px; position: relative; display: inline-block; margin: 8px; border: 1px solid #ccc; border-radius: 6px; background: white; pointer-events: auto;";
 
-            const isPrimary = file.isExisting ? file.is_primary : (index === 0 && !selectedFiles.some(f => f.is_primary));
+            // Calculate Primary Status:
+            // 1. If it was already primary, keep it.
+            // 2. If no image is marked primary, make index 0 primary.
+            const isPrimary = file.is_primary || (!hasExistingPrimary && index === 0);
+            
+            // Sync the object's property so it's correct for potential re-renders
+            file.is_primary = isPrimary;
+
             const primaryBadge = isPrimary ? 
                 `<span style="position:absolute; bottom:0; left:0; right:0; background:rgba(6,58,50,0.9); color:white; font-size:10px; text-align:center; padding:2px 0; z-index:5; border-radius: 0 0 6px 6px;">Primary</span>` : '';
 
+            // We include hidden primary_image value to help PHP identify which existing image is primary
+            const primaryInput = isPrimary && file.isExisting ? `<input type="hidden" name="primary_existing_image" value="${file.image_name}">` : '';
             const hiddenInput = file.isExisting ? `<input type="hidden" name="existing_images[]" value="${file.image_name}">` : '';
 
             wrapper.innerHTML = `
                 ${hiddenInput}
+                ${primaryInput}
                 ${primaryBadge}
                 <button type="button" 
                     onclick="removeImage(event, ${index}, '${containerId}', '${textId}', '${inputId}')" 
@@ -227,7 +226,8 @@ function renderPreviews(containerId, textId, inputId) {
             if (!file.isExisting) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    document.getElementById(`img-preview-${index}`).src = e.target.result;
+                    const img = document.getElementById(`img-preview-${index}`);
+                    if (img) img.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             }
@@ -246,45 +246,43 @@ function renderPreviews(containerId, textId, inputId) {
 function removeImage(event, index, containerId, textId, inputId) {
     event.stopPropagation();
     selectedFiles.splice(index, 1);
+    
+    // Reset primary status of all remaining files so renderPreviews can recalculate 
+    // who should be primary (index 0 if the previous primary was removed)
+    const hasPrimaryLeft = selectedFiles.some(f => f.is_primary === true);
+    if (!hasPrimaryLeft && selectedFiles.length > 0) {
+        selectedFiles[0].is_primary = true;
+    }
+
     renderPreviews(containerId, textId, inputId);
 }
 
 /**
- * Populates the Fixed Price Management form (Edit mode)
+ * FIXED PRICE MANAGEMENT
  */
 function editFpm(data) {
     document.getElementById('fpm_action').value = 'update_fixed_price';
     document.getElementById('fpm_id').value = data.fixed_price_id;
-    
     document.getElementById('fpm_paper_type').value = data.paper_type_id;
     document.getElementById('fpm_dimension').value = data.dimension;
     document.getElementById('fpm_width').value = data.width_inch;
     document.getElementById('fpm_height').value = data.height_inch;
     document.getElementById('fpm_price').value = data.fixed_price;
-    
     document.getElementById('form_title').innerText = 'Edit Pricing Record';
     document.getElementById('fpm_submit_btn').innerText = 'Update Price';
     document.getElementById('fpm_cancel_btn').style.display = 'block';
-    
     document.getElementById('fixedPriceForm').scrollIntoView({ behavior: 'smooth' });
 }
 
-/**
- * Resets the Fixed Price Management form
- */
 function resetFpmForm() {
     document.getElementById('fixedPriceForm').reset();
     document.getElementById('fpm_action').value = 'add_fixed_price';
     document.getElementById('fpm_id').value = '';
-    
     document.getElementById('form_title').innerText = 'Add New Pricing';
     document.getElementById('fpm_submit_btn').innerText = 'Add Entry';
     document.getElementById('fpm_cancel_btn').style.display = 'none';
 }
 
-/**
- * URL Cleanup: Removes success/error params from the address bar
- */
 window.addEventListener('DOMContentLoaded', (event) => {
     if (window.history.replaceState) {
         const url = new URL(window.location.href);
