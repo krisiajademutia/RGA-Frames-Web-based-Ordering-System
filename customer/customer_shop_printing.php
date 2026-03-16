@@ -95,10 +95,13 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
                 </div>
             </div>
 
-            <div class="ps-total-container d-flex justify-content-between align-items-center">
+            <div class="ps-total-container">
                 <span class="ps-total-label">TOTAL</span>
                 <div class="ps-total-amount" id="display-total">₱0.00</div>
+                <div class="ps-btn">
                 <button class="ps-btn-cart"><i class="fas fa-cart-plus me-2"></i> Add to Cart</button>
+                <button class="ps-btn-buy-now" id="buyNowBtn"> Buy Now</button>
+                </div>
             </div>
         </div>
     </div>
@@ -233,7 +236,7 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
         this.disabled = true;
         this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
 
-        fetch('../process/add_to_cart.php', { method: 'POST', body: formData })
+        fetch('../process/add_to_cart_printing_process.php', { method: 'POST', body: formData })
         .then(res => res.json())
         .then(data => {
             if(data.success) {
@@ -340,6 +343,45 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
 
     fileInput.addEventListener('click', function(e) {
         e.stopPropagation();
+    });
+
+
+    // Buy Now button
+    const buyNowBtn = document.querySelector('.ps-btn-buy-now');
+
+    buyNowBtn.addEventListener('click', function() {
+        if (!validateForm()) return;
+
+        const formData = new FormData();
+        formData.append('image', fileInput.files[0]);
+        formData.append('type', paperSelect.value);
+        formData.append('size', sizeSelect.value);
+        formData.append('qty', qtyInput.value);
+        formData.append('width', customW.value);
+        formData.append('height', customH.value);
+        const priceText = document.getElementById('display-total').innerText.replace(/[^\d.]/g, '');
+        formData.append('total_price', parseFloat(priceText) || 0);
+        formData.append('is_buy_now', 1); // <-- this flag is required by checkout.php
+
+        // Disable button while processing
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+        fetch('../process/buy_now_printing_process.php', { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Redirect immediately to checkout.php
+                  window.location.href = 'customer_checkout.php';
+                } else {
+                    showToast(data.message || 'Failed to process Buy Now.', 'error');
+                }
+            })
+            .catch(() => showToast('A connection error occurred.', 'error'))
+            .finally(() => {
+                this.disabled = false;
+                this.innerHTML = 'Buy Now';
+            });
     });
 </script>
 </body>

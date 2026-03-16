@@ -4793,6 +4793,62 @@ body {
     color: #FFFFFF;
 }
 
+/* Buy Now Button */
+
+.ps-btn-buy-now {
+    background-color: #064e3b;
+    color: #ffffff;
+    border: none;
+    padding: 10px 25px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    min-width: 140px;
+    justify-content: center;
+}
+
+.ps-btn-buy-now:hover {
+    background-color: #032e23;
+}
+
+.ps-btn-buy-now:active {
+    transform: scale(0.98);
+}
+
+.ps-btn-buy-now:disabled {
+    background-color: #8fa6a0;
+    cursor: not-allowed;
+}
+
+.ps-action-buttons {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.ps-total-container {
+    background-color: #E9ECEF;
+    padding: 15px 40px;
+    border-radius: 12px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ps-total-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.ps-btn {
+    display: flex;
+    gap: 10px;
+}
 /* --- 7. Footer Section --- */
 .ps-footer {
     background-color: #051A15;
