@@ -56,9 +56,8 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
     .modal-backdrop.show:nth-of-type(n+2) { display: none !important; }
     .option-tile.active { border: 2px solid var(--forest-dark) !important; background: #f0fdf4 !important; }
     .swatch-item.active { outline: 2px solid var(--forest-dark); outline-offset: 2px; transform: scale(1.1); }
-    /* Functional visibility classes */
+
     #secondaryMatSection, #uploadSection, #paperTypeSection { display: none; }
-    /* Image Preview Style */
     #imagePreviewContainer { 
         display: none; 
         width: 100px; 
@@ -331,7 +330,6 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
             const max = parseInt(input.getAttribute('max')) || 1;
             let newVal = parseInt(input.value) + val;
             
-            // REQUIREMENT: Prevent price adding up if stock is 1
             if (newVal >= 1 && newVal <= max) {
                 input.value = newVal;
                 updateTotalPrice();
