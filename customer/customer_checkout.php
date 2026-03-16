@@ -18,6 +18,7 @@ $cartItems       = [];
 $cartTotal       = 0;
 
 if ($isBuyNow) {
+   
     // ── OMNI-CHANNEL BUY NOW FLOW ──
     $itemData = $_SESSION['buy_now_item'];
     $itemType = $itemData['item_type'] ?? 'CUSTOM_FRAME'; // Default fallback

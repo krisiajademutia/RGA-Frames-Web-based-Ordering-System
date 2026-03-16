@@ -23,14 +23,25 @@ class OrderRepository {
 
     public function getOrdersByStatus(string $status, $filters = []) {
         $sql = "
-            SELECT 
-                o.order_id, o.order_reference_no, o.created_at, o.total_price,
-                o.order_status, o.payment_method, o.delivery_option,
-                c.first_name, c.last_name, c.phone_number, c.email
-            FROM tbl_orders o
-            JOIN tbl_customer c ON o.customer_id = c.customer_id
-            WHERE o.order_status = ?
-        ";
+    SELECT 
+        o.order_id, o.order_reference_no, o.created_at, o.total_price,
+        o.order_status, o.payment_method, o.delivery_option,
+        c.first_name, c.last_name, c.phone_number, c.email,
+
+        foi.service_type,
+        poi.order_id AS print_order
+
+    FROM tbl_orders o
+    JOIN tbl_customer c ON o.customer_id = c.customer_id
+
+    LEFT JOIN tbl_frame_order_items foi
+        ON o.order_id = foi.order_id
+
+    LEFT JOIN tbl_printing_order_items poi
+        ON o.order_id = poi.order_id
+
+    WHERE o.order_status = ?
+";
         $params = [$status];
         $types  = "s";
 

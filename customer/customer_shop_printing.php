@@ -98,7 +98,10 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
             <div class="ps-total-container d-flex justify-content-between align-items-center">
                 <span class="ps-total-label">TOTAL</span>
                 <div class="ps-total-amount" id="display-total">₱0.00</div>
-                <button class="ps-btn-cart"><i class="fas fa-cart-plus me-2"></i> Add to Cart</button>
+                <div class="d-flex gap-2">
+                    <button class="ps-btn-cart"><i class="fas fa-cart-plus me-2"></i> Add to Cart</button>
+                    <button class="ps-btn-buy-now" style="background-color: #0f3d33; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold;"><i class="fas fa-bolt me-2"></i> Buy Now</button>
+                </div>
             </div>
         </div>
     </div>
@@ -115,6 +118,7 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
     const uploadContent = document.getElementById('upload-content');
     const previewWrapper = document.getElementById('preview-wrapper');
     const btnCart = document.querySelector('.ps-btn-cart');
+    const btnBuyNow = document.querySelector('.ps-btn-buy-now');
     const uploadArea = document.getElementById('upload-area');
 
     function showToast(message, type = 'success') {
@@ -130,65 +134,58 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
     }
 
     function validateForm() {
-    let isValid = true;
-    
-    // Select the specific error spans
-    const wErr = document.getElementById('width-error');
-    const hErr = document.getElementById('height-error');
-    const fileErr = document.getElementById('file-error');
-    const paperErr = document.getElementById('paper-error');
+        let isValid = true;
+        const wErr = document.getElementById('width-error');
+        const hErr = document.getElementById('height-error');
+        const fileErr = document.getElementById('file-error');
+        const paperErr = document.getElementById('paper-error');
 
-    // 1. Reset all error messages
-    [wErr, hErr, fileErr, paperErr].forEach(el => {
-        el.innerText = "";
-        el.classList.add('d-none');
-    });
+        [wErr, hErr, fileErr, paperErr].forEach(el => {
+            el.innerText = "";
+            el.classList.add('d-none');
+        });
 
-    // 2. File validation
-    if (!fileInput.files[0]) {
-        fileErr.innerText = "Please select an image.";
-        fileErr.classList.remove('d-none');
-        isValid = false;
+        if (!fileInput.files[0]) {
+            fileErr.innerText = "Please select an image.";
+            fileErr.classList.remove('d-none');
+            isValid = false;
+        }
+
+        if (paperSelect.selectedIndex === 0) {
+            paperErr.innerText = "Please select a paper type.";
+            paperErr.classList.remove('d-none');
+            isValid = false;
+        }
+
+        const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+        const maxWidth = parseFloat(selectedOption?.dataset.maxwidth) || 0;
+        const maxHeight = parseFloat(selectedOption?.dataset.maxheight) || 0;
+        const userW = parseFloat(customW.value);
+        const userH = parseFloat(customH.value);
+
+        if (!customW.value || userW <= 0) {
+            wErr.innerText = "Required";
+            wErr.classList.remove('d-none');
+            isValid = false;
+        } else if (maxWidth > 0 && userW > maxWidth) {
+            wErr.innerText = `Width must not exceed ${maxWidth}"`;
+            wErr.classList.remove('d-none');
+            isValid = false;
+        }
+
+        if (!customH.value || userH <= 0) {
+            hErr.innerText = "Required";
+            hErr.classList.remove('d-none');
+            isValid = false;
+        } else if (maxHeight > 0 && userH > maxHeight) {
+            hErr.innerText = `Height must not exceed ${maxHeight}"`;
+            hErr.classList.remove('d-none');
+            isValid = false;
+        }
+
+        return isValid;
     }
 
-    // 3. Paper selection validation
-    if (paperSelect.selectedIndex === 0) {
-        paperErr.innerText = "Please select a paper type.";
-        paperErr.classList.remove('d-none');
-        isValid = false;
-    }
-
-    // 4. Dimension validation
-    const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
-    const maxWidth = parseFloat(selectedOption?.dataset.maxwidth) || 0;
-    const maxHeight = parseFloat(selectedOption?.dataset.maxheight) || 0;
-    const userW = parseFloat(customW.value);
-    const userH = parseFloat(customH.value);
-
-    // Width Check
-    if (!customW.value || userW <= 0) {
-        wErr.innerText = "Required";
-        wErr.classList.remove('d-none');
-        isValid = false;
-    } else if (maxWidth > 0 && userW > maxWidth) {
-        wErr.innerText = `Width must not exceed ${maxWidth}"`;
-        wErr.classList.remove('d-none');
-        isValid = false;
-    }
-
-    // Height Check
-    if (!customH.value || userH <= 0) {
-        hErr.innerText = "Required";
-        hErr.classList.remove('d-none');
-        isValid = false;
-    } else if (maxHeight > 0 && userH > maxHeight) {
-        hErr.innerText = `Height must not exceed ${maxHeight}"`;
-        hErr.classList.remove('d-none');
-        isValid = false;
-    }
-
-    return isValid;
-}
     function calculateArea() {
         const w = parseFloat(customW.value) || 0;
         const h = parseFloat(customH.value) || 0;
@@ -217,6 +214,7 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
         });
     }
 
+    // --- ADD TO CART LOGIC ---
     btnCart.addEventListener('click', function() {
         if (!validateForm()) return;
 
@@ -233,12 +231,11 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
         this.disabled = true;
         this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
 
-        fetch('../process/add_to_cart.php', { method: 'POST', body: formData })
+        fetch('../process/add_to_cart_printing_process.php', { method: 'POST', body: formData })
         .then(res => res.json())
         .then(data => {
             if(data.success) {
                 showToast('Item successfully added to cart.');
-                // Clear Form
                 fileInput.value = ''; 
                 paperSelect.selectedIndex = 0; 
                 sizeSelect.innerHTML = '<option selected disabled>Select size</option>'; 
@@ -252,7 +249,6 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
                 uploadContent.classList.remove('d-none');
                 previewWrapper.classList.add('d-none');
             } else {
-                // ONLY show toast if it's NOT a dimension violation (since that's already shown inline)
                 if (data.message && !data.message.includes("dimensions")) {
                     showToast(data.message, 'error');
                 }
@@ -265,14 +261,54 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
         });
     });
 
+    // --- BUY NOW LOGIC ---
+    btnBuyNow.addEventListener('click', function() {
+        if (!validateForm()) return;
+
+        const formData = new FormData();
+        formData.append('image', fileInput.files[0]);
+        formData.append('type', paperSelect.value);
+        
+        // This grabs the actual text name of the paper safely!
+        const paperNameText = paperSelect.selectedIndex > 0 ? paperSelect.options[paperSelect.selectedIndex].text : 'Standard';
+        formData.append('paper_name', paperNameText);
+
+        formData.append('size', sizeSelect.value);
+        formData.append('qty', qtyInput.value);
+        formData.append('width', customW.value);
+        formData.append('height', customH.value);
+        const priceText = document.getElementById('display-total').innerText.replace(/[^\d.]/g, '');
+        formData.append('total_price', parseFloat(priceText) || 0);
+
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+
+        fetch('../process/buy_now_printing_process.php', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                window.location.href = 'customer_checkout.php';
+            } else {
+                showToast(data.message || 'Error processing Buy Now', 'error');
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-bolt me-2"></i> Buy Now';
+            }
+        })
+        .catch(() => {
+            showToast('A connection error occurred.', 'error');
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-bolt me-2"></i> Buy Now';
+        });
+    });
+
     [paperSelect, sizeSelect].forEach(el => el.addEventListener('change', updatePrice));
     [customW, customH].forEach(el => {
-    el.addEventListener('input', () => {
-        calculateArea();
-        validateForm();
-        updatePrice();
+        el.addEventListener('input', () => {
+            calculateArea();
+            validateForm();
+            updatePrice();
+        });
     });
-});
 
     document.getElementById('plus-btn').addEventListener('click', () => { 
         qtyInput.value = parseInt(qtyInput.value) + 1; 

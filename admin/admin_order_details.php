@@ -405,7 +405,7 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
                     <?php if ($isPrintOnly): ?>
                         <div class="admn-ordr-dtls-spec-row">
                             <span>Paper Size</span>
-                            <span><?= $item['print_width'] ?? '—' ?>" × <?= $item['print_height'] ?? '—' ?>" (<?= $item['print_total_inch'] ?? '—' ?> total inches)</span>
+                            <span><?= $item['print_width'] ?? '—' ?>" × <?= $item['print_height'] ?? '—' ?>"</span>
                         </div>
                         <div class="admn-ordr-dtls-spec-row">
                             <span>Paper Type</span>
