@@ -1,29 +1,21 @@
 <?php
+// customer/customer_shop_readymade.php
 require_once __DIR__ . '/../includes/customer_header.php';
 require_once __DIR__ . '/../config/db_connect.php';
-require_once __DIR__ . '/../classes/Frames/Repository/FrameRepositoryInterface.php';
-require_once __DIR__ . '/../classes/Frames/Repository/ReadyMadeFrameRepository.php';
-require_once __DIR__ . '/../classes/Frames/FrameService.php';
+require_once __DIR__ . '/../classes/ReadyMade/Repository/ReadyMadeRepository.php';
+require_once __DIR__ . '/../classes/ReadyMade/ReadyMadeService.php';
 require_once __DIR__ . '/../classes/Option/Repository/FixedPriceRepository.php';
 
-$repository = new \Classes\Frames\Repository\ReadyMadeFrameRepository($conn);
-$frameService = new \Classes\Frames\FrameService($repository);
-$posted_frames = $frameService->getAllFrames();
+// ── Single data fetch (no duplicate calls) ─────────────────
+$repo          = new \Classes\ReadyMade\Repository\ReadyMadeRepository($conn);
+$service       = new \Classes\ReadyMade\ReadyMadeService($repo);
+$search_term   = trim($_GET['search'] ?? '');
+$posted_frames = $service->getFrames($search_term);
 
-$search_term = isset($_GET['search']) ? $_GET['search'] : '';
-if (!empty($search_term)) {
-    $posted_frames = array_filter($frameService->getAllFrames(), function($frame) use ($search_term) {
-        return stripos($frame['product_name'], $search_term) !== false || 
-                stripos($frame['design_name'], $search_term) !== false;
-    });
-} else {
-    $posted_frames = $frameService->getAllFrames();
-}
-
-$fixedPriceRepo = new FixedPriceRepository($conn);
-$allFixedPrices = $fixedPriceRepo->getAll();
-
-$printServicePrice = 0;
+// ── Fixed prices ────────────────────────────────────────────
+$fixedPriceRepo       = new FixedPriceRepository($conn);
+$allFixedPrices       = $fixedPriceRepo->getAll();
+$printServicePrice    = 0;
 $matboardServicePrice = 0;
 
 while ($fpRow = $allFixedPrices->fetch_assoc()) {
@@ -33,19 +25,19 @@ while ($fpRow = $allFixedPrices->fetch_assoc()) {
         $matboardServicePrice = (float)$fpRow['fixed_price'];
     }
 }
-    
-//Secondary Matboard
-$matOptions = [];
-$matColorsQuery = $conn->query("SELECT * FROM tbl_matboard_color");
+
+// ── Matboard colors (correct table: tbl_matboard_colors) ────
+$matOptions     = [];
+$matColorsQuery = $conn->query("SELECT * FROM tbl_matboard_colors WHERE is_active = 1");
 if ($matColorsQuery && $matColorsQuery->num_rows > 0) {
-    while($m = $matColorsQuery->fetch_assoc()) { $matOptions[] = $m; }
+    while ($m = $matColorsQuery->fetch_assoc()) { $matOptions[] = $m; }
 }
 
-// FETCH PAPER TYPES FOR PRINT OPTION
+// ── Paper types ─────────────────────────────────────────────
 $paperOptions = [];
-$paperQuery = $conn->query("SELECT * FROM tbl_paper_type");
+$paperQuery   = $conn->query("SELECT * FROM tbl_paper_type");
 if ($paperQuery && $paperQuery->num_rows > 0) {
-    while($p = $paperQuery->fetch_assoc()) { $paperOptions[] = $p; }
+    while ($p = $paperQuery->fetch_assoc()) { $paperOptions[] = $p; }
 }
 ?>
 
@@ -71,6 +63,15 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
     #imagePreview { width: 100%; height: 100%; object-fit: cover; }
     .btn-buy-now { background-color: #fff; color: var(--forest-dark); border: 2px solid var(--forest-dark); font-weight: 700; }
     .btn-buy-now:hover { background-color: var(--forest-dark); color: #fff; }
+
+    /* Toast notifications */
+    #rm-toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .rm-toast { min-width: 260px; padding: 14px 18px; border-radius: 10px; font-size: 0.9rem; font-weight: 600;
+                color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,.18); opacity: 0; transform: translateY(12px);
+                transition: opacity .3s, transform .3s; pointer-events: none; }
+    .rm-toast.show    { opacity: 1; transform: translateY(0); }
+    .rm-toast.success { background: #0F473A; }
+    .rm-toast.error   { background: #dc2626; }
 </style>
 
 <div class="post-admin-container animate-fade-in-up" style="margin-top: 120px; padding-bottom: 60px;">
@@ -94,7 +95,7 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
             <?php foreach($posted_frames as $row): ?>
                 <div class="posted-card-item border">
                     <div class="posted-image-box">
-                        <img src="/rga_frames/uploads/<?= $row['image_name'] ?>" alt="Frame">
+                        <img src="/rga_frames/uploads/<?= htmlspecialchars($row['image_name'] ?? '') ?>" alt="Frame">
                     </div>
                     <div class="posted-info">
                         <h4 class="posted-item-title"><?= htmlspecialchars($row['product_name']) ?></h4>
@@ -109,7 +110,7 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
                                 style="background: var(--forest-dark); color: white;"
                                 data-bs-toggle="modal" 
                                 data-bs-target="#productDetailsModal"
-                                data-product='<?= json_encode($row) ?>'>
+                                data-product='<?= htmlspecialchars(json_encode($row), ENT_QUOTES) ?>'>
                             <i class="fa-solid fa-eye me-1"></i> Details
                         </button>
                     </div>
@@ -123,6 +124,7 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
         <?php endif; ?>
     </div>
 
+    <!-- ── Product Details Modal (original UI — untouched) ──── -->
     <div class="modal fade" id="productDetailsModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content custom-modal-content shadow-lg">
@@ -167,8 +169,8 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
                                     <label class="section-label">Paper Type</label>
                                     <div class="tile-group">
                                         <?php foreach($paperOptions as $index => $paper): ?>
-                                            <div class="option-tile <?= $index === 0 ? 'active' : '' ?>" onclick="selectPaper(this, '<?= $paper['paper_name'] ?>')">
-                                                <strong><?= $paper['paper_name'] ?></strong>
+                                            <div class="option-tile <?= $index === 0 ? 'active' : '' ?>" onclick="selectPaper(this, '<?= htmlspecialchars($paper['paper_name']) ?>')">
+                                                <strong><?= htmlspecialchars($paper['paper_name']) ?></strong>
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
@@ -179,180 +181,258 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
                                     <div class="swatch-group">
                                         <div class="swatch-item active" style="background:#f3f4f6; font-size:9px; display:flex; align-items:center; justify-content:center;" onclick="selectMat(this, 0, 'None', true)">None</div>
                                         <?php foreach($matOptions as $mat): ?>
-                                            <div class="swatch-item" style="background:<?= $mat['color_code'] ?>" onclick="selectMat(this, <?= $matboardServicePrice ?>, '<?= $mat['color_name'] ?>', false)"></div>
+                                            <div class="swatch-item"
+                                                 style="background-image: url('/rga_frames/uploads/<?= htmlspecialchars($mat['image_name'] ?? '') ?>'); background-size: cover; background-color: #ddd;"
+                                                 title="<?= htmlspecialchars($mat['matboard_color_name']) ?>"
+                                                 onclick="selectMat(this, <?= $matboardServicePrice ?>, '<?= htmlspecialchars($mat['matboard_color_name']) ?>', false)">
+                                            </div>
                                         <?php endforeach; ?>
                                     </div>
                                 </section>
 
-                                    <section id="secondaryMatSection" class="mb-4">
-                                        <label class="section-label">Secondary Mat-board</label>
-                                        <div class="swatch-group">
-                                            <div class="swatch-item active" style="background:#f3f4f6; font-size:9px; display:flex; align-items:center; justify-content:center;" onclick="selectSecondaryMat(this, 0, 'None')">None</div>
-                                            <?php foreach($matOptions as $mat): ?>
-                                                <div class="swatch-item" style="background:<?= $mat['color_code'] ?>" onclick="selectSecondaryMat(this, <?= $matboardServicePrice ?>, '<?= $mat['color_name'] ?>')"></div>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    </section>
-
-                                    <section class="mb-4">
-                                        <label class="section-label">Mount Type</label>
-                                        <div class="tile-group">
-                                            <div class="option-tile active" onclick="selectMount(this, 'Wall Hanging')"><strong>Wall Hanging</strong><span>Hang on wall</span></div>
-                                            <div class="option-tile" onclick="selectMount(this, 'Stand')"><strong>Stand</strong><span>Tabletop display</span></div>
-                                        </div>
-                                    </section>
-
-                                    <div class="mt-5 d-flex align-items-center justify-content-between border-top pt-3">
-                                        <div class="d-flex align-items-center gap-3">
-                                            <label class="fw-bold small text-muted">Quantity</label>
-                                            <div class="qty-container">
-                                                <button type="button" class="qty-btn" onclick="adjustQty(-1)">-</button>
-                                                <input type="number" name="quantity" id="modalQtyInput" class="qty-input-field" value="1" min="1" readonly>
-                                                <button type="button" class="qty-btn" onclick="adjustQty(1)">+</button>
+                                <section id="secondaryMatSection" class="mb-4">
+                                    <label class="section-label">Secondary Mat-board</label>
+                                    <div class="swatch-group">
+                                        <div class="swatch-item active" style="background:#f3f4f6; font-size:9px; display:flex; align-items:center; justify-content:center;" onclick="selectSecondaryMat(this, 0, 'None')">None</div>
+                                        <?php foreach($matOptions as $mat): ?>
+                                            <div class="swatch-item"
+                                                 style="background-image: url('/rga_frames/uploads/<?= htmlspecialchars($mat['image_name'] ?? '') ?>'); background-size: cover; background-color: #ddd;"
+                                                 title="<?= htmlspecialchars($mat['matboard_color_name']) ?>"
+                                                 onclick="selectSecondaryMat(this, <?= $matboardServicePrice ?>, '<?= htmlspecialchars($mat['matboard_color_name']) ?>')">
                                             </div>
-                                        </div>
-                                        <div class="text-end">
-                                            <span class="text-muted small d-block">Total Price</span>
-                                            <h3 id="modalProductPrice" class="fw-bold m-0" style="color: var(--forest-dark);">₱ 0.00</h3>
-                                        </div>
+                                        <?php endforeach; ?>
                                     </div>
+                                </section>
 
-                                    <div class="d-flex gap-2 mt-4">
-                                        <button type="button" class="btn-add-cart w-100 rounded-pill" onclick="submitAddToCart()">Add to Cart</button>
-                                        <button type="button" class="btn btn-buy-now w-100 rounded-pill" onclick="handleBuyNow()">Buy Now</button>
+                                <section class="mb-4">
+                                    <label class="section-label">Mount Type</label>
+                                    <div class="tile-group">
+                                        <div class="option-tile active" onclick="selectMount(this, 'Wall Hanging')"><strong>Wall Hanging</strong><span>Hang on wall</span></div>
+                                        <div class="option-tile" onclick="selectMount(this, 'Stand')"><strong>Stand</strong><span>Tabletop display</span></div>
                                     </div>
-                                </form>
-                            </div>
+                                </section>
+
+                                <div class="mt-5 d-flex align-items-center justify-content-between border-top pt-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <label class="fw-bold small text-muted">Quantity</label>
+                                        <div class="qty-container">
+                                            <button type="button" class="qty-btn" onclick="adjustQty(-1)">-</button>
+                                            <input type="number" name="quantity" id="modalQtyInput" class="qty-input-field" value="1" min="1" readonly>
+                                            <button type="button" class="qty-btn" onclick="adjustQty(1)">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="text-muted small d-block">Total Price</span>
+                                        <h3 id="modalProductPrice" class="fw-bold m-0" style="color: var(--forest-dark);">₱ 0.00</h3>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex gap-2 mt-4">
+                                    <button type="button" class="btn-add-cart w-100 rounded-pill" onclick="submitAddToCart()">Add to Cart</button>
+                                    <button type="button" class="btn btn-buy-now w-100 rounded-pill" onclick="handleBuyNow()">Buy Now</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Toast container -->
+<div id="rm-toast-wrap"></div>
 
-    <script>
-        let basePrice = 0, servicePrice = 0, pMatPrice = 0, sMatPrice = 0;
-        const productModal = document.getElementById('productDetailsModal');
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-        productModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            const product = JSON.parse(button.getAttribute('data-product'));
+<script>
+    let basePrice = 0, servicePrice = 0, pMatPrice = 0, sMatPrice = 0;
+    const productModal = document.getElementById('productDetailsModal');
 
-            basePrice = parseFloat(product.product_price);
-            servicePrice = 0; pMatPrice = 0; sMatPrice = 0;
+    // ── Populate modal on open ───────────────────────────────
+    productModal.addEventListener('show.bs.modal', function (event) {
+        const button  = event.relatedTarget;
+        const product = JSON.parse(button.getAttribute('data-product'));
 
-            document.getElementById('modalProductId').value = product.r_product_id;
-            document.getElementById('modalProductName').innerText = product.product_name;
-            document.getElementById('modalProductImg').src = "/rga_frames/uploads/" + product.image_name;
-            document.getElementById('specSize').innerText = `${product.width}x${product.height}"`;
-            document.getElementById('specDesign').innerText = product.design_name;
-            document.getElementById('specColor').innerText = product.color_name;
-            document.getElementById('specStock').innerText = `${product.stock} available`;
-            
-            document.getElementById('modalQtyInput').max = product.stock;
-            document.getElementById('modalQtyInput').value = 1;
+        basePrice    = parseFloat(product.product_price);
+        servicePrice = 0; pMatPrice = 0; sMatPrice = 0;
 
-            resetSelections();
-            updateTotalPrice();
-        });
+        document.getElementById('modalProductId').value      = product.r_product_id;
+        document.getElementById('modalProductName').innerText = product.product_name;
+        document.getElementById('modalProductImg').src        = "/rga_frames/uploads/" + product.image_name;
+        document.getElementById('specSize').innerText         = `${product.width}x${product.height}"`;
+        document.getElementById('specDesign').innerText       = product.design_name;
+        document.getElementById('specColor').innerText        = product.color_name;
+        document.getElementById('specStock').innerText        = `${product.stock} available`;
 
-        function selectService(el, price, showOptions) {
-            el.closest('.tile-group').querySelectorAll('.option-tile').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-            servicePrice = parseFloat(price);
-            document.getElementById('selectedService').value = el.querySelector('strong').innerText;
-            
-            document.getElementById('uploadSection').style.display = showOptions ? 'block' : 'none';
-            document.getElementById('paperTypeSection').style.display = showOptions ? 'block' : 'none';
-            
-            updateTotalPrice();
+        document.getElementById('modalQtyInput').max   = product.stock;
+        document.getElementById('modalQtyInput').value = 1;
+
+        resetSelections();
+        updateTotalPrice();
+    });
+
+    function selectService(el, price, showOptions) {
+        el.closest('.tile-group').querySelectorAll('.option-tile').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        servicePrice = parseFloat(price);
+        document.getElementById('selectedService').value = el.querySelector('strong').innerText;
+        document.getElementById('uploadSection').style.display    = showOptions ? 'block' : 'none';
+        document.getElementById('paperTypeSection').style.display = showOptions ? 'block' : 'none';
+        updateTotalPrice();
+    }
+
+    function selectPaper(el, name) {
+        el.closest('.tile-group').querySelectorAll('.option-tile').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('selectedPaper').value = name;
+    }
+
+    function selectMat(el, price, name, isNone) {
+        el.closest('.swatch-group').querySelectorAll('.swatch-item').forEach(s => s.classList.remove('active'));
+        el.classList.add('active');
+        pMatPrice = parseFloat(price);
+        document.getElementById('selectedMat').value = name;
+
+        const secSec = document.getElementById('secondaryMatSection');
+        secSec.style.display = isNone ? 'none' : 'block';
+        if (isNone) {
+            sMatPrice = 0;
+            document.getElementById('selectedSecondaryMat').value = 'None';
+            secSec.querySelectorAll('.swatch-item').forEach(s => s.classList.remove('active'));
+            secSec.querySelector('.swatch-item:first-child').classList.add('active');
         }
+        updateTotalPrice();
+    }
 
-        function selectPaper(el, name) {
-            el.closest('.tile-group').querySelectorAll('.option-tile').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById('selectedPaper').value = name;
-        }
+    function selectSecondaryMat(el, price, name) {
+        el.closest('.swatch-group').querySelectorAll('.swatch-item').forEach(s => s.classList.remove('active'));
+        el.classList.add('active');
+        sMatPrice = parseFloat(price);
+        document.getElementById('selectedSecondaryMat').value = name;
+        updateTotalPrice();
+    }
 
-        function selectMat(el, price, name, isNone) {
-            el.closest('.swatch-group').querySelectorAll('.swatch-item').forEach(s => s.classList.remove('active'));
-            el.classList.add('active');
-            pMatPrice = parseFloat(price);
-            document.getElementById('selectedMat').value = name;
-        
-            const secSec = document.getElementById('secondaryMatSection');
-            secSec.style.display = isNone ? 'none' : 'block';
-            if(isNone) { 
-                sMatPrice = 0; 
-                document.getElementById('selectedSecondaryMat').value = "None";
-                secSec.querySelectorAll('.swatch-item').forEach(s => s.classList.remove('active'));
-                secSec.querySelector('.swatch-item:first-child').classList.add('active');
+    function selectMount(el, name) {
+        el.closest('.tile-group').querySelectorAll('.option-tile').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('selectedMount').value = name;
+    }
+
+    function previewUserImage(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('imagePreviewContainer').style.display = 'block';
             }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function updateTotalPrice() {
+        const qty   = parseInt(document.getElementById('modalQtyInput').value) || 1;
+        const total = (basePrice + servicePrice + pMatPrice + sMatPrice) * qty;
+        document.getElementById('modalProductPrice').innerText =
+            "₱ " + total.toLocaleString(undefined, { minimumFractionDigits: 2 });
+    }
+
+    function adjustQty(val) {
+        const input  = document.getElementById('modalQtyInput');
+        const max    = parseInt(input.getAttribute('max')) || 1;
+        const newVal = parseInt(input.value) + val;
+        if (newVal >= 1 && newVal <= max) {
+            input.value = newVal;
             updateTotalPrice();
         }
+    }
 
-        function selectSecondaryMat(el, price, name) {
-            el.closest('.swatch-group').querySelectorAll('.swatch-item').forEach(s => s.classList.remove('active'));
-            el.classList.add('active');
-            sMatPrice = parseFloat(price);
-            document.getElementById('selectedSecondaryMat').value = name;
-            updateTotalPrice();
-        }
+    function resetSelections() {
+        document.getElementById('uploadSection').style.display         = 'none';
+        document.getElementById('paperTypeSection').style.display      = 'none';
+        document.getElementById('secondaryMatSection').style.display   = 'none';
+        document.getElementById('imagePreviewContainer').style.display = 'none';
+    }
 
-        function selectMount(el, name) {
-            el.closest('.tile-group').querySelectorAll('.option-tile').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById('selectedMount').value = name;
-        }
+    productModal.addEventListener('hidden.bs.modal', function () {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = 'auto';
+    });
 
-        function previewUserImage(input) {
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('imagePreview').src = e.target.result;
-                    document.getElementById('imagePreviewContainer').style.display = 'block';
-                }
-                reader.readAsDataURL(input.files[0]);
+    // ── Toast helper ─────────────────────────────────────────
+    function showToast(message, type = 'success') {
+        const wrap  = document.getElementById('rm-toast-wrap');
+        const toast = document.createElement('div');
+        toast.className   = 'rm-toast ' + type;
+        toast.textContent = message;
+        wrap.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.add('show'));
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 350);
+        }, 3200);
+    }
+
+    // ── Add to Cart (fixed: was just alert()) ────────────────
+    async function submitAddToCart() {
+        const btn = document.querySelector('.btn-add-cart');
+        btn.disabled    = true;
+        btn.textContent = 'Adding…';
+
+        try {
+            const res  = await fetch('../process/add_to_cart_readymade_process.php', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    product_id: document.getElementById('modalProductId').value,
+                    quantity:   document.getElementById('modalQtyInput').value,
+                })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                showToast('✓ ' + data.message, 'success');
+                bootstrap.Modal.getInstance(productModal).hide();
+            } else {
+                showToast(data.message || 'Could not add to cart.', 'error');
             }
+        } catch (err) {
+            showToast('Network error. Please try again.', 'error');
+        } finally {
+            btn.disabled    = false;
+            btn.textContent = 'Add to Cart';
         }
+    }
 
-        function updateTotalPrice() {
-            const qtyInput = document.getElementById('modalQtyInput');
-            const qty = parseInt(qtyInput.value);
-            const total = (basePrice + servicePrice + pMatPrice + sMatPrice) * qty;
-            document.getElementById('modalProductPrice').innerText = "₱ " + total.toLocaleString(undefined, {minimumFractionDigits: 2});
-        }
+    // ── Buy Now (fixed: was completely missing) ───────────────
+    async function handleBuyNow() {
+        const btn = document.querySelector('.btn-buy-now');
+        btn.disabled    = true;
+        btn.textContent = 'Please wait…';
 
-        function adjustQty(val) {
-            const input = document.getElementById('modalQtyInput');
-            const max = parseInt(input.getAttribute('max')) || 1;
-            let newVal = parseInt(input.value) + val;
-            
-            if (newVal >= 1 && newVal <= max) {
-                input.value = newVal;
-                updateTotalPrice();
+        try {
+            const res  = await fetch('../process/buy_now_readymade_process.php', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    product_id: document.getElementById('modalProductId').value,
+                    quantity:   document.getElementById('modalQtyInput').value,
+                })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                window.location.href = data.redirect;
+            } else {
+                showToast(data.message || 'Could not proceed.', 'error');
+                btn.disabled    = false;
+                btn.textContent = 'Buy Now';
             }
+        } catch (err) {
+            showToast('Network error. Please try again.', 'error');
+            btn.disabled    = false;
+            btn.textContent = 'Buy Now';
         }
+    }
+</script>
 
-        function resetSelections() {
-            document.getElementById('uploadSection').style.display = 'none';
-            document.getElementById('paperTypeSection').style.display = 'none';
-            document.getElementById('secondaryMatSection').style.display = 'none';
-            document.getElementById('imagePreviewContainer').style.display = 'none';
-        }
-
-        productModal.addEventListener('hidden.bs.modal', function () {
-            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = 'auto';
-        });
-
-        function submitAddToCart() {
-            const formData = new FormData(document.getElementById('addToCartForm'));
-            alert(`Added to Cart!\nTotal: ${document.getElementById('modalProductPrice').innerText}`);
-        }
-    </script>
-
-    <?php require_once __DIR__ . '/../includes/idx_footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/idx_footer.php'; ?>
