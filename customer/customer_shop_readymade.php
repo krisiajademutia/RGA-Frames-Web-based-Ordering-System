@@ -10,6 +10,16 @@ $repository = new \Classes\Frames\Repository\ReadyMadeFrameRepository($conn);
 $frameService = new \Classes\Frames\FrameService($repository);
 $posted_frames = $frameService->getAllFrames();
 
+$search_term = isset($_GET['search']) ? $_GET['search'] : '';
+if (!empty($search_term)) {
+    $posted_frames = array_filter($frameService->getAllFrames(), function($frame) use ($search_term) {
+        return stripos($frame['product_name'], $search_term) !== false || 
+                stripos($frame['design_name'], $search_term) !== false;
+    });
+} else {
+    $posted_frames = $frameService->getAllFrames();
+}
+
 $fixedPriceRepo = new FixedPriceRepository($conn);
 $allFixedPrices = $fixedPriceRepo->getAll();
 
@@ -60,6 +70,8 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
         background: #eee;
     }
     #imagePreview { width: 100%; height: 100%; object-fit: cover; }
+    .btn-buy-now { background-color: #fff; color: var(--forest-dark); border: 2px solid var(--forest-dark); font-weight: 700; }
+    .btn-buy-now:hover { background-color: var(--forest-dark); color: #fff; }
 </style>
 
 <div class="post-admin-container animate-fade-in-up" style="margin-top: 120px; padding-bottom: 60px;">
@@ -68,18 +80,9 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
             <h1 class="csc-title">Ready-Made Frames</h1>
             <p class="csc-subtitle">Browse our collection of crafted frames</p>
         </div>
-
         <div class="shop-search-filter-group">
             <form action="" method="GET" class="search-filter-pill">
-                <input type="text" name="search" class="search-input-field" placeholder="Search frames...">
-                <div class="filter-dropdown-wrapper">
-                    <select name="size" class="compact-filter-select">
-                        <option value="" selected>Size</option>
-                        <option value="4x6">4x6</option>
-                        <option value="5x7">5x7</option>
-                        <option value="8x10">8x10</option>
-                    </select>
-                </div>
+                <input type="text" name="search" class="search-input-field" placeholder="Search frames..." value="<?= htmlspecialchars($search_term) ?>">
                 <button type="submit" class="search-action-btn">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </button>
@@ -87,51 +90,38 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
         </div>
     </div>
 
-    <div class="posted-main-container shadow-sm">
-        <div class="posted-header-bar">
-            <span>ALL READY-MADE FRAMES</span>
-            <span class="posted-badge"><?= count($posted_frames) ?> items found</span>
-        </div>
-
-        <div class="posted-grid p-4">
-            <?php if(!empty($posted_frames)): ?>
-                <?php foreach($posted_frames as $row): ?>
-                    <div class="posted-card-item border">
-                        <div class="posted-image-box">
-                            <img src="/rga_frames/uploads/<?= $row['image_name'] ?>" alt="Frame">
-                            <?php if($row['stock'] > 0 && $row['stock'] <= 5): ?>
-                                <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-2">Limited</span>
-                            <?php endif; ?>
-                        </div>
-                        <div class="posted-info">
-                            <h4 class="posted-item-title"><?= htmlspecialchars($row['product_name']) ?></h4>
-                            <p class="posted-item-meta m-0"><?= $row['width'] ?>x<?= $row['height'] ?>"</p>
-                            <p class="posted-item-subtext m-0 text-muted small"><?= $row['design_name'] ?> | <?= $row['type_name'] ?></p>
-                            
-                            <span class="posted-stock-pill <?= ($row['stock'] > 0) ? 'bg-success' : 'bg-danger' ?> mt-2">
-                                <?= ($row['stock'] > 0) ? $row['stock'] . ' In Stock' : 'Out of Stock' ?>
-                            </span>
-                        </div>
-                        <div class="posted-card-footer border-top pt-3">
-                            <span class="posted-price-text">₱ <?= number_format($row['product_price'], 2) ?></span>
-                            <button class="btn btn-sm rounded-pill px-3 shadow-sm open-details-btn" 
-                                    style="background: var(--forest-dark); color: white; font-weight: 700;"
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#productDetailsModal"
-                                    data-product='<?= json_encode($row) ?>'
-                                    <?= ($row['stock'] <= 0) ? 'disabled' : '' ?>>
-                                <i class="fa-solid fa-eye me-1"></i> Details
-                            </button>
-                        </div>
+    <div class="posted-grid p-4">
+        <?php if(!empty($posted_frames)): ?>
+            <?php foreach($posted_frames as $row): ?>
+                <div class="posted-card-item border">
+                    <div class="posted-image-box">
+                        <img src="/rga_frames/uploads/<?= $row['image_name'] ?>" alt="Frame">
                     </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div class="p-5 text-center w-100">
-                    <i class="fa-solid fa-box-open fa-2x text-muted mb-3"></i>
-                    <p class="text-muted">No frames match your criteria.</p>
+                    <div class="posted-info">
+                        <h4 class="posted-item-title"><?= htmlspecialchars($row['product_name']) ?></h4>
+                        <p class="posted-item-meta m-0"><?= $row['width'] ?>x<?= $row['height'] ?>"</p>
+                        <span class="posted-stock-pill <?= ($row['stock'] > 0) ? 'bg-success' : 'bg-danger' ?> mt-2">
+                            <?= ($row['stock'] > 0) ? $row['stock'] . ' In Stock' : 'Out of Stock' ?>
+                        </span>
+                    </div>
+                    <div class="posted-card-footer border-top pt-3">
+                        <span class="posted-price-text">₱ <?= number_format($row['product_price'], 2) ?></span>
+                        <button class="btn btn-sm rounded-pill px-3 shadow-sm open-details-btn" 
+                                style="background: var(--forest-dark); color: white;"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#productDetailsModal"
+                                data-product='<?= json_encode($row) ?>'>
+                            <i class="fa-solid fa-eye me-1"></i> Details
+                        </button>
+                    </div>
                 </div>
-            <?php endif; ?>
-        </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div class="p-5 text-center w-100">
+                <i class="fa-solid fa-box-open fa-2x text-muted mb-3"></i>
+                <p class="text-muted">No frames found for "<?= htmlspecialchars($search_term) ?>".</p>
+            </div>
+        <?php endif; ?>
     </div>
 
     <div class="modal fade" id="productDetailsModal" tabindex="-1" aria-hidden="true">
@@ -153,7 +143,6 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
 
                         <div class="col-md-7">
                             <button type="button" class="btn-close float-end" data-bs-dismiss="modal" aria-label="Close"></button>
-                            
                             <form id="addToCartForm">
                                 <input type="hidden" name="product_id" id="modalProductId">
                                 <input type="hidden" name="service_type" id="selectedService" value="Frame only">
@@ -229,8 +218,9 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
                                         </div>
                                     </div>
 
-                                    <div class="mt-4">
-                                        <button type="button" class="btn-add-cart w-100" onclick="submitAddToCart()">Add to Cart</button>
+                                    <div class="d-flex gap-2 mt-4">
+                                        <button type="button" class="btn-add-cart w-100 rounded-pill" onclick="submitAddToCart()">Add to Cart</button>
+                                        <button type="button" class="btn btn-buy-now w-100 rounded-pill" onclick="handleBuyNow()">Buy Now</button>
                                     </div>
                                 </form>
                             </div>
