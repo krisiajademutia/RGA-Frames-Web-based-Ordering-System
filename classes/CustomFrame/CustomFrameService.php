@@ -1,9 +1,10 @@
 <?php
 // classes/CustomFrame/CustomFrameService.php
 
+require_once __DIR__ . '/../Order/DirectOrderInterface.php';
 require_once __DIR__ . '/Repository/CustomFrameRepository.php';
 
-class CustomFrameService {
+class CustomFrameService implements DirectOrderInterface {
     private CustomFrameRepository $repo;
     private $conn;
 
@@ -12,7 +13,9 @@ class CustomFrameService {
         $this->conn = $conn;
     }
 
-    // ── Builder page data ────────────────────────────────
+    /**
+     * KEEP: Used by your custom shop screen to load dropdowns/prices
+     */
     public function getFrameBuilderData(): array {
         return [
             'frame_types'        => $this->repo->getActiveFrameTypes(),
@@ -26,14 +29,16 @@ class CustomFrameService {
         ];
     }
 
-    // ── Server-side price calculation ────────────────────
+    /**
+     * KEEP: Essential for calculating totals before saving to DB
+     */
     public function calculatePrice(array $data): array {
         $basePrice  = 0.0;
         $extraPrice = 0.0;
         $printPrice = 0.0;
 
-        $w = (float)($data['custom_width'] ?? 0);
-        $h = (float)($data['custom_height'] ?? 0);
+        $w = (float)($data['custom_width'] ?? $data['width'] ?? 0);
+        $h = (float)($data['custom_height'] ?? $data['height'] ?? 0);
 
         if (!empty($data['frame_size_id']) && $data['frame_size_id'] !== 'OTHER') {
             $fs = $this->repo->getFrameSizeById((int)$data['frame_size_id']);
@@ -58,7 +63,6 @@ class CustomFrameService {
         $primaryId   = (int)($data['primary_matboard_id']   ?? 0);
         $secondaryId = (int)($data['secondary_matboard_id'] ?? 0);
 
-        // Only charge when BOTH primary and secondary are selected — charge once using primary price
         if ($primaryId > 0 && $secondaryId > 0) {
             $mc1 = $this->repo->getMatboardById($primaryId);
             $extraPrice += $mc1 ? (float)$mc1['base_price'] : 0;
@@ -100,132 +104,111 @@ class CustomFrameService {
         ];
     }
 
-    // ── Add to Cart ──────────────────────────────────────
+    /**
+     * KEEP: Used for normal Cart additions
+     */
     public function addToCart(int $customerId, array $data): array {
         $this->conn->begin_transaction();
         try {
             $prices = $this->calculatePrice($data);
-
             $cProductId = $this->repo->insertCustomFrameProduct(
                 !empty($data['frame_type_id'])   ? (int)$data['frame_type_id']   : null,
                 !empty($data['frame_design_id']) ? (int)$data['frame_design_id'] : null,
                 !empty($data['frame_color_id'])  ? (int)$data['frame_color_id']  : null,
-                $prices['width'],
-                $prices['height'],
-                $prices['base_price']
+                $prices['width'], $prices['height'], $prices['base_price']
             );
 
             $cartId = $this->repo->getOrCreateCart($customerId);
-
             $printingItemId = null;
-            $serviceType    = 'FRAME_ONLY';
+            $serviceType = (!empty($data['service_type']) && $data['service_type'] === 'FRAME&PRINT') ? 'FRAME&PRINT' : 'FRAME_ONLY';
 
-            if (!empty($data['service_type']) && $data['service_type'] === 'FRAME&PRINT') {
-                $serviceType    = 'FRAME&PRINT';
+            if ($serviceType === 'FRAME&PRINT') {
                 $printingItemId = $this->repo->insertPrintingOrderItem(
-                    $cartId, null,
-                    (int)($data['paper_type_id'] ?? 0),
-                    $data['image_path'] ?? '',
-                    $prices['width'], $prices['height'],
-                    max(1, (int)($data['quantity'] ?? 1)),
-                    $prices['print_price']
+                    $cartId, null, (int)($data['paper_type_id'] ?? 0),
+                    $data['image_path'] ?? '', $prices['width'], $prices['height'],
+                    max(1, (int)($data['quantity'] ?? 1)), $prices['print_price']
                 );
             }
 
             $this->repo->insertFrameOrderItem(
-                'CUSTOM', null, $cProductId,
-                'CART', $cartId, null,
+                'CUSTOM', null, $cProductId, 'CART', $cartId, null,
                 $serviceType, $printingItemId,
-                (!empty($data['primary_matboard_id'])   && (int)$data['primary_matboard_id']   > 0) ? (int)$data['primary_matboard_id']   : null,
-                (!empty($data['secondary_matboard_id']) && (int)$data['secondary_matboard_id'] > 0) ? (int)$data['secondary_matboard_id'] : null,
-                !empty($data['mount_type_id']) ? (int)$data['mount_type_id'] : null,
+                (int)($data['primary_matboard_id'] ?? 0) ?: null,
+                (int)($data['secondary_matboard_id'] ?? 0) ?: null,
+                (int)($data['mount_type_id'] ?? 0) ?: null,
                 max(1, (int)($data['quantity'] ?? 1)),
-                $prices['base_price'],
-                $prices['extra_price'],
-                $prices['sub_total']
+                $prices['base_price'], $prices['extra_price'], $prices['sub_total']
             );
 
             $this->conn->commit();
             return ['success' => true, 'message' => 'Added to cart successfully!'];
-
         } catch (Exception $e) {
             $this->conn->rollback();
-            return ['success' => false, 'message' => 'Failed to add to cart: ' . $e->getMessage()];
+            return ['success' => false, 'message' => $e->getMessage()];
         }
     }
 
-    // ── Buy Now ──────────────────────────────────────────
-    // Now accepts discount_amount and final_total injected by checkout_process.php
-    public function buyNow(int $customerId, array $data): array {
+    /**
+     * UPDATED: Renamed to placeBuyNow to match DirectOrderInterface
+     */
+    public function placeBuyNow(int $customerId, array $data): array {
         $this->conn->begin_transaction();
         try {
             $prices = $this->calculatePrice($data);
 
+            // 1. Insert Custom Product
             $cProductId = $this->repo->insertCustomFrameProduct(
-                !empty($data['frame_type_id'])   ? (int)$data['frame_type_id']   : null,
-                !empty($data['frame_design_id']) ? (int)$data['frame_design_id'] : null,
-                !empty($data['frame_color_id'])  ? (int)$data['frame_color_id']  : null,
-                $prices['width'],
-                $prices['height'],
-                $prices['base_price']
+                (int)($data['frame_type_id'] ?? 0) ?: null,
+                (int)($data['frame_design_id'] ?? 0) ?: null,
+                (int)($data['frame_color_id'] ?? 0) ?: null,
+                $prices['width'], $prices['height'], $prices['base_price']
             );
 
+            // 2. Insert Main Order
             $refNo          = 'RGA-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
             $qty            = max(1, (int)($data['quantity'] ?? 1));
             $subTotal       = $prices['grand_total'];
             $discountAmount = (float)($data['discount_amount'] ?? 0.00);
-            $finalTotal     = isset($data['final_total']) ? (float)$data['final_total'] : $subTotal;
-            $paymentMethod  = strtoupper($data['payment_method']  ?? 'CASH');
-            $deliveryOption = strtoupper($data['delivery_option'] ?? 'PICKUP');
-            $deliveryAddress = $data['delivery_address'] ?? null;
+            $finalTotal     = (float)($data['final_total'] ?? $subTotal);
 
             $orderId = $this->repo->insertOrder(
-                $customerId, $refNo,
-                $subTotal, $discountAmount, $finalTotal,
-                $paymentMethod, $deliveryOption, $deliveryAddress
+                $customerId, $refNo, $subTotal, $discountAmount, $finalTotal,
+                strtoupper($data['payment_method'] ?? 'CASH'),
+                strtoupper($data['delivery_option'] ?? 'PICKUP'),
+                $data['delivery_address'] ?? null
             );
 
+            // 3. Handle Printing if needed
             $printingItemId = null;
-            $serviceType    = 'FRAME_ONLY';
+            $serviceType = (!empty($data['service_type']) && $data['service_type'] === 'FRAME&PRINT') ? 'FRAME&PRINT' : 'FRAME_ONLY';
 
-            if (!empty($data['service_type']) && $data['service_type'] === 'FRAME&PRINT') {
-                $serviceType    = 'FRAME&PRINT';
+            if ($serviceType === 'FRAME&PRINT') {
                 $printingItemId = $this->repo->insertPrintingOrderItem(
-                    null, $orderId,
-                    (int)($data['paper_type_id'] ?? 0),
-                    $data['image_path'] ?? '',
-                    $prices['width'], $prices['height'],
-                    $qty,
-                    $prices['print_price']
+                    null, $orderId, (int)($data['paper_type_id'] ?? 0),
+                    $data['image_path'] ?? '', $prices['width'], $prices['height'],
+                    $qty, $prices['print_price']
                 );
             }
 
+            // 4. Link everything
             $this->repo->insertFrameOrderItem(
-                'CUSTOM', null, $cProductId,
-                'ORDER', null, $orderId,
+                'CUSTOM', null, $cProductId, 'ORDER', null, $orderId,
                 $serviceType, $printingItemId,
-                (!empty($data['primary_matboard_id'])   && (int)$data['primary_matboard_id']   > 0) ? (int)$data['primary_matboard_id']   : null,
-                (!empty($data['secondary_matboard_id']) && (int)$data['secondary_matboard_id'] > 0) ? (int)$data['secondary_matboard_id'] : null,
-                !empty($data['mount_type_id']) ? (int)$data['mount_type_id'] : null,
-                $qty,
-                $prices['base_price'],
-                $prices['extra_price'],
-                $prices['sub_total']
+                (int)($data['primary_matboard_id'] ?? 0) ?: null,
+                (int)($data['secondary_matboard_id'] ?? 0) ?: null,
+                (int)($data['mount_type_id'] ?? 0) ?: null,
+                $qty, $prices['base_price'], $prices['extra_price'], $prices['sub_total']
             );
 
+            // 5. Payment record
             $this->repo->insertPayment($orderId, $finalTotal);
 
             $this->conn->commit();
-            return [
-                'success'  => true,
-                'message'  => 'Order placed successfully!',
-                'order_id' => $orderId,
-                'ref_no'   => $refNo,
-            ];
+            return ['success' => true, 'order_id' => $orderId, 'ref_no' => $refNo];
 
         } catch (Exception $e) {
             $this->conn->rollback();
-            return ['success' => false, 'message' => 'Failed to place order: ' . $e->getMessage()];
+            return ['success' => false, 'message' => $e->getMessage()];
         }
     }
 }

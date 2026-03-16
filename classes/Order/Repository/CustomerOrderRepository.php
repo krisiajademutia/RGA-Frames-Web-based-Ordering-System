@@ -40,7 +40,7 @@ class CustomerOrderRepository {
                          WHEN i.c_product_id IS NOT NULL THEN fd.design_name
                          ELSE NULL END) AS item_label,
                 MAX(CASE WHEN i.r_product_id IS NOT NULL OR i.c_product_id IS NOT NULL THEN 1 ELSE 0 END) AS has_frame,
-                MAX(CASE WHEN i.service_type = 'FRAME&PRINT' OR poi.printing_order_item_id IS NOT NULL THEN 1 ELSE 0 END) AS has_print,
+                MAX(CASE WHEN i.service_type = 'FRAME&PRINT' OR poi.order_id IS NOT NULL THEN 1 ELSE 0 END) AS has_print,
                 MAX(CASE WHEN i.c_product_id IS NOT NULL THEN 1 ELSE 0 END) AS is_custom,
                 SUM(i.quantity) AS total_qty
             FROM tbl_orders o
@@ -54,7 +54,7 @@ class CustomerOrderRepository {
             LEFT JOIN tbl_ready_made_product rm      ON i.r_product_id = rm.r_product_id
             LEFT JOIN tbl_custom_frame_product cfp   ON i.c_product_id = cfp.c_product_id
             LEFT JOIN tbl_frame_designs fd           ON cfp.frame_design_id = fd.frame_design_id
-            LEFT JOIN tbl_printing_order_items poi   ON i.printing_order_item_id = poi.printing_order_item_id
+            LEFT JOIN tbl_printing_order_items poi ON o.order_id = poi.order_id
             WHERE o.customer_id = ?
         ";
         $params = [$customer_id];

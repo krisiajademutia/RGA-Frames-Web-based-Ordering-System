@@ -175,6 +175,23 @@ $tab_labels = [
                     <!-- Order ID + Ref + Status -->
                     <div class="admn-ordr-id-row">
                         <span class="admn-ordr-id">Order #<?= $order['order_id'] ?></span>
+                        
+                        <?php 
+                            // Pull the service_type from the database (which exists for frames, but is empty for printing)
+                            $type = strtoupper($order['service_type'] ?? '');
+
+                            if ($type === 'FRAME_ONLY') {
+                                echo '<span class="badge bg-primary">Frame Only</span>';
+                            } elseif ($type === 'FRAME&PRINT') {
+                                echo '<span class="badge bg-success">Frame & Print</span>';
+                            } elseif (empty($type)) {
+                                // Since tbl_printing_order_items has no service_type, it will be empty!
+                                echo '<span class="badge bg-info text-dark"><i class="fas fa-print"></i> Print Only</span>';
+                            } else {
+                                echo '<span class="badge bg-secondary">' . htmlspecialchars($order['service_type']) . '</span>';
+                            }
+                        ?>
+
                         <span class="admn-ordr-ref-pill"><?= htmlspecialchars($order['order_reference_no'] ?? '—') ?></span>
                         <span class="admn-ordr-status-pill admn-ordr-status-<?= $st ?>"><?= $stLabel ?></span>
                     </div>
