@@ -11,6 +11,7 @@ class DirectOrderFactory {
             case 'PRINTING':
                 require_once __DIR__ . '/../Printing/PrintingDirectOrderService.php';
                 return new PrintingDirectOrderService($conn); 
+            
             default:
                 throw new Exception("Unknown item type: " . $itemType);
         }
