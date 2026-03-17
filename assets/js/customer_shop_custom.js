@@ -1,7 +1,7 @@
 // assets/js/customer_shop_custom.js
 
 const state = {
-    serviceType:       'FRAME_ONLY',  // matches the pre-selected default in HTML
+    serviceType:       'FRAME_ONLY',
     frameTypeId:       null,  frameTypeName:    '',  frameTypePrice:   0,
     frameDesignId:     null,  frameDesignName:  '',  frameDesignPrice: 0,
     frameColorId:      null,  frameColorName:   '',
@@ -11,7 +11,7 @@ const state = {
     mountTypeId:       null,  mountName:        '',  mountPrice:       0,
     paperTypeId:       null,  paperName:        '',  paperMultiplier:  0,
     imageUploaded:     false, imageName:        '',
-    quantity:          1,
+    quantity:          1
 };
 
 // ── Helpers ──────────────────────────────────────────────
@@ -199,14 +199,11 @@ function updateMatboardSummary() {
     const sec = parseInt(state.secondaryMatboard) || 0;
 
     if (pri === 0 && sec === 0) {
-        // Nothing selected
         hideRow('sum-matboard-row');
     } else if (pri !== 0 && sec !== 0) {
-        // Both selected — charge once (use primary price, they should be the same)
         showRow('sum-matboard-row', 'sum-matboard', state.primaryMatName + ' + ' + state.secondaryMatName);
         setPrice('sum-matboard-price', state.primaryMatPrice);
     } else {
-        // Only one selected — free
         const name = pri !== 0 ? state.primaryMatName : state.secondaryMatName;
         showRow('sum-matboard-row', 'sum-matboard', name);
         setPrice('sum-matboard-price', 0);
@@ -316,7 +313,6 @@ function updateTotal() {
     // 2. Extras (matboards + mount)
     const priId = parseInt(state.primaryMatboard)  || 0;
     const secId = parseInt(state.secondaryMatboard) || 0;
-    // Only charge when BOTH primary and secondary are selected — charge once
     if (priId > 0 && secId > 0) {
         extras += state.primaryMatPrice;
     }
@@ -347,18 +343,12 @@ function updateTotal() {
         setPrice('sum-paper-price', 0);
     }
 
-    // 4. Grand total
+    // 4. Grand total (ORIGINAL CALCULATION ONLY)
     const unitTotal = frameBase + extras + printBase;
     let grandTotal  = unitTotal * state.quantity;
 
-    // NOTE: The 20% discount shown here is just a preview.
-    // The real discount is applied server-side at checkout based on
-    // bulk quantity, repeat customer, and photographer status.
-    if (typeof HAS_DISCOUNT !== 'undefined' && HAS_DISCOUNT) {
-        grandTotal = grandTotal * 0.80;
-        const serviceLabel = state.serviceType === 'FRAME_PRINT' ? 'Frame & Print' : 'Frame only';
-        showRow('sum-service-row', 'sum-service', `${serviceLabel} (⭐ 20% LOYALTY DISCOUNT!)`);
-    }
+    const serviceLabel = state.serviceType === 'FRAME_PRINT' ? 'Frame & Print' : 'Frame only';
+    showRow('sum-service-row', 'sum-service', serviceLabel);
 
     qs('#csc-total').textContent = '₱' + grandTotal.toLocaleString('en-PH', {
         minimumFractionDigits: 2,
@@ -367,6 +357,28 @@ function updateTotal() {
 }
 
 // ── Form Submission ──────────────────────────────────────
+function buildFormData(actionType) {
+    const fd = new FormData();
+    fd.append('action',             actionType);
+    fd.append('service_type',       state.serviceType === 'FRAME_PRINT' ? 'FRAME&PRINT' : 'FRAME_ONLY');
+    fd.append('frame_type_id',      state.frameTypeId    ?? '');
+    fd.append('frame_design_id',    state.frameDesignId  ?? '');
+    fd.append('frame_color_id',     state.frameColorId   ?? '');
+    fd.append('frame_size_id',      state.frameSizeId    ?? 'OTHER');
+    fd.append('width',              state.frameWidth     ?? 0);
+    fd.append('height',             state.frameHeight    ?? 0);
+    fd.append('primary_matboard',   state.primaryMatboard   ?? 0);
+    fd.append('secondary_matboard', state.secondaryMatboard ?? 0);
+    fd.append('mount_type_id',      state.mountTypeId    ?? '');
+    fd.append('paper_type_id',      state.paperTypeId    ?? '');
+    fd.append('quantity',           state.quantity);
+    
+    const img = qs('#csc-image-input');
+    if (img && img.files[0]) fd.append('customer_image', img.files[0]);
+
+    return fd;
+}
+
 async function submitAddToCart() {
     if (!state.frameTypeId || !state.frameDesignId || !state.frameColorId) {
         showToast('Please complete your frame selection first.', 'error'); return;
@@ -381,22 +393,7 @@ async function submitAddToCart() {
         showToast('Please upload an image for Frame & Print!', 'error'); return;
     }
 
-    const fd = new FormData();
-    fd.append('action',             'add_to_cart');
-    fd.append('service_type',       state.serviceType === 'FRAME_PRINT' ? 'FRAME&PRINT' : 'FRAME_ONLY');
-    fd.append('frame_type_id',      state.frameTypeId    ?? '');
-    fd.append('frame_design_id',    state.frameDesignId  ?? '');
-    fd.append('frame_color_id',     state.frameColorId   ?? '');
-    fd.append('frame_size_id',      state.frameSizeId    ?? 'OTHER');
-    fd.append('width',       state.frameWidth     ?? 0);
-    fd.append('height',      state.frameHeight    ?? 0);
-    fd.append('primary_matboard',   state.primaryMatboard   ?? 0);
-    fd.append('secondary_matboard', state.secondaryMatboard ?? 0);
-    fd.append('mount_type_id',      state.mountTypeId    ?? '');
-    fd.append('paper_type_id',      state.paperTypeId    ?? '');
-    fd.append('quantity',           state.quantity);
-    const img = qs('#csc-image-input');
-    if (img && img.files[0]) fd.append('customer_image', img.files[0]);
+    const fd = buildFormData('add_to_cart');
 
     const cartBtn = qs('#csc-add-to-cart');
     const buyBtn  = qs('#csc-buy-now');
@@ -430,22 +427,7 @@ async function submitBuyNow() {
         showToast('Please upload an image for Frame & Print!', 'error'); return;
     }
 
-    const fd = new FormData();
-    fd.append('action',             'buy_now');
-    fd.append('service_type',       state.serviceType === 'FRAME_PRINT' ? 'FRAME&PRINT' : 'FRAME_ONLY');
-    fd.append('frame_type_id',      state.frameTypeId    ?? '');
-    fd.append('frame_design_id',    state.frameDesignId  ?? '');
-    fd.append('frame_color_id',     state.frameColorId   ?? '');
-    fd.append('frame_size_id',      state.frameSizeId    ?? 'OTHER');
-    fd.append('width',       state.frameWidth     ?? 0);
-    fd.append('height',      state.frameHeight    ?? 0);
-    fd.append('primary_matboard',   state.primaryMatboard   ?? 0);
-    fd.append('secondary_matboard', state.secondaryMatboard ?? 0);
-    fd.append('mount_type_id',      state.mountTypeId    ?? '');
-    fd.append('paper_type_id',      state.paperTypeId    ?? '');
-    fd.append('quantity',           state.quantity);
-    const img = qs('#csc-image-input');
-    if (img && img.files[0]) fd.append('customer_image', img.files[0]);
+    const fd = buildFormData('buy_now');
 
     const buyBtn  = qs('#csc-buy-now');
     const cartBtn = qs('#csc-add-to-cart');
@@ -557,5 +539,4 @@ document.addEventListener('keydown', function(e) {
 });
 
 // ── Page load: sync state with pre-selected HTML defaults ─
-// Service type "Frame only" is pre-selected in HTML but state was null — show it in summary
 showRow('sum-service-row', 'sum-service', 'Frame only');

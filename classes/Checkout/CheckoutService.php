@@ -1,16 +1,20 @@
 <?php
 // classes/Checkout/CheckoutService.php
+
 require_once __DIR__ . '/Repository/CheckoutRepository.php';
+require_once __DIR__ . '/../CustomFrame/CustomFrameService.php';
 
 class CheckoutService {
     private $repo;
+    private $conn;
 
     // ── Business rule constants ──────────────────────────
-    const BULK_QTY_THRESHOLD = 30;   // min total frames to unlock delivery + bulk discount
-    const DISCOUNT_RATE      = 0.20; // flat 20% off
+    const BULK_QTY_THRESHOLD = 30;   // min total frames
+    const DISCOUNT_RATE      = 0.20; // 20%
 
     public function __construct($conn) {
         $this->repo = new CheckoutRepository($conn);
+        $this->conn = $conn;
     }
 
     public function getCustomerDetails(int $customer_id): ?array {
@@ -26,7 +30,7 @@ class CheckoutService {
      *
      * Rules:
      * 1. BULK_ORDER      — total qty >= 30 frames
-     * 2. REPEAT_CUSTOMER — customer has at least 1 COMPLETED past order
+     * 2. REPEAT_CUSTOMER — customer has at least 3 COMPLETED past orders (Kuya's Rule)
      * 3. PHOTOGRAPHER    — customer_type = 'PHOTOGRAPHER'
      *
      * Returns:
@@ -37,13 +41,13 @@ class CheckoutService {
         $totalQty = array_sum(array_column($cartItems, 'quantity'));
         $qualified = false;
 
-        // Rule 1: Bulk order
+        // Rule 1: Bulk order (30+ items)
         if ($totalQty >= self::BULK_QTY_THRESHOLD) {
             $qualified = true;
         }
 
-        // Rule 2: Repeat customer
-        if (!$qualified && $this->repo->getCompletedOrderCount($customer_id) > 0) {
+        // Rule 2: Repeat customer (FIXED: Now requires 3 or more completed orders)
+        if (!$qualified && $this->repo->getCompletedOrderCount($customer_id) >= 3) {
             $qualified = true;
         }
 
@@ -52,6 +56,8 @@ class CheckoutService {
             $qualified = true;
         }
 
+        // Because of the !$qualified checks above, it is IMPOSSIBLE to get 40% or 60%.
+        // It maxes out at exactly 20%.
         $discountAmount = $qualified ? round($subtotal * self::DISCOUNT_RATE, 2) : 0.00;
 
         return [
@@ -60,21 +66,45 @@ class CheckoutService {
         ];
     }
 
-    /**
-     * Delivery is only unlocked when total qty >= BULK_QTY_THRESHOLD (30 frames).
-     */
+    // ✅ DELIVERY CHECK (FIXED)
     public function isDeliveryUnlocked(array $cartItems): bool {
         return array_sum(array_column($cartItems, 'quantity')) >= self::BULK_QTY_THRESHOLD;
     }
 
-    // UPGRADED: Now accepts $isBuyNow and $buyNowItemData
-    public function processCheckout(int $customer_id, array $post, array $files, array $cartItems, float $cartTotal, bool $isBuyNow = false, ?array $buyNowItemData = null): array {
-        if (empty($cartItems)) {
+    // ✅ MAIN CHECKOUT (FULLY FIXED)
+    public function processCheckout(
+        int $customer_id,
+        array $post,
+        array $files,
+        array $cartItems,
+        float $cartTotal,
+        bool $isBuyNow = false,
+        ?array $buyNowItemData = null
+    ): array {
+
+        if (empty($cartItems) && !$isBuyNow) {
             return ['success' => false, 'message' => 'Your cart is empty!'];
         }
 
+        // 🔥 STEP 1: FIX BUY NOW TOTAL (SERVER-SIDE RECOMPUTE)
+        if ($isBuyNow && $buyNowItemData) {
+            $cfService = new CustomFrameService($this->conn);
+            $priceData = $cfService->calculatePrice($buyNowItemData);
+
+            $cartTotal = $priceData['grand_total'];
+        }
+
+        // 🔥 STEP 2: NORMALIZE ITEMS FOR DISCOUNT + DELIVERY
+        $normalizedItems = $cartItems;
+
+        if ($isBuyNow && $buyNowItemData) {
+            $normalizedItems = [[
+                'quantity' => (int)($buyNowItemData['quantity'] ?? 1)
+            ]];
+        }
+
         $delivery_option = strtoupper(trim($post['delivery_option'] ?? 'PICKUP'));
-        $payment_method  = strtoupper(trim($post['payment_method']  ?? 'CASH'));
+        $payment_method  = strtoupper(trim($post['payment_method'] ?? 'CASH'));
 
         $address = ($delivery_option === 'DELIVERY')
             ? trim($post['delivery_address'] ?? '')
@@ -84,16 +114,16 @@ class CheckoutService {
             return ['success' => false, 'message' => 'Please enter your delivery address.'];
         }
 
-        // Server-side guard: delivery only when unlocked
-        if ($delivery_option === 'DELIVERY' && !$this->isDeliveryUnlocked($cartItems)) {
+        // 🔥 FIXED DELIVERY CHECK
+        if ($delivery_option === 'DELIVERY' && !$this->isDeliveryUnlocked($normalizedItems)) {
             return ['success' => false, 'message' => 'Delivery is only available for orders of 30 or more frames.'];
         }
 
         $delivery_fee = ($delivery_option === 'DELIVERY') ? 150.00 : 0.00;
 
-        // Calculate discount
+        // 🔥 FIXED DISCOUNT
         $customer = $this->repo->getCustomerDetails($customer_id);
-        $discount = $this->calculateDiscount($customer_id, $customer, $cartItems, $cartTotal);
+        $discount = $this->calculateDiscount($customer_id, $customer, $normalizedItems, $cartTotal);
 
         $total_price = round(($cartTotal - $discount['discount_amount']) + $delivery_fee, 2);
         if ($total_price < 0) $total_price = 0.00;
@@ -110,6 +140,7 @@ class CheckoutService {
 
         $paymentProof = null;
 
+        // GCash handling
         if ($payment_method === 'GCASH') {
             if (!isset($files['receipt_image']) || $files['receipt_image']['error'] !== UPLOAD_ERR_OK) {
                 return ['success' => false, 'message' => 'GCash receipt is required.'];
@@ -120,18 +151,18 @@ class CheckoutService {
 
             $ext = strtolower(pathinfo($files['receipt_image']['name'], PATHINFO_EXTENSION));
             if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
-                return ['success' => false, 'message' => 'Invalid file format. Only JPG, PNG, WEBP allowed.'];
+                return ['success' => false, 'message' => 'Invalid file format.'];
             }
 
             if ($files['receipt_image']['size'] > 10 * 1024 * 1024) {
-                return ['success' => false, 'message' => 'Receipt image too large. Maximum 10MB.'];
+                return ['success' => false, 'message' => 'File too large.'];
             }
 
-            $fileName = 'gcash_checkout_' . $customer_id . '_' . time() . '.' . $ext;
+            $fileName = 'gcash_' . $customer_id . '_' . time() . '.' . $ext;
             $dest     = $uploadDir . $fileName;
 
             if (!move_uploaded_file($files['receipt_image']['tmp_name'], $dest)) {
-                return ['success' => false, 'message' => 'Failed to upload receipt. Please try again.'];
+                return ['success' => false, 'message' => 'Upload failed.'];
             }
 
             $paymentProof = [
@@ -140,11 +171,18 @@ class CheckoutService {
             ];
         }
 
-        // UPGRADED: Passes $isBuyNow and $buyNowItemData into the repository
-        $success = $this->repo->placeOrder($customer_id, $orderData, $cartItems, $paymentProof, $isBuyNow, $buyNowItemData);
+        // 🔥 FINAL SAVE
+        $success = $this->repo->placeOrder(
+            $customer_id,
+            $orderData,
+            $cartItems,
+            $paymentProof,
+            $isBuyNow,
+            $buyNowItemData
+        );
 
         return $success
-            ? ['success' => true,  'message' => 'Order placed successfully!', 'ref_no' => $orderData['reference_no']]
-            : ['success' => false, 'message' => 'Something went wrong. Please try again.'];
+            ? ['success' => true, 'message' => 'Order placed successfully!', 'ref_no' => $orderData['reference_no']]
+            : ['success' => false, 'message' => 'Something went wrong.'];
     }
 }
