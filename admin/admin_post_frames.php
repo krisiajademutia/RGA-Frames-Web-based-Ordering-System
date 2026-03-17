@@ -297,9 +297,6 @@ $posted_frames = $frameService->getAllFrames();
 <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow" style="border-radius: 15px;">
-            <div class="modal-header border-0 pb-0">
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
             <div class="modal-body text-center">
                 <div class="mx-auto mb-3" style="width:60px; height:60px; border-radius:50%; background:#e6f0ee; color:#004030; display:flex; align-items:center; justify-content:center; font-size:24px;">
                     <i class="fa-solid fa-trash-can"></i>
