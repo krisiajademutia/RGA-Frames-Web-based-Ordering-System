@@ -1,6 +1,9 @@
 <?php
 // classes/Checkout/Repository/CheckoutRepository.php
 
+// 🟢 NEW: Pull in our SOLID Strategies
+require_once __DIR__ . '/OrderStrategies.php';
+
 class CheckoutRepository {
     private $conn;
 
@@ -40,7 +43,7 @@ class CheckoutRepository {
         $stmt1->execute();
         $frames = $stmt1->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        // 2. Fetch Standalone Printing Items (Removed non-existent source_type column)
+        // 2. Fetch Standalone Printing Items
         $stmt2 = $this->conn->prepare("
             SELECT 
                 pi.*, 
@@ -120,89 +123,22 @@ class CheckoutRepository {
                 $stmt3->execute();
             }
 
-            // 4. THE OMNI-CHANNEL SAVER
+            // 4. THE OMNI-CHANNEL SAVER (🟢 NOW 100% SOLID! 🟢)
             if ($isBuyNow && $buyNowItemData) {
                 $itemType = $buyNowItemData['item_type'] ?? 'CUSTOM_FRAME';
-                $qty = (int)($buyNowItemData['quantity'] ?? 1);
+                $qty      = (int)($buyNowItemData['quantity'] ?? 1);
                 $subTotal = (float)$orderData['sub_total']; 
 
-                if ($itemType === 'CUSTOM_FRAME') {
-                    // Extract SAFELY. If missing, pass NULL.
-                    $service_type   = $buyNowItemData['service_type'] ?? 'FRAME_ONLY';
-                    $f_type_id      = !empty($buyNowItemData['frame_type_id']) ? $buyNowItemData['frame_type_id'] : null;
-                    $f_design_id    = !empty($buyNowItemData['frame_design_id']) ? $buyNowItemData['frame_design_id'] : null;
-                    $f_color_id     = !empty($buyNowItemData['frame_color_id']) ? $buyNowItemData['frame_color_id'] : null;
-                    $custom_w       = (float)($buyNowItemData['width'] ?? 0);
-                    $custom_h       = (float)($buyNowItemData['height'] ?? 0);
-                    $mat1_id        = !empty($buyNowItemData['primary_matboard_id']) ? $buyNowItemData['primary_matboard_id'] : null;
-                    $mat2_id        = !empty($buyNowItemData['secondary_matboard_id']) ? $buyNowItemData['secondary_matboard_id'] : null;
-                    $mount_id       = !empty($buyNowItemData['mount_type_id']) ? $buyNowItemData['mount_type_id'] : null;
-                    
-                    // A. Create Custom Frame Profile
-                    $stmtCF = $this->conn->prepare("
-                        INSERT INTO tbl_custom_frame_product 
-                        (frame_type_id, frame_design_id, frame_color_id, custom_width, custom_height, calculated_price) 
-                        VALUES (?, ?, ?, ?, ?, ?)
-                    ");
-                    $stmtCF->bind_param("iiiddd", $f_type_id, $f_design_id, $f_color_id, $custom_w, $custom_h, $subTotal);
-                    $stmtCF->execute();
-                    $c_product_id = $this->conn->insert_id;
-
-                    // B. Attached Print
-                    $printing_id = null;
-                    if ($service_type === 'FRAME&PRINT') {
-                        $paper_id = !empty($buyNowItemData['paper_type_id']) ? $buyNowItemData['paper_type_id'] : null;
-                        $img_path = $buyNowItemData['image_path'] ?? null;
-                        $zero_price = 0.00;
-
-                        $stmtPrint = $this->conn->prepare("
-                            INSERT INTO tbl_printing_order_items 
-                            (order_id, paper_type_id, image_path, width_inch, height_inch, quantity, sub_total) 
-                            VALUES (?, ?, ?, ?, ?, ?, ?)
-                        ");
-                        $stmtPrint->bind_param("iisddid", $order_id, $paper_id, $img_path, $custom_w, $custom_h, $qty, $zero_price);
-                        $stmtPrint->execute();
-                        $printing_id = $this->conn->insert_id;
-                    }
-                    
-                    // C. Link Main Order
-                    $stmtOrder = $this->conn->prepare("
-                        INSERT INTO tbl_frame_order_items 
-                        (order_id, source_type, frame_category, c_product_id, service_type, printing_order_item_id, primary_matboard_id, secondary_matboard_id, mount_type_id, quantity, base_price, extra_price, sub_total) 
-                        VALUES (?, 'ORDER', 'CUSTOM', ?, ?, ?, ?, ?, ?, ?, 0, 0, ?)
-                    ");
-                    $stmtOrder->bind_param("iisiiiiid", $order_id, $c_product_id, $service_type, $printing_id, $mat1_id, $mat2_id, $mount_id, $qty, $subTotal);
-                    $stmtOrder->execute();
-
-                } elseif ($itemType === 'PRINTING') {
-                    $p_paper_id = !empty($buyNowItemData['paper_type_id']) ? $buyNowItemData['paper_type_id'] : null;
-                    $p_width    = (float)($buyNowItemData['width'] ?? 0);
-                    $p_height   = (float)($buyNowItemData['height'] ?? 0);
-                    $p_image    = (string)($buyNowItemData['image_path'] ?? '');
-
-                    $stmtPrint = $this->conn->prepare("
-                        INSERT INTO tbl_printing_order_items 
-                        (order_id, paper_type_id, image_path, width_inch, height_inch, quantity, sub_total) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                    ");
-                    $stmtPrint->bind_param("iisddid", $order_id, $p_paper_id, $p_image, $p_width, $p_height, $qty, $subTotal);
-                    $stmtPrint->execute();
-
-                } elseif ($itemType === 'READY_MADE') {
-                    $r_product_id = !empty($buyNowItemData['r_product_id']) ? $buyNowItemData['r_product_id'] : null;
-                    $stmtRM = $this->conn->prepare("
-                        INSERT INTO tbl_frame_order_items 
-                        (order_id, source_type, frame_category, r_product_id, service_type, quantity, base_price, extra_price, sub_total) 
-                        VALUES (?, 'ORDER', 'READY_MADE', ?, 'FRAME_ONLY', ?, 0, 0, ?)
-                    ");
-                    $stmtRM->bind_param("iiid", $order_id, $r_product_id, $qty, $subTotal);
-                    $stmtRM->execute();
-                }
+                // Look how clean this is! The Repository uses the Factory to get the right strategy
+                $saver = ItemSaverFactory::make($itemType);
+                
+                // Then it just delegates the save command. No if/else statements needed!
+                $saver->saveItem($this->conn, $order_id, $buyNowItemData, $subTotal, $qty);
 
             } else {
                 // IT'S A CART CHECKOUT - The completely bulletproof transfer
-                $cartQuery = $this->conn->query("SELECT cart_id FROM tbl_cart WHERE customer_id = $customer_id LIMIT 1");
-                
+                $cartQuery = $this->conn->query("SELECT cart_id FROM tbl_cart WHERE customer_id = $customer_id ORDER BY cart_id DESC LIMIT 1");
+
                 if ($cartQuery && $cartQuery->num_rows > 0) {
                     $cartRow = $cartQuery->fetch_assoc();
                     $c_id = (int)$cartRow['cart_id'];

@@ -1,4 +1,4 @@
-// assets/js/customer_printing.js
+// assets/js/customer_shop_printing.js
 
 const paperSelect = document.getElementById('paper-type-select');
 const sizeSelect = document.getElementById('size-select');
@@ -15,28 +15,56 @@ const btnBuyNow = document.querySelector('.ps-btn-buy-now');
 const uploadArea = document.getElementById('upload-area');
 
 function showToast(message, type = 'success') {
-    Swal.fire({
-        toast: true,
-        position: 'bottom-end', 
-        icon: type,
-        title: message,
-        showConfirmButton: false,
-        timer: 4000,
-        timerProgressBar: true
-    });
+    const existing = document.querySelector('#csc-toast');
+    if (existing) existing.remove();
+    
+    const toast = document.createElement('div');
+    toast.id = 'csc-toast';
+    
+    // Using left/right 0 and margin auto perfectly centers it without fighting the animation
+    toast.style.cssText = [
+        'position:fixed', 
+        'bottom:3rem', 
+        'left:0', 
+        'right:0',
+        'margin:0 auto',
+        'width:max-content',
+        'max-width:90%',
+        'z-index:9999',
+        'background:' + (type === 'success' ? '#0F473A' : '#ef4444'),
+        'color:#fff', 
+        'padding:0.85rem 1.5rem', 
+        'border-radius:10px',
+        'font-size:0.9rem', 
+        'font-weight:600',
+        'box-shadow:0 4px 16px rgba(0,0,0,0.15)',
+        'animation:fadeInUp 0.3s ease',
+        'text-align:center'
+    ].join(';');
+    
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.remove(), 3500);
 }
 
-function validateForm() {
+function validateForm(showToastMsg = false) {
     let isValid = true;
+    let errorMessage = "";
+
     const wErr = document.getElementById('width-error');
     const hErr = document.getElementById('height-error');
     const fileErr = document.getElementById('file-error');
     const paperErr = document.getElementById('paper-error');
 
     [wErr, hErr, fileErr, paperErr].forEach(el => {
-        el.innerText = "";
-        el.classList.add('d-none');
+        if(el) {
+            el.innerText = "";
+            el.classList.add('d-none');
+        }
     });
+    customW.style.borderColor = '';
+    customH.style.borderColor = '';
 
     if (!fileInput.files[0]) {
         fileErr.innerText = "Please select an image.";
@@ -55,26 +83,55 @@ function validateForm() {
     const maxHeight = parseFloat(selectedOption?.dataset.maxheight) || 0;
     const userW = parseFloat(customW.value);
     const userH = parseFloat(customH.value);
+    const paperNameText = paperSelect.selectedIndex > 0 ? paperSelect.options[paperSelect.selectedIndex].text.toLowerCase() : '';
 
+   // 3. MAXIMUM WIDTH CHECK
     if (!customW.value || userW <= 0) {
-        wErr.innerText = "Required";
-        wErr.classList.remove('d-none');
+        if(wErr) { wErr.innerText = "Required"; wErr.classList.remove('d-none'); }
+        customW.style.borderColor = '#ef4444'; // Red Border
         isValid = false;
+        if(!errorMessage) errorMessage = "Please enter a valid width.";
     } else if (maxWidth > 0 && userW > maxWidth) {
-        wErr.innerText = `Width must not exceed ${maxWidth}"`;
-        wErr.classList.remove('d-none');
+        if(wErr) { wErr.innerText = `Maximum Print Size is ${maxWidth}x${maxHeight}`; wErr.classList.remove('d-none'); }
+        customW.style.borderColor = '#ef4444'; // Red Border
         isValid = false;
+        if(!errorMessage) errorMessage = `Maximum Print Size is ${maxWidth}x${maxHeight} inches.`;
     }
 
+    // 4. MAXIMUM HEIGHT CHECK
     if (!customH.value || userH <= 0) {
-        hErr.innerText = "Required";
-        hErr.classList.remove('d-none');
+        if(hErr) { hErr.innerText = "Required"; hErr.classList.remove('d-none'); }
+        customH.style.borderColor = '#ef4444'; // Red Border
         isValid = false;
+        if(!errorMessage) errorMessage = "Please enter a valid height.";
     } else if (maxHeight > 0 && userH > maxHeight) {
-        hErr.innerText = `Height must not exceed ${maxHeight}"`;
-        hErr.classList.remove('d-none');
+        if(hErr) { hErr.innerText = `Maximum Print Size is ${maxWidth}x${maxHeight}`; hErr.classList.remove('d-none'); }
+        customH.style.borderColor = '#ef4444'; // Red Border
         isValid = false;
+        if(!errorMessage) errorMessage = `Maximum Print Size is ${maxWidth}x${maxHeight} inches.`;
     }
+
+    if (isValid && paperNameText.includes('canvas')) {
+        const shortSide = Math.min(userW, userH);
+        const longSide = Math.max(userW, userH);
+
+        if (shortSide < 12 || longSide < 18) {
+            const errorMsg = "Canvas minimum is 12x18";
+            if(wErr) { wErr.innerText = errorMsg; wErr.classList.remove('d-none'); }
+            if(hErr) { hErr.innerText = errorMsg; hErr.classList.remove('d-none'); }
+            
+            // Turn both fields red!
+            customW.style.borderColor = '#ef4444'; 
+            customH.style.borderColor = '#ef4444';
+            
+            isValid = false;
+            if(!errorMessage) errorMessage = "Canvas minimum size allowed is 12x18 inches.";
+        }
+    }
+
+    if (!isValid && showToastMsg && errorMessage) {
+        showToast(errorMessage, 'error');
+    }   
 
     return isValid;
 }
@@ -109,7 +166,7 @@ function updatePrice() {
 
 // --- ADD TO CART LOGIC ---
 btnCart.addEventListener('click', function() {
-    if (!validateForm()) return;
+    if (!validateForm(true)) return;
 
     const formData = new FormData();
     formData.append('image', fileInput.files[0]);
@@ -160,7 +217,7 @@ btnCart.addEventListener('click', function() {
 
 // --- BUY NOW LOGIC ---
 btnBuyNow.addEventListener('click', function() {
-    if (!validateForm()) return;
+    if (!validateForm(true)) return;
 
     const formData = new FormData();
     formData.append('image', fileInput.files[0]);

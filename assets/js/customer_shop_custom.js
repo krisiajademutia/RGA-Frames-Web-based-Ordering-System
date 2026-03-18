@@ -11,8 +11,14 @@ const state = {
     mountTypeId:       null,  mountName:        '',  mountPrice:       0,
     paperTypeId:       null,  paperName:        '',  paperMultiplier:  0,
     imageUploaded:     false, imageName:        '',
-    quantity:          1
+    quantity:          1,
+    hasSizeError:      false,
+    basePrice:         0,
+    extraPrice:        0,
+    printPrice:        0,
+    unitSubTotal:      0
 };
+
 
 // ── Helpers ──────────────────────────────────────────────
 function qs(sel)  { return document.querySelector(sel); }
@@ -75,6 +81,41 @@ initSelector('.csc-service-option[data-value="FRAME_ONLY"], .csc-service-option[
     updateTotal();
 });
 
+function validateCanvasSize() {
+    const errorText = qs('#canvas-size-error');
+    const wInput = qs('#csc-width');
+    const hInput = qs('#csc-height');
+
+    if (!errorText || !wInput || !hInput) return;
+
+    // 1. Reset visual errors
+    errorText.style.display = 'none';
+    wInput.style.borderColor = '';
+    hInput.style.borderColor = '';
+    state.hasSizeError = false;
+
+    // 2. Check the rule
+    const w = state.frameWidth || 0;
+    const h = state.frameHeight || 0;
+    const isCanvas = state.paperName && state.paperName.toLowerCase().includes('canvas');
+
+    // Only trigger if Frame & Print is selected, Paper is Canvas, and they have started typing
+    if (state.serviceType === 'FRAME_PRINT' && isCanvas && (w > 0 || h > 0)) {
+        const minSide = Math.min(w, h);
+        const maxSide = Math.max(w, h);
+
+        // If either dimension is fully entered and fails the rule, show error
+        if ((w > 0 && h > 0 && (minSide < 12 || maxSide < 18)) || 
+            (w > 0 && h === 0 && w < 12) || 
+            (h > 0 && w === 0 && h < 12)) {
+            
+            errorText.style.display = 'block';
+            wInput.style.borderColor = '#ef4444'; // Red border
+            hInput.style.borderColor = '#ef4444'; // Red border
+            state.hasSizeError = true;
+        }
+    }
+}
 // ── Frame Type ───────────────────────────────────────────
 initSelector('.csc-type-option', card => {
     state.frameTypeId    = card.dataset.value;
@@ -148,7 +189,7 @@ qsa('.csc-size-pill').forEach(pill => {
         }
 
         if (state.frameDesignPrice > 0 && state.frameDesignPrice <= 75 && (maxSide > 18 || minSide > 12)) {
-            alert("Kuya's Rule: Designs in this price range (₱75) are only available for sizes up to 12x18 inches.");
+            alert(" Designs in this price range (₱75) are only available for sizes up to 12x18 inches.");
             qs('#csc-width').value  = '';
             qs('#csc-height').value = '';
             w = 0; h = 0;
@@ -163,6 +204,7 @@ qsa('.csc-size-pill').forEach(pill => {
         state.frameSizeId = 'OTHER';
         updateSizeLabel();
         updateTotal();
+        validateCanvasSize();
     });
 });
 
@@ -232,6 +274,7 @@ qs('#csc-paper-type')?.addEventListener('change', function() {
         hideRow('sum-paper-row');
     }
     updateTotal();
+    validateCanvasSize();
 });
 
 // ── Image Upload ─────────────────────────────────────────
@@ -347,6 +390,11 @@ function updateTotal() {
     const unitTotal = frameBase + extras + printBase;
     let grandTotal  = unitTotal * state.quantity;
 
+    state.basePrice    = frameBase;
+    state.extraPrice   = extras;
+    state.printPrice   = printBase;
+    state.unitSubTotal = unitTotal;
+
     const serviceLabel = state.serviceType === 'FRAME_PRINT' ? 'Frame & Print' : 'Frame only';
     showRow('sum-service-row', 'sum-service', serviceLabel);
 
@@ -372,6 +420,10 @@ function buildFormData(actionType) {
     fd.append('mount_type_id',      state.mountTypeId    ?? '');
     fd.append('paper_type_id',      state.paperTypeId    ?? '');
     fd.append('quantity',           state.quantity);
+    fd.append('base_price',         state.basePrice);
+    fd.append('extra_price',        state.extraPrice);
+    fd.append('print_price',        state.printPrice);
+    fd.append('sub_total',          state.unitSubTotal);
     
     const img = qs('#csc-image-input');
     if (img && img.files[0]) fd.append('customer_image', img.files[0]);
@@ -380,6 +432,12 @@ function buildFormData(actionType) {
 }
 
 async function submitAddToCart() {
+    // 🟢 BLOCK SUBMISSION IF RED TEXT IS SHOWING 🟢
+    if (state.hasSizeError) {
+        showToast('Please fix the Canvas size error before proceeding.', 'error');
+        qs('#csc-width').focus();
+        return; 
+    }
     if (!state.frameTypeId || !state.frameDesignId || !state.frameColorId) {
         showToast('Please complete your frame selection first.', 'error'); return;
     }
@@ -392,6 +450,7 @@ async function submitAddToCart() {
     if (state.serviceType === 'FRAME_PRINT' && !state.imageUploaded) {
         showToast('Please upload an image for Frame & Print!', 'error'); return;
     }
+    
 
     const fd = buildFormData('add_to_cart');
 
@@ -414,6 +473,12 @@ async function submitAddToCart() {
 }
 
 async function submitBuyNow() {
+    // 🟢 BLOCK SUBMISSION IF RED TEXT IS SHOWING 🟢
+    if (state.hasSizeError) {
+        showToast('Please fix the Canvas size error before proceeding.', 'error');
+        qs('#csc-width').focus();
+        return; 
+    }
     if (!state.frameTypeId || !state.frameDesignId || !state.frameColorId) {
         showToast('Please complete your frame selection first.', 'error'); return;
     }
@@ -426,6 +491,7 @@ async function submitBuyNow() {
     if (state.serviceType === 'FRAME_PRINT' && !state.imageUploaded) {
         showToast('Please upload an image for Frame & Print!', 'error'); return;
     }
+  
 
     const fd = buildFormData('buy_now');
 

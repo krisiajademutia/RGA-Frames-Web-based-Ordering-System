@@ -196,7 +196,7 @@ $discountedTotal  = round($cartTotal - $discount['discount_amount'], 2);
                                         </span>
                                     <?php endif; ?>
                                 </div>
-                                <div class="chk-radio-sub">We'll deliver to your address. +₱150.00</div>
+                                <div class="chk-radio-sub">We'll deliver to your address.</div>
                             </div>
                         </label>
 
@@ -218,7 +218,7 @@ $discountedTotal  = round($cartTotal - $discount['discount_amount'], 2);
                                    onchange="onPaymentChange(this)">
                             <div>
                                 <div class="chk-radio-title">Cash</div>
-                                <div class="chk-radio-sub">Pay at least 50% upon pickup/delivery</div>
+                                <div class="chk-radio-sub"></div>
                             </div>
                         </label>
 

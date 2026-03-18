@@ -88,10 +88,17 @@ class CheckoutService {
 
         // 🔥 STEP 1: FIX BUY NOW TOTAL (SERVER-SIDE RECOMPUTE)
         if ($isBuyNow && $buyNowItemData) {
-            $cfService = new CustomFrameService($this->conn);
-            $priceData = $cfService->calculatePrice($buyNowItemData);
-
-            $cartTotal = $priceData['grand_total'];
+            $itemType = $buyNowItemData['item_type'] ?? 'CUSTOM_FRAME';
+            
+            if ($itemType === 'CUSTOM_FRAME') {
+                // Only use CustomFrameService to recompute if it's actually a frame
+                $cfService = new CustomFrameService($this->conn);
+                $priceData = $cfService->calculatePrice($buyNowItemData);
+                $cartTotal = $priceData['grand_total'];
+            } else {
+                // For PRINTING and READY_MADE, trust the price already calculated
+                $cartTotal = (float)($buyNowItemData['total_price'] ?? $cartTotal);
+            }
         }
 
         // 🔥 STEP 2: NORMALIZE ITEMS FOR DISCOUNT + DELIVERY

@@ -91,6 +91,10 @@ $data = [
     'paper_type_id'         => $paperTypeId,
     'image_path'            => $imagePath,
     'quantity'              => $quantity,
+    'base_price'            => isset($_POST['base_price']) ? (float)$_POST['base_price'] : 0,
+    'extra_price'           => isset($_POST['extra_price']) ? (float)$_POST['extra_price'] : 0,
+    'print_price'           => isset($_POST['print_price']) ? (float)$_POST['print_price'] : 0,
+    'sub_total'             => isset($_POST['sub_total']) ? (float)$_POST['sub_total'] : 0,
 ];
 
 $service = new CustomFrameService($conn);

@@ -107,7 +107,7 @@ class CustomFrameService {
             'height'      => $h,
         ];
     }
-    /**
+   /**
      * Add to cart (NO DISCOUNT APPLIED HERE)
      */
     public function addToCart(int $customerId, array $data): array {
@@ -115,6 +115,31 @@ class CustomFrameService {
 
         try {
             $prices = $this->calculatePrice($data);
+
+            // 🟢 NEW BUSINESS RULE: Canvas 12x18 Minimum Check 🟢
+            $serviceType = (!empty($data['service_type']) && $data['service_type'] === 'FRAME&PRINT')
+                ? 'FRAME&PRINT'
+                : 'FRAME_ONLY';
+
+            if ($serviceType === 'FRAME&PRINT' && !empty($data['paper_type_id'])) {
+                // Fetch the actual paper name from the database using the ID
+                $pt = $this->repo->getPaperTypeById((int)$data['paper_type_id']);
+                
+                // Check if the word 'canvas' is anywhere in the paper name
+                if ($pt && stripos($pt['paper_name'], 'canvas') !== false) {
+                    $shortest_side = min($prices['width'], $prices['height']);
+                    $longest_side = max($prices['width'], $prices['height']);
+
+                    if ($shortest_side < 12 || $longest_side < 18) {
+                        $this->conn->rollback(); // Cancel the database save!
+                        return [
+                            'success' => false, 
+                            'message' => 'Canvas prints require a minimum frame size of 12x18 inches.'
+                        ];
+                    }
+                }
+            }
+            // 🟢 END OF NEW BUSINESS RULE 🟢
 
             $cProductId = $this->repo->insertCustomFrameProduct(
                 !empty($data['frame_type_id'])   ? (int)$data['frame_type_id']   : null,
@@ -128,10 +153,6 @@ class CustomFrameService {
             $cartId = $this->repo->getOrCreateCart($customerId);
 
             $printingItemId = null;
-
-            $serviceType = (!empty($data['service_type']) && $data['service_type'] === 'FRAME&PRINT')
-                ? 'FRAME&PRINT'
-                : 'FRAME_ONLY';
 
             if ($serviceType === 'FRAME&PRINT') {
                 $printingItemId = $this->repo->insertPrintingOrderItem(

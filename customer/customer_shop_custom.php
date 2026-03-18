@@ -276,6 +276,10 @@ if ($customerId > 0) {
                                 <input type="number" class="csc-size-input" id="csc-height" placeholder="e.g. 28" min="1" step="0.5">
                             </div>
                         </div>
+
+                        <div id="canvas-size-error" style="color: #ef4444; font-size: 0.85rem; margin-top: 8px; font-weight: 500; display: none;">
+                            <i class="fas fa-exclamation-circle"></i> Minimum size for Canvas is 12x18 inches.
+                        </div>
                     </div>
                 </div>
 
