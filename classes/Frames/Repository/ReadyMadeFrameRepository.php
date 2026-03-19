@@ -104,19 +104,22 @@ class ReadyMadeFrameRepository implements FrameRepositoryInterface {
     }
 
     public function delete(int $id) {
-        // 1. Delete image records
-        $stmt_img = $this->db->prepare("DELETE FROM tbl_ready_made_product_images WHERE r_product_id = ?");
-        $stmt_img->bind_param("i", $id);
-        $stmt_img->execute();
+    $this->db->begin_transaction();
+    try {
+        // Delete child records first
+        $this->db->query("DELETE FROM tbl_ready_made_product_images WHERE r_product_id = $id");
+        $this->db->query("DELETE FROM tbl_ready_made_product_stocks WHERE r_product_id = $id");
+        
+        // Delete the main product record
+        $stmt = $this->db->prepare("DELETE FROM tbl_ready_made_product WHERE r_product_id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
 
-        // 2. Delete stock records
-        $stmt1 = $this->db->prepare("DELETE FROM tbl_ready_made_product_stocks WHERE r_product_id = ?");
-        $stmt1->bind_param("i", $id);
-        $stmt1->execute();
-
-        // 3. Delete the product itself
-        $stmt2 = $this->db->prepare("DELETE FROM tbl_ready_made_product WHERE r_product_id = ?");
-        $stmt2->bind_param("i", $id);
-        return $stmt2->execute();
+        $this->db->commit();
+        return true;
+    } catch (\Exception $e) {
+        $this->db->rollback();
+        return false;
     }
+}
 }

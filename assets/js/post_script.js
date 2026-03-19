@@ -2,54 +2,60 @@ let selectedFiles = []; // For NEW file objects
 let removedExistingFiles = []; // For filenames to be deleted from DB
 
 document.addEventListener('DOMContentLoaded', () => {
-    // We select all triggers, including the new width/height inputs
-    // Note: Make sure to add 'post-calc-trigger' class to your width/height inputs in PHP if not already there
     const selects = document.querySelectorAll('.post-calc-trigger');
     const priceDisplay = document.getElementById('post_total_display');
     const isEditMode = document.querySelector('input[name="r_product_id"]') !== null;
 
-    // Select the specific width and height inputs by name
     const widthInput = document.querySelector('input[name="width"]');
     const heightInput = document.querySelector('input[name="height"]');
 
     function runCalculation(isInitialLoad = false) {
+        // Prevent overwriting existing prices on Edit page load
         if (isEditMode && isInitialLoad) return;
 
         let widthValue = parseFloat(widthInput?.value) || 0;
         let heightValue = parseFloat(heightInput?.value) || 0;
+        
         let frameDesignPrice = 0;
+        let frameTypePrice = 0;
 
-        // Loop through selects to find the Frame Design price
+        // Loop through selects to find both Design and Type prices
         selects.forEach(s => {
             const selectedOption = s.options[s.selectedIndex];
             const price = parseFloat(selectedOption?.getAttribute('data-price')) || 0;
             
-            // Only assign to design price if it's the design dropdown
             if (s.name === 'frame_design_id') {
                 frameDesignPrice = price;
             }
+            
+            // ADDED: Capture Frame Type Price
+            if (s.name === 'frame_type_id') {
+                frameTypePrice = price;
+            }
         });
 
-        // NEW FORMULA: ((Width + Height) / 6) * Frame Design Price
-        let total = ((widthValue + heightValue) / 6) * frameDesignPrice;
+        /**
+         * UPDATED FORMULA: 
+         * ((Width + Height) / 6) * Frame Design Price + Frame Type Price
+         **/
+        let total = (((widthValue + heightValue) / 6) * frameDesignPrice) + frameTypePrice;
 
         if (priceDisplay) {
             priceDisplay.value = total.toFixed(2);
         }
     }
 
-    // Add listeners to dropdowns
+    // Add listeners to dropdowns (Ensure 'frame_type_id' select has the class 'post-calc-trigger')
     selects.forEach(s => {
         s.addEventListener('change', () => runCalculation(false));
     });
 
-    // Add listeners to Width and Height inputs so price updates while typing
     if (widthInput) widthInput.addEventListener('input', () => runCalculation(false));
     if (heightInput) heightInput.addEventListener('input', () => runCalculation(false));
 
     runCalculation(true);
 
-    // Trigger Success Modal
+    // Modal Trigger
     const trigger = document.getElementById('triggerSuccessModal');
     if (trigger) {
         const successModal = new bootstrap.Modal(document.getElementById('successOperationModal'));
@@ -57,9 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-/**
- * Loads images from database into the preview array
- */
 function loadExistingPhotos(images, containerId, textId, inputId) {
     images.forEach(img => {
         selectedFiles.push({
@@ -156,9 +159,21 @@ function removeImage(event, index, containerId, textId, inputId) {
 function confirmDelete(id, name) {
     const modalElement = document.getElementById('deleteConfirmModal');
     if (!modalElement) return;
+
+    // Set the product name in the modal text
     document.getElementById('deleteProductName').innerText = name;
-    document.getElementById('confirmDeleteLink').href = `../process/postframe_process.php?action=delete&id=${id}`;
     
-    const deleteModal = new bootstrap.Modal(modalElement);
-    deleteModal.show();
+    // BUILD THE CORRECT URL: Point directly to the process file relative to the admin page
+    document.getElementById('confirmDeleteLink').href = `../process/postframe_process.php?action=delete&id=${id}`;
+
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
 }
+
+// AUTO-SHOW SUCCESS MODAL
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('triggerSuccessModal')) {
+        var successModal = new bootstrap.Modal(document.getElementById('successOperationModal'));
+        successModal.show();
+    }
+});

@@ -257,8 +257,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                     <div><label class="opt-label">Paper Name *</label><input type="text" name="paper_name" class="opt-input" required value="<?= htmlspecialchars($edit_data['paper_name'] ?? '') ?>"></div>
                     <div><label class="opt-label">Multiplier *</label><input type="number" step="0.0001" name="multiplier" class="opt-input" required value="<?= $edit_data['multiplier'] ?? '' ?>"></div>
                     <div><label class="opt-label">Min Width (in) *</label><input type="number" step="0.01" name="min_width_inch" class="opt-input" required value="<?= $edit_data['min_width_inch'] ?? '' ?>"></div>
+                      <div><label class="opt-label">Max Width (in) *</label><input type="number" step="0.01" name="max_width_inch" class="opt-input" required value="<?= $edit_data['max_width_inch'] ?? '' ?>"></div>
                     <div><label class="opt-label">Min Height (in) *</label><input type="number" step="0.01" name="min_height_inch" class="opt-input" required value="<?= $edit_data['min_height_inch'] ?? '' ?>"></div>
-                    <div><label class="opt-label">Max Width (in) *</label><input type="number" step="0.01" name="max_width_inch" class="opt-input" required value="<?= $edit_data['max_width_inch'] ?? '' ?>"></div>
                     <div><label class="opt-label">Max Height (in) *</label><input type="number" step="0.01" name="max_height_inch" class="opt-input" required value="<?= $edit_data['max_height_inch'] ?? '' ?>"></div>
                     <div>
                         <label class="opt-label">Status</label>

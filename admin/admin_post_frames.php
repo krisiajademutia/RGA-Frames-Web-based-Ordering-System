@@ -55,8 +55,8 @@ $posted_frames = $frameService->getAllFrames();
     
     <div class="post-header-wrapper">
         <div>
-            <h1 style="color: var(--forest-dark); font-weight: 800; font-size: 28px; margin:0;">Post Frames</h1>
-            <p style="color: #6B7280; margin-top: 5px; font-size: 15px;">Manage your custom framing components.</p>
+            <h1 style="color: var(--forest-dark); font-weight: 800; font-size: 28px; margin:0;">Ready-made Frames</h1>
+            <p style="color: #6B7280; margin-top: 5px; font-size: 15px;">Post and manage ready-made frame products visible to customers.</p>
         </div>
         <div class="post-dropdown">
             <button class="post-dropbtn" type="button">
@@ -140,83 +140,88 @@ $posted_frames = $frameService->getAllFrames();
 
     <?php elseif($view == 'edit' && $edit_data): ?>
     <div class="post-card shadow-sm">
-        <div class="post-card-header">EDIT READY-MADE FRAME</div>
-        <form action="/rga_frames/process/postframe_process.php" method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="r_product_id" value="<?= $edit_data['r_product_id'] ?>">
-            <input type="hidden" name="removed_images" id="removed_images" value="">
-            <div class="post-form-grid">
-                <div>
-                    <label class="post-label">PRODUCT NAME <span class="text-danger">*</span></label>
-                    <input type="text" name="product_name" class="post-input" value="<?= $edit_data['product_name'] ?>" required>
-                </div>
-                <div>
-                    <label class="post-label">FRAME TYPE <span class="text-danger">*</span></label>
-                    <select name="frame_type_id" class="post-input post-calc-trigger" required>
-                        <?php $types->data_seek(0); while($r = $types->fetch_assoc()): ?>
-                            <option value="<?= $r['frame_type_id'] ?>" data-price="<?= $r['type_price'] ?>" <?= ($r['frame_type_id'] == $edit_data['frame_type_id']) ? 'selected' : '' ?>><?= $r['type_name'] ?></option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-                <div>
-                    <label class="post-label">FRAME DESIGN <span class="text-danger">*</span></label>
-                    <select name="frame_design_id" class="post-input post-calc-trigger" required>
-                        <?php $designs->data_seek(0); while($r = $designs->fetch_assoc()): ?>
-                            <option value="<?= $r['frame_design_id'] ?>" data-price="<?= $r['price'] ?>" <?= ($r['frame_design_id'] == $edit_data['frame_design_id']) ? 'selected' : '' ?>><?= $r['design_name'] ?></option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-                <div>
-                    <label class="post-label">FRAME COLOR <span class="text-danger">*</span></label>
-                    <select name="frame_color_id" class="post-input" required>
-                        <?php $colors->data_seek(0); while($r = $colors->fetch_assoc()): ?>
-                            <option value="<?= $r['frame_color_id'] ?>" <?= ($r['frame_color_id'] == $edit_data['frame_color_id']) ? 'selected' : '' ?>><?= $r['color_name'] ?></option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-                <div>
-                    <label class="post-label">FRAME SIZE <span class="text-danger">*</span></label>
+    <div class="post-card-header">EDIT READY-MADE FRAME</div>
+    <form action="/rga_frames/process/postframe_process.php" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="r_product_id" value="<?= $edit_data['r_product_id'] ?>">
+        <input type="hidden" name="removed_images" id="removed_images" value="">
+        
+        <div class="post-form-grid">
+            <div>
+                <label class="post-label">PRODUCT NAME <span class="text-danger">*</span></label>
+                <input type="text" name="product_name" class="post-input" value="<?= $edit_data['product_name'] ?>" required>
+            </div>
+            <div>
+                <label class="post-label">FRAME TYPE <span class="text-danger">*</span></label>
+                <select name="frame_type_id" class="post-input post-calc-trigger" required>
+                    <?php $types->data_seek(0); while($r = $types->fetch_assoc()): ?>
+                        <option value="<?= $r['frame_type_id'] ?>" data-price="<?= $r['type_price'] ?>" <?= ($r['frame_type_id'] == $edit_data['frame_type_id']) ? 'selected' : '' ?>><?= $r['type_name'] ?></option>
+                    <?php endwhile; ?>
+                </select>
+            </div>
+
+            <div>
+                <label class="post-label">FRAME DESIGN <span class="text-danger">*</span></label>
+                <select name="frame_design_id" class="post-input post-calc-trigger" required>
+                    <?php $designs->data_seek(0); while($r = $designs->fetch_assoc()): ?>
+                        <option value="<?= $r['frame_design_id'] ?>" data-price="<?= $r['price'] ?>" <?= ($r['frame_design_id'] == $edit_data['frame_design_id']) ? 'selected' : '' ?>><?= $r['design_name'] ?></option>
+                    <?php endwhile; ?>
+                </select>
+            </div>
+            <div>
+                <label class="post-label">FRAME COLOR <span class="text-danger">*</span></label>
+                <select name="frame_color_id" class="post-input" required>
+                    <?php $colors->data_seek(0); while($r = $colors->fetch_assoc()): ?>
+                        <option value="<?= $r['frame_color_id'] ?>" <?= ($r['frame_color_id'] == $edit_data['frame_color_id']) ? 'selected' : '' ?>><?= $r['color_name'] ?></option>
+                    <?php endwhile; ?>
+                </select>
+            </div>
+
+            <div>
+                <label class="post-label">FRAME SIZE <span class="text-danger">*</span></label>
                     <div class="d-flex align-items-center gap-2">
                         <input type="number" step="0.01" name="width" class="post-input post-size-box" value="<?= $edit_data['width'] ?>" required>
                         <span class="fw-bold">X</span>
                         <input type="number" step="0.01" name="height" class="post-input post-size-box" value="<?= $edit_data['height'] ?>" required>
-                    </div>
                 </div>
-                <div>
-                    <label class="post-label">SELLING PRICE (₱) <span class="text-danger">*</span></label>
-                    <div class="position-relative">
-                        <span style="position:absolute; left:15px; top:11px; font-weight:bold;">₱</span>
-                        <input type="number" step="0.01" name="product_price" id="post_total_display" class="post-input" style="padding-left:35px;" value="<?= $edit_data['product_price'] ?>" required>
-                    </div>
+            </div>
+            <div>
+                <label class="post-label">SELLING PRICE (₱) <span class="text-danger">*</span></label>
+                <div class="position-relative">
+                    <span style="position:absolute; left:15px; top:11px; font-weight:bold;">₱</span>
+                    <input type="number" step="0.01" name="product_price" id="post_total_display" class="post-input" style="padding-left:35px;" value="<?= $edit_data['product_price'] ?>" required>
                 </div>
-                <div>
-                    <label class="post-label">STOCK QUANTITY <span class="text-danger">*</span></label>
-                    <input type="number" name="stock_quantity" class="post-input" value="<?= $edit_data['quantity'] ?>" required>
-                </div>
+            </div>
+
+            <div>
+                <label class="post-label">STOCK QUANTITY <span class="text-danger">*</span></label>
+                <input type="number" name="stock_quantity" class="post-input" value="<?= $edit_data['quantity'] ?>" required>
+            </div>
                 <div class="post-upload-container">
-                    <label class="post-label">PRODUCT PHOTOS <span class="text-danger">*</span></label>
-                    <div class="post-upload-zone position-relative" onclick="document.getElementById('edit_design_imgs').click();">
-                        <input type="file" name="images[]" id="edit_design_imgs" style="display:none;" multiple onchange="handleMultipleFilePreview(this, 'image_preview_container', 'post_img_text')">
-                        <div id="image_preview_container" class="preview-overlay"></div>
-                        <div class="upload-content text-center">
-                            <i class="fa-solid fa-images"></i>
-                            <p class="m-0" id="post_img_text">Click to upload photos</p>
-                        </div>
+                <label class="post-label">PRODUCT PHOTOS <span class="text-danger">*</span></label>
+                <div class="post-upload-zone position-relative" onclick="document.getElementById('edit_design_imgs').click();">
+                    <input type="file" name="images[]" id="edit_design_imgs" style="display:none;" multiple onchange="handleMultipleFilePreview(this, 'image_preview_container', 'post_img_text')">
+                    <div id="image_preview_container" class="preview-overlay"></div>
+                    <div class="upload-content text-center">
+                        <i class="fa-solid fa-images"></i>
+                        <p class="m-0" id="post_img_text">Click to upload photos</p>
                     </div>
-                    <?php if(!empty($edit_images)): ?>
-                        <script>
-                            window.addEventListener('load', () => { 
-                                loadExistingPhotos(<?= json_encode($edit_images) ?>, 'image_preview_container', 'post_img_text', 'edit_design_imgs'); 
-                            });
-                        </script>
-                    <?php endif; ?>
                 </div>
+                <?php if(!empty($edit_images)): ?>
+                    <script>
+                        window.addEventListener('load', () => { 
+                            loadExistingPhotos(<?= json_encode($edit_images) ?>, 'image_preview_container', 'post_img_text', 'edit_design_imgs'); 
+                        });
+                    </script>
+                <?php endif; ?>
             </div>
-            <div class="d-flex justify-content-center gap-3 mb-3">
-                <a href="admin_post_frames.php?view=posted" class="post-btn-clear text-decoration-none d-flex align-items-center justify-content-center">Cancel</a>
-                <button type="submit" name="update_product" class="post-btn-submit">Update Frame</button>
-            </div>
-        </form>
-    </div>
+        </div>
+
+        <div class="d-flex justify-content-center gap-3 mb-3">
+            <a href="admin_post_frames.php?view=posted" class="post-btn-clear text-decoration-none d-flex align-items-center justify-content-center">Cancel</a>
+            <button type="submit" name="update_product" class="post-btn-submit">Update Frame</button>
+        </div>
+    </form>
+</div>
 
     <?php else: ?>
     <div class="post-card shadow-sm">
@@ -257,9 +262,9 @@ $posted_frames = $frameService->getAllFrames();
                 <div>
                     <label class="post-label">FRAME SIZE <span class="text-danger">*</span></label>
                     <div class="d-flex align-items-center gap-2">
-                        <input type="number" step="0.01" name="width" class="post-input post-size-box" placeholder="W" required>
+                        <input type="number" step="0.01" name="width" class="post-input post-size-box" placeholder="Width" required>
                         <span class="fw-bold">X</span>
-                        <input type="number" step="0.01" name="height" class="post-input post-size-box" placeholder="H" required>
+                        <input type="number" step="0.01" name="height" class="post-input post-size-box" placeholder="Height" required>
                     </div>
                 </div>
                 <div>
@@ -285,7 +290,7 @@ $posted_frames = $frameService->getAllFrames();
                     </div>
                 </div>
             </div>
-            <div class="d-flex justify-content-center gap-3 mb-3">
+           <div class="d-flex justify-content-center gap-3 mb-3" style="margin-top: 30px;">
                 <button type="reset" class="post-btn-clear" onclick="document.getElementById('image_preview_container').innerHTML = ''; selectedFiles = [];">Clear</button>
                 <button type="submit" name="add_product" class="post-btn-submit">Post Frame</button>
             </div>
@@ -321,9 +326,9 @@ $posted_frames = $frameService->getAllFrames();
                 </div>
                 <div class="modal-body text-center pb-5">
                     <div class="mb-4">
-                        <i class="fa-solid fa-circle-check post-alert-icon"></i>
+                        <i class="fa-solid fa-circle-check" style="font-size: 60px; color: #004030;"></i>
                     </div>
-                    <h5 class="post-alert-title px-4">
+                    <h5 class="post-alert-title px-4" style="color: #4B5563; font-weight: 400;">
                         Ready-made frame <strong style="color: #111827;"><?= htmlspecialchars($_SESSION['post_success_modal']['name']) ?></strong> 
                         <?= htmlspecialchars($_SESSION['post_success_modal']['action']) ?> successfully!
                     </h5>
@@ -331,8 +336,41 @@ $posted_frames = $frameService->getAllFrames();
             </div>
         </div>
     </div>
-    <input type="hidden" id="triggerSuccessModal" value="1">
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            new bootstrap.Modal(document.getElementById('successOperationModal')).show();
+        });
+    </script>
     <?php unset($_SESSION['post_success_modal']); ?>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['post_error_modal'])): ?>
+    <div class="modal fade" id="postErrorModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content post-alert-content shadow" style="border-radius: 20px;">
+                <div class="modal-header border-0 pt-3 pe-3">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center pb-5">
+                    <div class="mb-4">
+                        <i class="fa-solid fa-circle-xmark" style="font-size: 60px; color: #dc3545;"></i>
+                    </div>
+                    <h4 class="fw-bold mb-2" style="color: #111827;">
+                        <?= htmlspecialchars($_SESSION['post_error_modal']['title']) ?>
+                    </h4>
+                    <p class="post-alert-title px-4" style="color: #4B5563; font-weight: 400;">
+                        <?= htmlspecialchars($_SESSION['post_error_modal']['message']) ?>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            new bootstrap.Modal(document.getElementById('postErrorModal')).show();
+        });
+    </script>
+    <?php unset($_SESSION['post_error_modal']); ?>
 <?php endif; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
