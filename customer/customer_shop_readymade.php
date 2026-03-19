@@ -1,41 +1,44 @@
 <?php
-// customer/customer_shop_readymade.php
 require_once __DIR__ . '/../includes/customer_header.php';
 require_once __DIR__ . '/../config/db_connect.php';
 require_once __DIR__ . '/../classes/ReadyMade/Repository/ReadyMadeRepository.php';
 require_once __DIR__ . '/../classes/ReadyMade/ReadyMadeService.php';
-require_once __DIR__ . '/../classes/Option/Repository/FixedPriceRepository.php';
 
-// ── Single data fetch (no duplicate calls) ─────────────────
 $repo          = new \Classes\ReadyMade\Repository\ReadyMadeRepository($conn);
 $service       = new \Classes\ReadyMade\ReadyMadeService($repo);
 $search_term   = trim($_GET['search'] ?? '');
 $posted_frames = $service->getFrames($search_term);
+$mountTypes    = $service->getMountTypes();
 
-// ── Fixed prices ────────────────────────────────────────────
-$fixedPriceRepo       = new FixedPriceRepository($conn);
-$allFixedPrices       = $fixedPriceRepo->getAll();
-$printServicePrice    = 0;
-$matboardServicePrice = 0;
+$printRow = $conn->query(
+    "SELECT fixed_price FROM tbl_fixed_print_prices
+     WHERE dimension = 'Print Service' LIMIT 1"
+);
+$printServicePrice = ($printRow && $printRow->num_rows > 0)
+    ? (float)$printRow->fetch_assoc()['fixed_price']
+    : 0;
 
-while ($fpRow = $allFixedPrices->fetch_assoc()) {
-    if ($fpRow['dimension'] === 'Print Service') {
-        $printServicePrice = (float)$fpRow['fixed_price'];
-    } elseif ($fpRow['dimension'] === 'Matboard Service') {
-        $matboardServicePrice = (float)$fpRow['fixed_price'];
-    }
-}
+$matRow = $conn->query(
+    "SELECT fixed_price FROM tbl_fixed_print_prices
+     WHERE dimension = 'Matboard Service' LIMIT 1"
+);
+$matboardServicePrice = ($matRow && $matRow->num_rows > 0)
+    ? (float)$matRow->fetch_assoc()['fixed_price']
+    : 0;
 
-// ── Matboard colors (correct table: tbl_matboard_colors) ────
 $matOptions     = [];
-$matColorsQuery = $conn->query("SELECT * FROM tbl_matboard_colors WHERE is_active = 1");
+$matColorsQuery = $conn->query(
+    "SELECT matboard_color_id, matboard_color_name, base_price, image_name
+     FROM tbl_matboard_colors
+     WHERE is_active = 1
+     ORDER BY matboard_color_name ASC"
+);
 if ($matColorsQuery && $matColorsQuery->num_rows > 0) {
     while ($m = $matColorsQuery->fetch_assoc()) { $matOptions[] = $m; }
 }
 
-// ── Paper types ─────────────────────────────────────────────
 $paperOptions = [];
-$paperQuery   = $conn->query("SELECT * FROM tbl_paper_type");
+$paperQuery   = $conn->query("SELECT * FROM tbl_paper_type WHERE is_active = 1");
 if ($paperQuery && $paperQuery->num_rows > 0) {
     while ($p = $paperQuery->fetch_assoc()) { $paperOptions[] = $p; }
 }
@@ -64,7 +67,6 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
     .btn-buy-now { background-color: #fff; color: var(--forest-dark); border: 2px solid var(--forest-dark); font-weight: 700; }
     .btn-buy-now:hover { background-color: var(--forest-dark); color: #fff; }
 
-    /* Toast notifications */
     #rm-toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
     .rm-toast { min-width: 260px; padding: 14px 18px; border-radius: 10px; font-size: 0.9rem; font-weight: 600;
                 color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,.18); opacity: 0; transform: translateY(12px);
@@ -124,7 +126,6 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
         <?php endif; ?>
     </div>
 
-    <!-- ── Product Details Modal (original UI — untouched) ──── -->
     <div class="modal fade" id="productDetailsModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content custom-modal-content shadow-lg">
@@ -155,8 +156,13 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
                                 <section class="mb-4">
                                     <label class="section-label">Service Type</label>
                                     <div class="tile-group">
-                                        <div class="option-tile active" onclick="selectService(this, 0, false)"><strong>Frame only</strong><span>No print</span></div>
-                                        <div class="option-tile" onclick="selectService(this, <?= $printServicePrice ?>, true)"><strong>Frame & Print</strong><span>+₱<?= number_format($printServicePrice, 2) ?></span></div>
+                                        <div class="option-tile active" onclick="selectService(this, 0, false)">
+                                            <strong>Frame only</strong><span>No print</span>
+                                        </div>
+                                        <div class="option-tile" onclick="selectService(this, <?= $printServicePrice ?>, true)">
+                                            <strong>Frame & Print</strong>
+                                            <span><?= $printServicePrice > 0 ? '+₱' . number_format($printServicePrice, 2) : 'Included' ?></span>
+                                        </div>
                                     </div>
                                     <div id="uploadSection" class="mt-3 p-3 border rounded bg-light">
                                         <div id="imagePreviewContainer"><img id="imagePreview" src=""></div>
@@ -179,12 +185,20 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
                                 <section class="mb-4">
                                     <label class="section-label">Primary Mat-board <small class="text-muted fw-normal">(optional)</small></label>
                                     <div class="swatch-group">
-                                        <div class="swatch-item active" style="background:#f3f4f6; font-size:9px; display:flex; align-items:center; justify-content:center;" onclick="selectMat(this, 0, 'None', true)">None</div>
-                                        <?php foreach($matOptions as $mat): ?>
+                                        <div class="swatch-item active"
+                                             style="background:#f3f4f6; font-size:9px; display:flex; align-items:center; justify-content:center;"
+                                             onclick="selectMat(this, 0, 'None', true)">None</div>
+                                        <?php foreach($matOptions as $mat):
+                                            $matPrice = (float)$mat['base_price'] > 0
+                                                ? (float)$mat['base_price']
+                                                : $matboardServicePrice;
+                                        ?>
                                             <div class="swatch-item"
-                                                 style="background-image: url('/rga_frames/uploads/<?= htmlspecialchars($mat['image_name'] ?? '') ?>'); background-size: cover; background-color: #ddd;"
-                                                 title="<?= htmlspecialchars($mat['matboard_color_name']) ?>"
-                                                 onclick="selectMat(this, <?= $matboardServicePrice ?>, '<?= htmlspecialchars($mat['matboard_color_name']) ?>', false)">
+                                                 style="<?= $mat['image_name']
+                                                     ? "background-image:url('/rga_frames/uploads/" . htmlspecialchars($mat['image_name']) . "'); background-size:cover;"
+                                                     : "background:#ccc;" ?>"
+                                                 title="<?= htmlspecialchars($mat['matboard_color_name']) ?> <?= $matPrice > 0 ? '(+₱' . number_format($matPrice, 2) . ')' : '' ?>"
+                                                 onclick="selectMat(this, <?= $matPrice ?>, '<?= htmlspecialchars($mat['matboard_color_name']) ?>', false)">
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
@@ -193,12 +207,20 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
                                 <section id="secondaryMatSection" class="mb-4">
                                     <label class="section-label">Secondary Mat-board</label>
                                     <div class="swatch-group">
-                                        <div class="swatch-item active" style="background:#f3f4f6; font-size:9px; display:flex; align-items:center; justify-content:center;" onclick="selectSecondaryMat(this, 0, 'None')">None</div>
-                                        <?php foreach($matOptions as $mat): ?>
+                                        <div class="swatch-item active"
+                                             style="background:#f3f4f6; font-size:9px; display:flex; align-items:center; justify-content:center;"
+                                             onclick="selectSecondaryMat(this, 0, 'None')">None</div>
+                                        <?php foreach($matOptions as $mat):
+                                            $matPrice = (float)$mat['base_price'] > 0
+                                                ? (float)$mat['base_price']
+                                                : $matboardServicePrice;
+                                        ?>
                                             <div class="swatch-item"
-                                                 style="background-image: url('/rga_frames/uploads/<?= htmlspecialchars($mat['image_name'] ?? '') ?>'); background-size: cover; background-color: #ddd;"
-                                                 title="<?= htmlspecialchars($mat['matboard_color_name']) ?>"
-                                                 onclick="selectSecondaryMat(this, <?= $matboardServicePrice ?>, '<?= htmlspecialchars($mat['matboard_color_name']) ?>')">
+                                                 style="<?= $mat['image_name']
+                                                     ? "background-image:url('/rga_frames/uploads/" . htmlspecialchars($mat['image_name']) . "'); background-size:cover;"
+                                                     : "background:#ccc;" ?>"
+                                                 title="<?= htmlspecialchars($mat['matboard_color_name']) ?> <?= $matPrice > 0 ? '(+₱' . number_format($matPrice, 2) . ')' : '' ?>"
+                                                 onclick="selectSecondaryMat(this, <?= $matPrice ?>, '<?= htmlspecialchars($mat['matboard_color_name']) ?>')">
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
@@ -207,8 +229,15 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
                                 <section class="mb-4">
                                     <label class="section-label">Mount Type</label>
                                     <div class="tile-group">
-                                        <div class="option-tile active" onclick="selectMount(this, 'Wall Hanging')"><strong>Wall Hanging</strong><span>Hang on wall</span></div>
-                                        <div class="option-tile" onclick="selectMount(this, 'Stand')"><strong>Stand</strong><span>Tabletop display</span></div>
+                                        <?php foreach ($mountTypes as $index => $mount):
+                                            $fee = (float)$mount['additional_fee'];
+                                        ?>
+                                        <div class="option-tile <?= $index === 0 ? 'active' : '' ?>"
+                                             onclick="selectMount(this, <?= $fee ?>, '<?= htmlspecialchars($mount['mount_name']) ?>')">
+                                            <strong><?= htmlspecialchars($mount['mount_name']) ?></strong>
+                                            <span><?= $fee > 0 ? '+₱' . number_format($fee, 2) : 'No extra fee' ?></span>
+                                        </div>
+                                        <?php endforeach; ?>
                                     </div>
                                 </section>
 
@@ -240,33 +269,49 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
     </div>
 </div>
 
-<!-- Toast container -->
 <div id="rm-toast-wrap"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
-    let basePrice = 0, servicePrice = 0, pMatPrice = 0, sMatPrice = 0;
+    let basePrice = 0, servicePrice = 0, pMatPrice = 0, sMatPrice = 0, mountPrice = 0;
     const productModal = document.getElementById('productDetailsModal');
 
-    // ── Populate modal on open ───────────────────────────────
     productModal.addEventListener('show.bs.modal', function (event) {
         const button  = event.relatedTarget;
         const product = JSON.parse(button.getAttribute('data-product'));
 
-        basePrice    = parseFloat(product.product_price);
-        servicePrice = 0; pMatPrice = 0; sMatPrice = 0;
+        basePrice    = parseFloat(product.product_price) || 0;
+        servicePrice = 0;
+        pMatPrice    = 0;
+        sMatPrice    = 0;
+        mountPrice   = <?= !empty($mountTypes) ? (float)$mountTypes[0]['additional_fee'] : 0 ?>;
 
-        document.getElementById('modalProductId').value      = product.r_product_id;
-        document.getElementById('modalProductName').innerText = product.product_name;
-        document.getElementById('modalProductImg').src        = "/rga_frames/uploads/" + product.image_name;
-        document.getElementById('specSize').innerText         = `${product.width}x${product.height}"`;
-        document.getElementById('specDesign').innerText       = product.design_name;
-        document.getElementById('specColor').innerText        = product.color_name;
-        document.getElementById('specStock').innerText        = `${product.stock} available`;
+        document.getElementById('modalProductId').value       = product.r_product_id;
+        document.getElementById('modalProductName').innerText  = product.product_name;
+        document.getElementById('modalProductImg').src         = "/rga_frames/uploads/" + (product.image_name || '');
+        document.getElementById('specSize').innerText          = `${product.width}x${product.height}"`;
+        document.getElementById('specDesign').innerText        = product.design_name || '—';
+        document.getElementById('specColor').innerText         = product.color_name  || '—';
+        document.getElementById('specStock').innerText         = `${product.stock} available`;
 
         document.getElementById('modalQtyInput').max   = product.stock;
         document.getElementById('modalQtyInput').value = 1;
+
+        document.querySelectorAll('#addToCartForm .option-tile').forEach((t, i) => {
+            t.classList.toggle('active', i === 0 || 
+                (t.closest('section') !== t.closest('.tile-group')?.parentElement && false));
+        });
+        document.querySelectorAll('#addToCartForm .tile-group').forEach(group => {
+            group.querySelectorAll('.option-tile').forEach((t, i) => t.classList.toggle('active', i === 0));
+        });
+        document.querySelectorAll('#addToCartForm .swatch-group').forEach(group => {
+            group.querySelectorAll('.swatch-item').forEach((s, i) => s.classList.toggle('active', i === 0));
+        });
+
+        document.getElementById('selectedService').value       = 'Frame only';
+        document.getElementById('selectedPaper').value         = 'None';
+        document.getElementById('selectedMat').value           = 'None';
+        document.getElementById('selectedSecondaryMat').value  = 'None';
+        document.getElementById('selectedMount').value         = 'Wall Hanging';
 
         resetSelections();
         updateTotalPrice();
@@ -275,7 +320,7 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
     function selectService(el, price, showOptions) {
         el.closest('.tile-group').querySelectorAll('.option-tile').forEach(t => t.classList.remove('active'));
         el.classList.add('active');
-        servicePrice = parseFloat(price);
+        servicePrice = parseFloat(price) || 0;
         document.getElementById('selectedService').value = el.querySelector('strong').innerText;
         document.getElementById('uploadSection').style.display    = showOptions ? 'block' : 'none';
         document.getElementById('paperTypeSection').style.display = showOptions ? 'block' : 'none';
@@ -291,7 +336,7 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
     function selectMat(el, price, name, isNone) {
         el.closest('.swatch-group').querySelectorAll('.swatch-item').forEach(s => s.classList.remove('active'));
         el.classList.add('active');
-        pMatPrice = parseFloat(price);
+        pMatPrice = parseFloat(price) || 0;
         document.getElementById('selectedMat').value = name;
 
         const secSec = document.getElementById('secondaryMatSection');
@@ -308,15 +353,17 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
     function selectSecondaryMat(el, price, name) {
         el.closest('.swatch-group').querySelectorAll('.swatch-item').forEach(s => s.classList.remove('active'));
         el.classList.add('active');
-        sMatPrice = parseFloat(price);
+        sMatPrice = parseFloat(price) || 0;
         document.getElementById('selectedSecondaryMat').value = name;
         updateTotalPrice();
     }
 
-    function selectMount(el, name) {
+    function selectMount(el, price, name) {
         el.closest('.tile-group').querySelectorAll('.option-tile').forEach(t => t.classList.remove('active'));
         el.classList.add('active');
+        mountPrice = parseFloat(price) || 0;
         document.getElementById('selectedMount').value = name;
+        updateTotalPrice();
     }
 
     function previewUserImage(input) {
@@ -332,14 +379,14 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
 
     function updateTotalPrice() {
         const qty   = parseInt(document.getElementById('modalQtyInput').value) || 1;
-        const total = (basePrice + servicePrice + pMatPrice + sMatPrice) * qty;
+        const total = (basePrice + servicePrice + pMatPrice + sMatPrice + mountPrice) * qty;
         document.getElementById('modalProductPrice').innerText =
-            "₱ " + total.toLocaleString(undefined, { minimumFractionDigits: 2 });
+            "₱ " + total.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     function adjustQty(val) {
         const input  = document.getElementById('modalQtyInput');
-        const max    = parseInt(input.getAttribute('max')) || 1;
+        const max    = parseInt(input.getAttribute('max')) || 99;
         const newVal = parseInt(input.value) + val;
         if (newVal >= 1 && newVal <= max) {
             input.value = newVal;
@@ -360,7 +407,6 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
         document.body.style.overflow = 'auto';
     });
 
-    // ── Toast helper ─────────────────────────────────────────
     function showToast(message, type = 'success') {
         const wrap  = document.getElementById('rm-toast-wrap');
         const toast = document.createElement('div');
@@ -374,12 +420,10 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
         }, 3200);
     }
 
-    // ── Add to Cart (fixed: was just alert()) ────────────────
     async function submitAddToCart() {
         const btn = document.querySelector('.btn-add-cart');
         btn.disabled    = true;
         btn.textContent = 'Adding…';
-
         try {
             const res  = await fetch('../process/add_to_cart_readymade_process.php', {
                 method: 'POST',
@@ -389,7 +433,6 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
                 })
             });
             const data = await res.json();
-
             if (data.success) {
                 showToast('✓ ' + data.message, 'success');
                 bootstrap.Modal.getInstance(productModal).hide();
@@ -404,12 +447,10 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
         }
     }
 
-    // ── Buy Now (fixed: was completely missing) ───────────────
     async function handleBuyNow() {
         const btn = document.querySelector('.btn-buy-now');
         btn.disabled    = true;
         btn.textContent = 'Please wait…';
-
         try {
             const res  = await fetch('../process/buy_now_readymade_process.php', {
                 method: 'POST',
@@ -419,7 +460,6 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
                 })
             });
             const data = await res.json();
-
             if (data.success) {
                 window.location.href = data.redirect;
             } else {

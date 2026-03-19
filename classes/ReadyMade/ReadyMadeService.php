@@ -1,15 +1,8 @@
 <?php
-// classes/ReadyMade/ReadyMadeService.php
-
 namespace Classes\ReadyMade;
 
 use Classes\ReadyMade\Repository\IReadyMadeRepository;
 
-/**
- * ReadyMadeService — Single Responsibility: business logic only.
- * Depends on the IReadyMadeRepository abstraction (Dependency Inversion).
- * Open for extension (swap repo implementation) without modifying this class (Open/Closed).
- */
 class ReadyMadeService
 {
     private IReadyMadeRepository $repo;
@@ -19,10 +12,6 @@ class ReadyMadeService
         $this->repo = $repo;
     }
 
-    /**
-     * Return all frames, optionally filtered by a search term.
-     * Business rule: only return frames with stock > 0 shown last (not hidden).
-     */
     public function getFrames(string $search = ''): array
     {
         $all = $this->repo->getAll();
@@ -40,19 +29,11 @@ class ReadyMadeService
         }));
     }
 
-    /** Get one frame or throw if not found */
     public function getFrameById(int $id): ?array
     {
         return $this->repo->getById($id);
     }
 
-    /**
-     * Add a ready-made frame to the customer's cart.
-     * Business rules:
-     *  - quantity must be >= 1
-     *  - cannot add more than available stock
-     * Returns ['success' => bool, 'message' => string]
-     */
     public function addToCart(int $customerId, int $productId, int $quantity): array
     {
         if ($quantity < 1) {
@@ -80,10 +61,11 @@ class ReadyMadeService
             : ['success' => false, 'message' => 'Failed to add to cart. Please try again.'];
     }
 
-    /**
-     * Prepare a Buy Now session payload.
-     * Returns the array to store in $_SESSION['buy_now_item'].
-     */
+    public function getMountTypes(): array
+    {
+        return $this->repo->getMountTypes();
+    }
+
     public function buildBuyNowPayload(int $productId, int $quantity): array
     {
         if ($quantity < 1) {
