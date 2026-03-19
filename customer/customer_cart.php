@@ -21,7 +21,6 @@
     </div>
 
     <?php if (!empty($cart_items)): ?>
-    <!-- NEW: Select-all toolbar bar matching the reference image -->
     <div class="cart-toolbar-bar">
         <div class="cart-toolbar-inner">
             <label class="cart-toolbar-select-all">
@@ -38,7 +37,7 @@
 
     <div class="cart-container">
         <div class="cart-content-grid">
-            
+
             <div class="cart-items-section">
                 <?php if (empty($cart_items)): ?>
                     <div class="alert alert-light border-dashed text-center py-5">
@@ -68,12 +67,84 @@
                                     <input type="text" class="cart-qty-input" value="<?= $item['quantity']; ?>" readonly>
                                     <button type="button" class="cart-qty-btn" onclick="updateQty(<?= $item['id']; ?>, 1)">+</button>
                                 </div>
+
+                                <!-- Inline expand toggle -->
+                                <button
+                                    type="button"
+                                    class="cart-details-toggle"
+                                    onclick="event.stopPropagation(); toggleDetails(<?= $item['id']; ?>, this)"
+                                >
+                                    <i class="fa-solid fa-chevron-down cart-details-chevron"></i>
+                                    View details
+                                </button>
                             </div>
                             <div class="cart-item-right">
                                 <p class="cart-item-price">₱<?= number_format($item['sub_total'], 2); ?></p>
-                               <button type="button" class="cart-remove-btn" title="Remove item" onclick="event.stopPropagation(); removeItem(<?= $item['id']; ?>)">
+                                <button type="button" class="cart-remove-btn" title="Remove item" onclick="event.stopPropagation(); removeItem(<?= $item['id']; ?>)">
                                     <i class="fa-solid fa-trash-can"></i>
                                 </button>
+                            </div>
+
+                            <!-- Inline expanded detail panel -->
+                            <div class="cart-item-expanded" id="cart-details-<?= $item['id']; ?>">
+                                <div class="cart-detail-grid">
+                                    <div class="cart-detail-row">
+                                        <span class="cart-detail-label">Service</span>
+                                        <span class="cart-detail-value"><?= htmlspecialchars($item['detail_service']); ?></span>
+                                    </div>
+                                    <div class="cart-detail-row">
+                                        <span class="cart-detail-label">Frame Type</span>
+                                        <span class="cart-detail-value"><?= htmlspecialchars($item['detail_type']); ?></span>
+                                    </div>
+                                    <div class="cart-detail-row">
+                                        <span class="cart-detail-label">Design</span>
+                                        <span class="cart-detail-value"><?= htmlspecialchars($item['detail_design']); ?></span>
+                                    </div>
+                                    <div class="cart-detail-row">
+                                        <span class="cart-detail-label">Color</span>
+                                        <span class="cart-detail-value"><?= htmlspecialchars($item['detail_color']); ?></span>
+                                    </div>
+                                    <div class="cart-detail-row">
+                                        <span class="cart-detail-label">Size</span>
+                                        <span class="cart-detail-value"><?= htmlspecialchars($item['detail_size']); ?></span>
+                                    </div>
+                                    <?php if (!empty($item['detail_paper'])): ?>
+                                    <div class="cart-detail-row">
+                                        <span class="cart-detail-label">Paper</span>
+                                        <span class="cart-detail-value"><?= htmlspecialchars($item['detail_paper']); ?></span>
+                                    </div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($item['detail_matboard'])): ?>
+                                    <div class="cart-detail-row">
+                                        <span class="cart-detail-label">Matboard</span>
+                                        <span class="cart-detail-value"><?= htmlspecialchars($item['detail_matboard']); ?></span>
+                                    </div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($item['detail_mount'])): ?>
+                                    <div class="cart-detail-row">
+                                        <span class="cart-detail-label">Mount</span>
+                                        <span class="cart-detail-value"><?= htmlspecialchars($item['detail_mount']); ?></span>
+                                    </div>
+                                    <?php endif; ?>
+                                    <div class="cart-detail-row">
+                                        <span class="cart-detail-label">Quantity</span>
+                                        <span class="cart-detail-value"><?= $item['quantity']; ?></span>
+                                    </div>
+                                    <div class="cart-detail-row">
+                                        <span class="cart-detail-label">Subtotal</span>
+                                        <span class="cart-detail-value cart-detail-price">₱<?= number_format($item['sub_total'], 2); ?></span>
+                                    </div>
+                                    <?php if ($item['service_type'] === 'FRAME&PRINT' && !empty($item['display_image'])): ?>
+                                    <div class="cart-detail-row" style="grid-column: span 2;">
+                                        <span class="cart-detail-label">Uploaded Photo</span>
+                                        <img 
+                                            src="<?= htmlspecialchars($item['display_image']); ?>" 
+                                            alt="Uploaded photo"
+                                            style="width:100%; max-width:260px; height:140px; object-fit:cover; border-radius:8px; border:1px solid #e5e7eb; margin-top:4px;"
+                                        >
+                                    </div>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -85,7 +156,7 @@
                     <div class="cart-summary-header">ORDER SUMMARY</div>
                     <div class="cart-summary-body">
                         <div id="empty-summary-msg" class="text-center py-3 text-muted small">Select items to view summary</div>
-                        
+
                         <?php foreach ($cart_items as $item): ?>
                             <div class="cart-summary-line" id="summary-item-<?= $item['id']; ?>" style="display: none;">
                                 <div>
@@ -97,13 +168,16 @@
                             </div>
                         <?php endforeach; ?>
 
-                        <?php if(!empty($cart_items)): ?>
+                        <?php if (!empty($cart_items)): ?>
                             <div class="cart-summary-divider"></div>
                             <div class="cart-total-section">
                                 <span class="total-label">Total</span>
                                 <span class="cart-total-value" id="running-total">₱0.00</span>
                             </div>
-                            <form action="checkout.php" method="POST">
+                            <!-- Posts selected_items to customer_checkout.php -->
+                            <!-- CheckoutService::getCartItems() reads from DB using the session customer_id -->
+                            <!-- selected_items is stored in session so checkout knows which items were chosen -->
+                            <form action="customer_checkout.php" method="POST">
                                 <input type="hidden" name="selected_items" id="selected-items-input">
                                 <button type="submit" id="checkout-btn" class="cart-checkout-btn" disabled>Proceed to Checkout</button>
                             </form>
@@ -111,11 +185,12 @@
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
 
-<!-- FIXED: Added style="display:none;" so modal is hidden on page load -->
+<!-- Delete confirmation modal -->
 <div id="deleteModal" class="-cart-modal-overlay" style="display:none;">
     <div class="-cart-modal-card">
         <div class="-cart-modal-icon-circle">
@@ -129,7 +204,20 @@
         </div>
     </div>
 </div>
-
+<!-- Clear Selected Modal -->
+<div id="clearSelectedModal" class="-cart-modal-overlay" style="display:none;">
+    <div class="-cart-modal-card">
+        <div class="-cart-modal-icon-circle">
+            <i class="fa-solid fa-trash-can"></i>
+        </div>
+        <h3 class="-cart-modal-title" id="clearModalTitle">Remove Selected Items</h3>
+        <p class="-cart-modal-text" id="clearModalText">Are you sure you want to remove the selected items? This action cannot be undone.</p>
+        <div class="-cart-modal-actions">
+            <button type="button" class="-cart-btn-modal-cancel" onclick="closeClearModal()">Cancel</button>
+            <a id="confirmClearBtn" href="#" class="-cart-btn-modal-confirm">Remove</a>
+        </div>
+    </div>
+</div>
 <script src="../assets/js/shopping_cart.js"></script>
 </body>
 </html>
