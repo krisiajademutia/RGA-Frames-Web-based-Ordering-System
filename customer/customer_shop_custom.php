@@ -476,6 +476,19 @@ if ($customerId > 0) {
     </div><!-- end container -->
 </div>
 
+<!-- Mobile Sticky Bottom Bar -->
+<div class="csc-mobile-bar" id="cscMobileBar">
+    <div class="csc-mobile-bar-left">
+        <span class="csc-mobile-bar-label">Total</span>
+        <span class="csc-mobile-bar-total" id="csc-mobile-total">₱0.00</span>
+    </div>
+    <div class="csc-mobile-bar-right">
+        <a class="csc-mobile-summary-link" id="cscSummaryLink">Order Summary ▲</a>
+        <button type="button" class="csc-btn-cart" id="csc-mobile-cart"><i class="fas fa-cart-shopping"></i></button>
+        <button type="button" class="csc-btn-buy" id="csc-mobile-buy">Buy Now</button>
+    </div>
+</div>
+
 <script>
 const CSC_DATA = {
     // 1. Fixed Frame Sizes (Removed the deleted 'price' column)
@@ -502,5 +515,52 @@ const CSC_DATA = {
     ], $builderData['fixed_print_prices'])) ?>
 };
 </script>
+<script>
+// Sync mobile bar total with main total
+const mainTotal    = document.getElementById('csc-total');
+const mobileTotal  = document.getElementById('csc-mobile-total');
+const mobileCart   = document.getElementById('csc-mobile-cart');
+const mobileBuy    = document.getElementById('csc-mobile-buy');
+const mainCart     = document.getElementById('csc-add-to-cart');
+const mainBuy      = document.getElementById('csc-buy-now');
+const summaryLink  = document.getElementById('cscSummaryLink');
+const summaryWrap  = document.querySelector('.csc-summary-wrap');
+const footer = document.querySelector('.idx-ftr');
+
+// Sync total text
+const totalObserver = new MutationObserver(() => {
+    if (mobileTotal) mobileTotal.textContent = mainTotal.textContent;
+});
+if (mainTotal) totalObserver.observe(mainTotal, { childList: true, subtree: true, characterData: true });
+
+// Tap buttons — trigger main buttons
+if (mobileCart) mobileCart.addEventListener('click', () => mainCart.click());
+if (mobileBuy)  mobileBuy.addEventListener('click',  () => mainBuy.click());
+
+// Tap "Order Summary" — scroll to summary
+if (summaryLink && summaryWrap) {
+    summaryLink.addEventListener('click', () => {
+        summaryWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+}
+
+// Hide sticky bar when order summary OR footer is visible
+function checkMobileBarVisibility() {
+    const mobileBar = document.getElementById('cscMobileBar');
+    if (!mobileBar) return;
+
+    const summaryVisible = summaryWrap ?
+        summaryWrap.getBoundingClientRect().top < window.innerHeight : false;
+    const footerVisible = footer ?
+        footer.getBoundingClientRect().top < window.innerHeight : false;
+
+    mobileBar.style.display = (summaryVisible || footerVisible) ? 'none' : '';
+}
+
+// Run on scroll and on page load
+window.addEventListener('scroll', checkMobileBarVisibility);
+checkMobileBarVisibility();
+</script>
 <script src="../assets/js/customer_shop_custom.js?v=<?= time() ?>"></script>
+
 <?php include __DIR__ . '/../includes/idx_footer.php'; ?>
