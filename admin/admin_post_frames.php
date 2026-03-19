@@ -84,34 +84,41 @@ $posted_frames = $frameService->getAllFrames();
                     $product_images = $img_res->fetch_all(MYSQLI_ASSOC);
                 ?>
                     <div class="posted-card-item">
-                        <div class="posted-image-box position-relative">
-                            <div id="carousel-<?= $p_id ?>" class="carousel slide h-100" data-bs-ride="false">
-                                <div class="carousel-inner h-100">
-                                    <?php if(!empty($product_images)): ?>
-                                        <?php foreach($product_images as $index => $img): ?>
-                                            <div class="carousel-item h-100 <?= $index === 0 ? 'active' : '' ?>">
-                                                <img src="/rga_frames/uploads/<?= $img['image_name'] ?>" class="d-block w-100 h-100 object-fit-cover" alt="Product">
-                                            </div>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <div class="carousel-item active h-100">
-                                            <div class="d-flex align-items-center justify-content-center h-100 bg-light text-muted">No Image</div>
+                                                    <div class="posted-image-box position-relative">
+                                <div id="carousel-<?= $p_id ?>" class="carousel slide h-100" data-bs-ride="false">
+                                    
+                                    <?php if(count($product_images) > 1): ?>
+                                        <div class="carousel-indicators">
+                                            <?php foreach($product_images as $index => $img): ?>
+                                                <button type="button" data-bs-target="#carousel-<?= $p_id ?>" data-bs-slide-to="<?= $index ?>" class="<?= $index === 0 ? 'active' : '' ?>" aria-current="true"></button>
+                                            <?php endforeach; ?>
                                         </div>
                                     <?php endif; ?>
-                                </div>
-                                <?php if(count($product_images) > 1): ?>
-                                    <div class="card-dots-menu dropdown">
-                                        <button class="btn btn-dark btn-sm rounded-circle opacity-75" data-bs-toggle="dropdown" style="position: absolute; top: 10px; right: 10px; z-index: 5;">
-                                            <i class="fa-solid fa-ellipsis-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                            <li><button class="dropdown-item" onclick="bootstrap.Carousel.getOrCreateInstance('#carousel-<?= $p_id ?>').prev()"><i class="fa-solid fa-chevron-left me-2"></i> Previous Image</button></li>
-                                            <li><button class="dropdown-item" onclick="bootstrap.Carousel.getOrCreateInstance('#carousel-<?= $p_id ?>').next()"><i class="fa-solid fa-chevron-right me-2"></i> Next Image</button></li>
-                                        </ul>
+
+                                    <div class="carousel-inner h-100">
+                                        <?php if(!empty($product_images)): ?>
+                                            <?php foreach($product_images as $index => $img): ?>
+                                                <div class="carousel-item h-100 <?= $index === 0 ? 'active' : '' ?>">
+                                                    <img src="/rga_frames/uploads/<?= $img['image_name'] ?>" class="d-block w-100 h-100 object-fit-cover" alt="Product">
+                                                </div>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <div class="carousel-item active h-100">
+                                                <div class="d-flex align-items-center justify-content-center h-100 bg-light text-muted">No Image</div>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
-                                <?php endif; ?>
+
+                                    <?php if(count($product_images) > 1): ?>
+                                        <button class="carousel-control-prev custom-nav" type="button" data-bs-target="#carousel-<?= $p_id ?>" data-bs-slide="prev">
+                                            <span class="nav-circle"><i class="fa-solid fa-chevron-left"></i></span>
+                                        </button>
+                                        <button class="carousel-control-next custom-nav" type="button" data-bs-target="#carousel-<?= $p_id ?>" data-bs-slide="next">
+                                            <span class="nav-circle"><i class="fa-solid fa-chevron-right"></i></span>
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
                             </div>
-                        </div>
                         <div class="posted-info">
                             <h4 class="posted-item-title"><?= htmlspecialchars($row['product_name']) ?></h4>
                             <p class="posted-item-meta m-0"><?= $row['width'] ?>x<?= $row['height'] ?>"</p>
