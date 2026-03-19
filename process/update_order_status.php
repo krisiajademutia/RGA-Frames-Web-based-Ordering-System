@@ -36,4 +36,15 @@ if ($new_status === 'COMPLETED') {
     $stmtFull->execute();
 }
 
+// If accepted (PROCESSING) — decrement stock for every ready-made item in this order
+if ($new_status === 'PROCESSING') {
+    $stmtStock = $conn->prepare("
+        UPDATE tbl_ready_made_product_stocks s
+        JOIN tbl_frame_order_items i ON s.r_product_id = i.r_product_id
+        SET s.quantity = GREATEST(0, s.quantity - i.quantity)
+        WHERE i.order_id = ? AND i.frame_category = 'READY_MADE'
+    ");
+    $stmtStock->bind_param("i", $order_id);
+    $stmtStock->execute();
+}
 echo json_encode(['success' => true]);
