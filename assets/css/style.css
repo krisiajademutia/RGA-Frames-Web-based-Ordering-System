@@ -5354,7 +5354,133 @@ body {
     0% { filter: blur(0px); }
     100% { filter: blur(5px); }
 }
+/* =========================================
+   PRINTING SERVICES — MOBILE FIXES
+   ========================================= */
+@media (max-width: 768px) {
 
+    .ps-page-wrapper {
+        padding-top: 70px;
+    }
+
+    .ps-main-title {
+        font-size: 1.6rem;
+        margin-bottom: 1rem;
+    }
+
+    .ps-card-body {
+        padding: 15px 15px;
+    }
+
+    /* Dropdowns full width */
+    .ps-select {
+        width: 100%;
+        font-size: 0.875rem;
+        padding: 10px 15px;
+    }
+
+    /* Width/Height/Total fields */
+    #dimension-fields .col-4 {
+        width: 33.33%;
+    }
+
+    #dimension-fields input {
+        font-size: 0.8rem;
+        padding: 6px 8px;
+        height: 38px;
+    }
+
+    #dimension-fields label {
+        font-size: 0.7rem;
+    }
+
+    /* Total bar */
+    .ps-total-container {
+        padding: 12px 15px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        border-radius: 0;
+        position: sticky;
+        bottom: 0;
+        z-index: 100;
+        box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+    }
+
+    .ps-total-label {
+        font-size: 0.95rem;
+    }
+
+    .ps-total-amount {
+        font-size: 1.5rem;
+    }
+
+    /* Buttons — full width, no wrapping */
+    .ps-total-container .d-flex {
+        width: 100%;
+        gap: 0.5rem;
+    }
+
+    .ps-btn-cart,
+    .ps-btn-buy-now {
+        flex: 1;
+        justify-content: center;
+        font-size: 0.875rem;
+        padding: 12px 10px;
+        min-width: unset;
+        white-space: nowrap;
+    }
+
+    /* Quantity */
+    .ps-quantity-control {
+        margin-top: 0.5rem;
+    }
+
+    .ps-qty-btn {
+        width: 36px;
+        height: 36px;
+    }
+
+    .ps-qty-input {
+        width: 55px;
+        height: 36px;
+        font-size: 1rem;
+    }
+
+    /* Upload area */
+    .ps-upload-area {
+        padding: 30px 15px;
+    }
+
+    .ps-upload-icon {
+        font-size: 2rem;
+    }
+
+    .ps-upload-text {
+        font-size: 0.9rem;
+    }
+
+    /* Preview */
+    .ps-preview-wrapper {
+        height: 220px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ps-main-title {
+        font-size: 1.4rem;
+    }
+
+    .ps-total-container {
+        padding: 10px 12px;
+    }
+
+    .ps-btn-cart,
+    .ps-btn-buy-now {
+        font-size: 0.8rem;
+        padding: 10px 8px;
+    }
+}
 /* =========================================
    ORDERS DASHBOARD — FULL REDESIGN
    ========================================= */
