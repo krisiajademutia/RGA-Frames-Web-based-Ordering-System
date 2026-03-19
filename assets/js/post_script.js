@@ -44,8 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
             priceDisplay.value = total.toFixed(2);
         }
     }
-
-    // Add listeners to dropdowns (Ensure 'frame_type_id' select has the class 'post-calc-trigger')
     selects.forEach(s => {
         s.addEventListener('change', () => runCalculation(false));
     });
