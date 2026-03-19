@@ -339,7 +339,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
 <div class="modal fade" id="fixedPriceModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content fpm-modal-content">
-            
             <div class="modal-header fpm-header text-white">
                 <h5 class="modal-title fpm-title">
                     <i class="fa-solid fa-tags me-2"></i> Fixed Print Price Management
@@ -348,7 +347,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
             </div>
 
             <div class="modal-body p-4">
-                
                 <form id="fixedPriceForm" action="../process/posting_options.php?tab=paper_types" method="POST">
                     <input type="hidden" name="action" id="fpm_action" value="add_fixed_price">
                     <input type="hidden" name="fixed_price_id" id="fpm_id" value="">
@@ -362,9 +360,15 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                                 <select name="paper_type_id" id="fpm_paper_type" class="fpm-select" required>
                                     <option value="" disabled selected>Choose paper...</option>
                                     <?php 
-                                    $papers = $conn->query("SELECT paper_type_id, paper_name, multiplier FROM tbl_paper_type");
+                                    // Fetching limits to use in JS validation
+                                    $papers = $conn->query("SELECT paper_type_id, paper_name, multiplier, min_width_inch, min_height_inch, max_width_inch, max_height_inch FROM tbl_paper_type");
                                     while($p = $papers->fetch_assoc()): ?>
-                                        <option value="<?= $p['paper_type_id'] ?>" data-multiplier="<?= $p['multiplier'] ?>">
+                                        <option value="<?= $p['paper_type_id'] ?>" 
+                                                data-multiplier="<?= $p['multiplier'] ?>"
+                                                data-min-w="<?= $p['min_width_inch'] ?>"
+                                                data-max-w="<?= $p['max_width_inch'] ?>"
+                                                data-min-h="<?= $p['min_height_inch'] ?>"
+                                                data-max-h="<?= $p['max_height_inch'] ?>">
                                             <?= htmlspecialchars($p['paper_name']) ?>
                                         </option>
                                     <?php endwhile; ?>
@@ -374,13 +378,15 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                                 <label class="fpm-label">Dimension Name</label>
                                 <input type="text" name="dimension" id="fpm_dimension" class="fpm-input" placeholder="e.g. 8x10" required>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-3 position-relative">
                                 <label class="fpm-label">Width (in)</label>
                                 <input type="number" step="0.01" name="width_inch" id="fpm_width" class="fpm-input" required>
+                                <span id="width_err" class="text-danger" style="position: absolute; left: 15px; bottom: -18px; font-size: 10px; font-weight: 600;"></span>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-3 position-relative">
                                 <label class="fpm-label">Height (in)</label>
                                 <input type="number" step="0.01" name="height_inch" id="fpm_height" class="fpm-input" required>
+                                <span id="height_err" class="text-danger" style="position: absolute; left: 15px; bottom: -18px; font-size: 10px; font-weight: 600;"></span>
                             </div>
                             <div class="col-md-3">
                                 <label class="fpm-label">Price (₱)</label>
@@ -432,13 +438,12 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                                 </tr>
                             <?php endwhile; else: ?>
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted py-4">No fixed prices found in the database.</td>
+                                    <td colspan="4" class="text-center text-muted py-4">No fixed prices found.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
-
             </div>
         </div>
     </div>
