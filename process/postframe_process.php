@@ -10,24 +10,31 @@ $repository = new \Classes\Frames\Repository\ReadyMadeFrameRepository($conn);
 $frameService = new \Classes\Frames\FrameService($repository);
 
 // DELETE ACTION
+// DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
     $id = (int)$_GET['id'];
+    
     $product = $frameService->getFrameById($id);
     $product_name = $product['product_name'] ?? 'Product';
 
     try {
-        // Get all images to delete physical files
-        $images = $repository->getProductImages($id);
-        foreach ($images as $img) {
-            @unlink("../uploads/" . $img['image_name']);
+      
+        if ($frameService->deleteFrame($id)) {
+            $_SESSION['post_success_modal'] = [
+                'name' => $product_name, 
+                'action' => 'deleted'
+            ];
+        } else {
+            throw new Exception("Linked record detected.");
         }
 
-        if ($frameService->deleteFrame($id)) {
-            $_SESSION['post_success_modal'] = ['name' => $product_name, 'action' => 'deleted'];
-        }
-    } catch (mysqli_sql_exception $e) {
-        $_SESSION['post_error_modal'] = ['title' => 'Error', 'message' => 'Cannot delete linked product.'];
+    } catch (Exception $e) {
+        $_SESSION['post_error_modal'] = [
+            'title' => 'Cannot Delete Product', 
+            'message' => 'This frame is currently linked to existing customer orders or records. To protect your sales history, it cannot be removed.'
+        ];
     }
+
     header("Location: ../admin/admin_post_frames.php?view=posted");
     exit();
 }
@@ -96,10 +103,6 @@ if (isset($_POST['update_product'])) {
                 }
             }
         }
-
-        // 3. ENFORCE PRIMARY IMAGE LOGIC
-        // This ensures the database stays in sync with your UI logic 
-        // where the first available image (index 0) is marked as primary.
         $conn->query("UPDATE tbl_ready_made_product_images SET is_primary = 0 WHERE r_product_id = $id");
         $conn->query("UPDATE tbl_ready_made_product_images SET is_primary = 1 WHERE r_product_id = $id ORDER BY image_id ASC LIMIT 1");
 

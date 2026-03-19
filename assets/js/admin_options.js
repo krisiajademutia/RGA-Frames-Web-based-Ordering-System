@@ -9,29 +9,113 @@ document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
     }
 
-    // --- Automatic Price Calculation Logic ---
+    // --- Automatic Price Calculation & Validation Logic ---
     const widthInput = document.getElementById('fpm_width');
     const heightInput = document.getElementById('fpm_height');
     const paperSelect = document.getElementById('fpm_paper_type');
     const priceInput = document.getElementById('fpm_price');
+    const submitBtn = document.getElementById('fpm_submit_btn');
 
     if (widthInput && heightInput && paperSelect && priceInput) {
-        const calculateFpmPrice = () => {
+        const calculateAndValidate = () => {
             const width = parseFloat(widthInput.value) || 0;
             const height = parseFloat(heightInput.value) || 0;
+            const selected = paperSelect.options[paperSelect.selectedIndex];
             
-            const selectedOption = paperSelect.options[paperSelect.selectedIndex];
-            const multiplier = selectedOption ? parseFloat(selectedOption.getAttribute('data-multiplier')) : 0;
+            if (!selected || selected.value === "") return;
 
-            if (width > 0 && height > 0 && multiplier > 0) {
-                const total = width * height * multiplier;
-                priceInput.value = total.toFixed(2);
+            // Get range values from dataset (passed from PHP)
+            const minW = parseFloat(selected.dataset.minW) || 0;
+            const maxW = parseFloat(selected.dataset.maxW) || 0;
+            const minH = parseFloat(selected.dataset.minH) || 0;
+            const maxH = parseFloat(selected.dataset.maxH) || 0;
+            const multiplier = parseFloat(selected.dataset.multiplier) || 0;
+
+            let isValid = true;
+
+            // Width Debug Logic
+            const wErr = document.getElementById('width_err');
+            if (width > 0) {
+                if (width < minW) {
+                    wErr.innerText = `below minimum width (${minW}")`;
+                    isValid = false;
+                } else if (width > maxW) {
+                    wErr.innerText = `above maximum width (${maxW}")`;
+                    isValid = false;
+                } else {
+                    wErr.innerText = "";
+                }
+            } else {
+                wErr.innerText = "";
+            }
+
+            // Height Debug Logic
+            const hErr = document.getElementById('height_err');
+            if (height > 0) {
+                if (height < minH) {
+                    hErr.innerText = `below minimum height (${minH}")`;
+                    isValid = false;
+                } else if (height > maxH) {
+                    hErr.innerText = `above maximum height (${maxH}")`;
+                    isValid = false;
+                } else {
+                    hErr.innerText = "";
+                }
+            } else {
+                hErr.innerText = "";
+            }
+
+            // --- BUTTON STATE LOGIC (GRAY AND UNCLICKABLE) ---
+            if (submitBtn) {
+                if (!isValid) {
+                    submitBtn.disabled = true;
+                    submitBtn.style.backgroundColor = "#cccccc"; 
+                    submitBtn.style.borderColor = "#cccccc";
+                    submitBtn.style.color = "#666666";
+                    submitBtn.style.cursor = "not-allowed";
+                    submitBtn.style.opacity = "0.7";
+                    priceInput.value = ""; // Clear price if dimensions are invalid
+                } else {
+                    submitBtn.disabled = false;
+                    submitBtn.style.backgroundColor = ""; // Reset to CSS defaults
+                    submitBtn.style.borderColor = "";
+                    submitBtn.style.color = "";
+                    submitBtn.style.cursor = "pointer";
+                    submitBtn.style.opacity = "1";
+                    
+                    // Calculate price only if both dimensions exist and are valid
+                    if (width > 0 && height > 0 && multiplier > 0) {
+                        const total = width * height * multiplier;
+                        priceInput.value = total.toFixed(2);
+                    }
+                }
             }
         };
 
-        widthInput.addEventListener('input', calculateFpmPrice);
-        heightInput.addEventListener('input', calculateFpmPrice);
-        paperSelect.addEventListener('change', calculateFpmPrice);
+        widthInput.addEventListener('input', calculateAndValidate);
+        heightInput.addEventListener('input', calculateAndValidate);
+        paperSelect.addEventListener('change', calculateAndValidate);
+    }
+
+    // Modal scroll fix for nested modals
+    const deleteFpmModalEl = document.getElementById('deleteFixedPriceModal');
+    if (deleteFpmModalEl) {
+        deleteFpmModalEl.addEventListener('hidden.bs.modal', function () {
+            if (document.querySelector('#fixedPriceModal.show')) {
+                document.body.classList.add('modal-open');
+                document.body.style.overflow = 'hidden';
+            }
+        });
+    }
+
+    // Clean URL params after notifications
+    if (window.history.replaceState) {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('success') || url.searchParams.has('error')) {
+            url.searchParams.delete('success');
+            url.searchParams.delete('error');
+            window.history.replaceState(null, null, url.href);
+        }
     }
 });
 
@@ -59,36 +143,15 @@ function confirmDeleteFpm(id) {
     modal.show();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const deleteFpmModalEl = document.getElementById('deleteFixedPriceModal');
-    if (deleteFpmModalEl) {
-        deleteFpmModalEl.addEventListener('hidden.bs.modal', function () {
-            if (document.querySelector('#fixedPriceModal.show')) {
-                document.body.classList.add('modal-open');
-                document.body.style.overflow = 'hidden';
-                document.body.style.paddingRight = '0px'; 
-            }
-        });
-    }
-});
-
 /**
- * SINGLE UPLOAD PREVIEW (For single image tabs)
+ * SINGLE UPLOAD PREVIEW
  */
 function showExistingImage(imgUrl, containerId, textId, inputId) {
     const container = document.getElementById(containerId);
     if (!container) return;
     const uploadZone = container.closest('.opt-upload-zone');
     
-    container.style.position = 'absolute';
-    container.style.top = '0';
-    container.style.left = '0';
-    container.style.width = '100%';
-    container.style.height = '100%';
-    container.style.zIndex = '10';
-    container.style.backgroundColor = '#fff';
-    container.style.borderRadius = '8px';
-    container.style.overflow = 'hidden';
+    container.style.cssText = "position:absolute; top:0; left:0; width:100%; height:100%; z-index:10; background:#fff; border-radius:8px; overflow:hidden;";
 
     container.innerHTML = `
         <div class="preview-wrapper" style="width: 100%; height: 100%; position: relative; pointer-events: auto;">
@@ -111,16 +174,7 @@ function handleSingleFilePreview(input, containerId, textId) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            container.style.position = 'absolute';
-            container.style.top = '0';
-            container.style.left = '0';
-            container.style.width = '100%';
-            container.style.height = '100%';
-            container.style.zIndex = '10';
-            container.style.backgroundColor = '#fff';
-            container.style.borderRadius = '8px';
-            container.style.overflow = 'hidden';
-
+            container.style.cssText = "position:absolute; top:0; left:0; width:100%; height:100%; z-index:10; background:#fff; border-radius:8px; overflow:hidden;";
             container.innerHTML = `
                 <div class="preview-wrapper" style="width: 100%; height: 100%; position: relative; pointer-events: auto;">
                     <button type="button" 
@@ -185,8 +239,6 @@ function renderPreviews(containerId, textId, inputId) {
 
     if (selectedFiles.length > 0) {
         textElement.innerText = `${selectedFiles.length} images selected`;
-        
-        // Determine if any image currently has primary status
         const hasExistingPrimary = selectedFiles.some(f => f.is_primary === true);
 
         selectedFiles.forEach((file, index) => {
@@ -194,18 +246,12 @@ function renderPreviews(containerId, textId, inputId) {
             wrapper.className = "preview-wrapper";
             wrapper.style.cssText = "width: 80px; height: 80px; position: relative; display: inline-block; margin: 8px; border: 1px solid #ccc; border-radius: 6px; background: white; pointer-events: auto;";
 
-            // Calculate Primary Status:
-            // 1. If it was already primary, keep it.
-            // 2. If no image is marked primary, make index 0 primary.
             const isPrimary = file.is_primary || (!hasExistingPrimary && index === 0);
-            
-            // Sync the object's property so it's correct for potential re-renders
             file.is_primary = isPrimary;
 
             const primaryBadge = isPrimary ? 
                 `<span style="position:absolute; bottom:0; left:0; right:0; background:rgba(6,58,50,0.9); color:white; font-size:10px; text-align:center; padding:2px 0; z-index:5; border-radius: 0 0 6px 6px;">Primary</span>` : '';
 
-            // We include hidden primary_image value to help PHP identify which existing image is primary
             const primaryInput = isPrimary && file.isExisting ? `<input type="hidden" name="primary_existing_image" value="${file.image_name}">` : '';
             const hiddenInput = file.isExisting ? `<input type="hidden" name="existing_images[]" value="${file.image_name}">` : '';
 
@@ -247,13 +293,9 @@ function removeImage(event, index, containerId, textId, inputId) {
     event.stopPropagation();
     selectedFiles.splice(index, 1);
     
-    // Reset primary status of all remaining files so renderPreviews can recalculate 
-    // who should be primary (index 0 if the previous primary was removed)
-    const hasPrimaryLeft = selectedFiles.some(f => f.is_primary === true);
-    if (!hasPrimaryLeft && selectedFiles.length > 0) {
+    if (selectedFiles.length > 0 && !selectedFiles.some(f => f.is_primary === true)) {
         selectedFiles[0].is_primary = true;
     }
-
     renderPreviews(containerId, textId, inputId);
 }
 
@@ -271,6 +313,11 @@ function editFpm(data) {
     document.getElementById('form_title').innerText = 'Edit Pricing Record';
     document.getElementById('fpm_submit_btn').innerText = 'Update Price';
     document.getElementById('fpm_cancel_btn').style.display = 'block';
+    
+    // Trigger calculation/validation to ensure correct button state for the loaded record
+    const event = new Event('input');
+    document.getElementById('fpm_width').dispatchEvent(event);
+    
     document.getElementById('fixedPriceForm').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -281,15 +328,15 @@ function resetFpmForm() {
     document.getElementById('form_title').innerText = 'Add New Pricing';
     document.getElementById('fpm_submit_btn').innerText = 'Add Entry';
     document.getElementById('fpm_cancel_btn').style.display = 'none';
+    
+    // Reset validation errors
+    document.getElementById('width_err').innerText = "";
+    document.getElementById('height_err').innerText = "";
+    
+    // Reset button state
+    const btn = document.getElementById('fpm_submit_btn');
+    btn.disabled = false;
+    btn.style.backgroundColor = "";
+    btn.style.opacity = "1";
+    btn.style.cursor = "pointer";
 }
-
-window.addEventListener('DOMContentLoaded', (event) => {
-    if (window.history.replaceState) {
-        const url = new URL(window.location.href);
-        if (url.searchParams.has('success') || url.searchParams.has('error')) {
-            url.searchParams.delete('success');
-            url.searchParams.delete('error');
-            window.history.replaceState(null, null, url.href);
-        }
-    }
-});

@@ -1276,21 +1276,58 @@ html {
     margin-top: 0;
 }
 /* Carousel Dots Menu */
-.card-dots-menu {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 10;
+.carousel-indicators {
+    margin-bottom: 0.5rem;
 }
 
-.card-dots-menu .btn {
-    width: 30px;
-    height: 30px;
-    padding: 0;
-    line-height: 30px;
-    border: none;
-    background: rgba(0,0,0,0.5);
-    color: white;
+.carousel-indicators [button], 
+.carousel-indicators button {
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 50% !important;
+    background-color: #fff !important;
+    opacity: 0.5;
+    border: none !important;
+    margin: 0 4px !important;
+}
+
+.carousel-indicators .active {
+    opacity: 1 !important;
+    width: 10px !important;
+    height: 10px !important;
+}
+
+/* Custom Navigation Circles */
+.custom-nav {
+    width: 15% !important; /* Area to trigger click */
+    opacity: 0; /* Hidden by default */
+    transition: opacity 0.3s ease;
+}
+
+.posted-image-box:hover .custom-nav {
+    opacity: 1; /* Show arrows on hover */
+}
+
+.nav-circle {
+    background-color: rgba(255, 255, 255, 0.8);
+    color: #000;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.nav-circle:hover {
+    background-color: #fff;
+}
+
+/* Hide default bootstrap icons if any */
+.carousel-control-prev-icon, .carousel-control-next-icon {
+    display: none;
 }
 
 /* Image Upload Preview Overlay */
@@ -1419,16 +1456,19 @@ html {
     border-bottom: 1.5px solid #ADADAD;
     font-size: 14px;
     font-weight: 600;
-    color: var(--forest-dark);
+    color: white;
     text-transform: uppercase;
     width: 100%;
     box-sizing: border-box;
+    background-color:var(--forest-dark);
+   border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
 }
 
 .post-form-grid {
     display: grid;
     grid-template-columns: 535px 535px;
-    gap: 25px 48px;
+    gap: 40px 48px;
     padding: 40px 60px;
     margin-bottom: 30px;
 }
@@ -1516,21 +1556,23 @@ html {
     box-shadow: 0 8px 30px rgba(0,0,0,0.05) !important;
     overflow: hidden;
 }
-
-.posted-header-bar {
+div.posted-header-bar {
+    background-color: var(--forest-dark) !important;
+    color: white !important;
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-family: var(--font-secondary);
     padding: 20px 35px 20px 55px;
-    border-bottom: 1.5px solid #ADADAD;
     font-size: 14px;
     font-weight: 600;
-    color: var(--forest-dark);
     text-transform: uppercase;
     width: 100%;
     box-sizing: border-box;
     flex-shrink: 0;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+
 }
 
 .posted-badge {
@@ -1912,13 +1954,14 @@ html {
 .opt-card-header {
     font-family: var(--font-secondary);
     padding: 20px 35px 20px 55px;
-    border-bottom: 1.5px solid #ADADAD;
     font-size: 14px;
     font-weight: 600;
-    color: var(--forest-dark);
+    color: white;
     text-transform: uppercase;
     width: 100%;
-    box-sizing: border-box;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    background-color: var(--forest-dark);
 }
 
 .opt-form-grid {
@@ -1948,7 +1991,11 @@ html {
     font-size: 14px;
     color: #374151;
 }
-
+.opt-input:hover {
+    border-color: var(--forest-dark) !important;
+    outline: none;
+    transition: border-color 0.2s ease-in-out;
+}
 .opt-upload-zone {
     margin-top: 27px;
     width: 522px;
@@ -2002,7 +2049,7 @@ html {
     text-decoration: none;
     font-weight: 600;
 }
-/* Unique Identifiers for Option Modals (opt-) based on post- style */
+
 .opt-alert-content {
     border-radius: 15px !important;
     border: none !important;
@@ -2010,7 +2057,7 @@ html {
 
 .opt-alert-icon {
     font-size: 60px;
-    color: #004030; /* Matching your post- green */
+    color: #004030;
 }
 
 .opt-alert-title {
@@ -2019,7 +2066,6 @@ html {
     font-weight: 400;
 }
 
-/* For highlighting the name in the alert */
 .opt-alert-title strong {
     color: #111827;
 }
@@ -2035,13 +2081,16 @@ html {
     justify-content: space-between;
     align-items: center;
     padding: 20px 35px 20px 55px;
-    border-bottom: 1.5px solid #ADADAD;
+   color: white;
+   background-color:var(--forest-dark);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
 }
 
 .opted-title {
     font-size: 14px;
     font-weight: 600;
-    color: var(--forest-dark);
+    color: white;
     text-transform: uppercase;
 }
 
@@ -7041,6 +7090,109 @@ body {
     box-shadow: 0 4px 10px rgba(15, 71, 58, 0.2);
 }
 
+/* --- RESPONSIVE ADJUSTMENTS FOR MOBILE/ANDROID --- */
+@media screen and (max-width: 1300px) {
+    .post-admin-container {
+        width: 95%;
+        margin-top: 120px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    /* Container & Header */
+    .post-admin-container {
+        margin-top: 100px;
+        width: 100%;
+        padding: 0 15px;
+    }
+
+    .post-header-wrapper {
+        flex-direction: column;
+        gap: 20px;
+        align-items: flex-start !important;
+        margin-bottom: 30px !important;
+        margin-top: 100px !important;
+    }
+
+    /* Grid Layout - Switch from 2 columns to 1 */
+    .post-form-grid {
+        grid-template-columns: 1fr; /* Single column */
+        padding: 25px 20px;
+        gap: 20px;
+    }
+
+    /* Fix fixed widths to be fluid */
+    .post-input, 
+    .post-size-box, 
+    .post-upload-zone, 
+    .post-btn-submit, 
+    .post-btn-clear {
+        width: 100% !important;
+    }
+
+    /* Handle the Width x Height row */
+    .fpm-size-grid {
+        grid-template-columns: 1fr auto 1fr;
+    }
+
+    /* Photo Upload Zone */
+    .post-upload-zone {
+        height: 140px; /* Slightly taller for easier thumb-tapping */
+        margin-top: 10px;
+    }
+
+    .post-upload-container.full-width {
+        grid-column: span 1;
+    }
+
+    /* Posted Items Grid */
+    .posted-grid {
+        grid-template-columns: 1fr; /* Stack cards on mobile */
+        padding: 20px;
+    }
+
+    /* Navigation/Dropdown */
+    .post-dropbtn {
+        width: 100%;
+    }
+
+    .post-dropdown {
+        width: 100%;
+    }
+
+    /* Buttons Footer */
+    .d-flex.justify-content-center.gap-3 {
+        flex-direction: column;
+        width: 100%;
+        padding: 0 20px 20px 20px;
+    }
+
+    .post-btn-submit, .post-btn-clear {
+        height: 50px; /* Larger hit area for fingers */
+    }
+
+    /* Card adjustments */
+    .post-card {
+        min-height: auto;
+    }
+
+    .post-card-header, .posted-header-bar {
+        padding: 15px 20px;
+        font-size: 13px;
+    }
+}
+
+/* Extra small devices (Android small) */
+@media screen and (max-width: 480px) {
+    .posted-image-box {
+        height: 180px;
+    }
+    
+    .modal-product-name {
+        font-size: 16px;
+    }
+}
+
 /* ── Design Card Zoom Button ── */
 .csc-design-img-wrap {
     position: relative;
@@ -10635,7 +10787,7 @@ body {
     gap: 1.5rem; 
     transition: all 0.15s;
     cursor: pointer;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
 }
 
 .cart-item-card:hover { 
@@ -10958,4 +11110,88 @@ body {
 .cart-toolbar-clear-btn:hover {
     opacity: 0.75;
     text-decoration: underline;
+}
+/* ── Cart item card: allow expanded panel to wrap below the row ── */
+.cart-item-card {
+    flex-wrap: wrap;
+}
+
+/* ── View details toggle button ── */
+.cart-details-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    background: #0F473A;
+    border: none;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #ffffff;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.cart-details-toggle:hover {
+    background: #0a3028;
+}
+
+.cart-details-chevron {
+    font-size: 10px;
+    transition: transform 0.2s ease;
+}
+
+.cart-details-chevron--open {
+    transform: rotate(180deg);
+}
+
+/* ── Collapsed state ── */
+.cart-item-expanded {
+    width: 100%;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    padding: 0 4px;
+    box-sizing: border-box;
+}
+
+/* ── Open state ── */
+.cart-item-expanded--open {
+    max-height: 400px;
+    padding: 12px 4px 4px;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 8px;
+}
+
+/* ── Detail rows: 2-column grid ── */
+.cart-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 24px;
+}
+
+.cart-detail-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.cart-detail-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.cart-detail-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: #111827;
+}
+
+.cart-detail-price {
+    font-weight: 700;
+    color: #0F473A;
 }
