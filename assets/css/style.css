@@ -9071,6 +9071,147 @@ body {
     line-height: 1;
 }
 /* =========================================
+   CHECKOUT — MOBILE FIXES
+   ========================================= */
+@media (max-width: 768px) {
+
+    .chk-page {
+        padding: 5rem 1rem 2rem;
+    }
+
+    .chk-heading {
+        font-size: 1.5rem;
+    }
+
+    .chk-subheading {
+        font-size: 0.85rem;
+        margin-bottom: 1.25rem;
+    }
+
+    /* Layout stacks to single column */
+    .chk-layout {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    /* Cards */
+    .chk-card {
+        margin-bottom: 1rem;
+        border-radius: 10px;
+    }
+
+    .chk-card-body {
+        padding: 1rem;
+    }
+
+    /* Customer details — stack vertically */
+    .chk-details-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    /* Delivery locked notice — fix wrapping */
+    .chk-delivery-locked-notice {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+        font-size: 0.82rem;
+        padding: 0.75rem;
+        line-height: 1.6;
+    }
+
+    .chk-delivery-locked-notice i {
+        display: none;
+    }
+
+    /* Radio options */
+    .chk-radio-option {
+        padding: 0.75rem 0.9rem;
+    }
+
+    .chk-radio-title {
+        font-size: 0.85rem;
+    }
+
+    .chk-radio-sub {
+        font-size: 0.75rem;
+    }
+
+    .chk-radio-lock {
+        font-size: 0.65rem;
+    }
+
+    /* Summary card */
+    .chk-summary-card {
+        position: static;
+        margin-top: 0;
+        border-radius: 10px;
+    }
+
+    .chk-summary-body {
+        padding: 0.85rem 1rem;
+    }
+
+    .chk-item-name {
+        font-size: 0.8rem;
+    }
+
+    .chk-item-meta {
+        font-size: 0.7rem;
+    }
+
+    .chk-item-price {
+        font-size: 0.82rem;
+    }
+
+    /* Total */
+    .chk-total-section {
+        padding: 0.85rem 1rem;
+    }
+
+    .chk-total-val {
+        font-size: 1.3rem;
+    }
+
+    /* Place order button */
+    .chk-submit-btn {
+        padding: 0.9rem;
+        font-size: 0.95rem;
+        margin-top: 0.75rem;
+    }
+
+    /* GCash section */
+    .chk-gcash-number {
+        font-size: 0.8rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .chk-upload-zone {
+        padding: 1rem;
+    }
+
+    .chk-upload-zone i {
+        font-size: 1.2rem;
+    }
+
+    /* Textarea */
+    .chk-textarea {
+        font-size: 0.875rem;
+    }
+    
+}
+
+@media (max-width: 400px) {
+    .chk-heading { font-size: 1.3rem; }
+    .chk-total-val { font-size: 1.2rem; }
+    .chk-item-row { flex-direction: column; gap: 0.25rem; }
+    .chk-item-row > div:last-child { 
+        display: flex; 
+        justify-content: flex-end; 
+        width: 100%; 
+    }
+}
+/* =========================================
    ADMIN CUSTOMERS PAGE — IMPROVED
    ========================================= */
  

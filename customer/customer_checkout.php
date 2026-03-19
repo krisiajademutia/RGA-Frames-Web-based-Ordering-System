@@ -166,10 +166,8 @@ $discountedTotal  = round($cartTotal - $discount['discount_amount'], 2);
                             </div>
                         <?php else: ?>
                             <div class="chk-delivery-locked-notice">
-                                <i class="fas fa-info-circle"></i>
-                                Delivery is available for orders of
-                                <strong><?= CheckoutService::BULK_QTY_THRESHOLD ?> or more frames/prints</strong>.
-                                Your order has <strong><?= $totalQty ?></strong> item<?= $totalQty !== 1 ? 's' : '' ?>.
+                                <i class="fas fa-info-circle" style="flex-shrink:0; margin-top:0.15rem;"></i>
+                                <span>Delivery is available for orders of <strong><?= CheckoutService::BULK_QTY_THRESHOLD ?> or more frames/prints</strong>. Your order has <strong><?= $totalQty ?></strong> item<?= $totalQty !== 1 ? 's' : '' ?>.</span>
                             </div>
                         <?php endif; ?>
 
