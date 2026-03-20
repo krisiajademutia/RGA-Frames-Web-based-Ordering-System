@@ -214,6 +214,7 @@ $avgRating    = $totalReviews > 0 ? round((float)$statsRow['avg'], 1) : 0;
             font-size: 0.875rem; color: #374151; line-height: 1.6;
             margin: 0 0 0.6rem;
             display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+            line-clamp: 3;
             overflow: hidden;
         }
         .rv-preview-date { font-size: 0.73rem; color: #9ca3af; display: flex; align-items: center; gap: 0.3rem; }
