@@ -1,4 +1,5 @@
 <?php
+
 namespace Classes\ReadyMade\Repository;
 
 interface IReadyMadeRepository
@@ -55,7 +56,7 @@ class ReadyMadeRepository implements IReadyMadeRepository
     {
         $stmt = $this->db->prepare("
             SELECT p.*, IFNULL(s.quantity, 0) AS stock,
-                   t.type_name, d.design_name, c.color_name
+                t.type_name, d.design_name, c.color_name
             FROM tbl_ready_made_product p
             LEFT JOIN tbl_frame_types   t ON p.frame_type_id   = t.frame_type_id
             LEFT JOIN tbl_frame_designs d ON p.frame_design_id = d.frame_design_id
@@ -101,7 +102,7 @@ class ReadyMadeRepository implements IReadyMadeRepository
         $chk = $this->db->prepare("
             SELECT item_id, quantity FROM tbl_frame_order_items
             WHERE cart_id = ? AND r_product_id = ? AND source_type = 'CART'
-              AND frame_category = 'READY_MADE'
+                AND frame_category = 'READY_MADE'
             LIMIT 1
         ");
         $chk->bind_param('ii', $cartId, $productId);
@@ -124,8 +125,8 @@ class ReadyMadeRepository implements IReadyMadeRepository
         $svcType  = 'FRAME_ONLY';
         $insert   = $this->db->prepare("
             INSERT INTO tbl_frame_order_items
-              (cart_id, source_type, frame_category, r_product_id,
-               service_type, quantity, base_price, extra_price, sub_total)
+                (cart_id, source_type, frame_category, r_product_id,
+                service_type, quantity, base_price, extra_price, sub_total)
             VALUES (?, 'CART', 'READY_MADE', ?, ?, ?, ?, 0, ?)
         ");
         $insert->bind_param('iisidd', $cartId, $productId, $svcType, $quantity, $unitPrice, $subTotal);
@@ -149,7 +150,7 @@ class ReadyMadeRepository implements IReadyMadeRepository
             SELECT mount_type_id, mount_name, IFNULL(additional_fee, 0) AS additional_fee
             FROM tbl_mount_type
             WHERE is_active = 1
-            ORDER BY mount_type_id ASC
+            ORDER BY additional_fee ASC, mount_type_id ASC
         ");
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
