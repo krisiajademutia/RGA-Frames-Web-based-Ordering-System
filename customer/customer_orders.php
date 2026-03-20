@@ -10,7 +10,10 @@ if (!isset($_SESSION['user_id']) || strtoupper($_SESSION['role'] ?? '') !== 'CUS
 }
 
 $customer_id = (int)$_SESSION['user_id'];
-$service     = new CustomerOrderService($conn);
+$repo = new CustomerOrderRepository($conn);
+$itemRepo = new OrderItemRepository($conn);
+$service = new CustomerOrderService($repo, $itemRepo);
+//$service     = new CustomerOrderService($conn);
 
 $activeTab = $_GET['status'] ?? 'ALL';
 $search    = trim($_GET['search'] ?? '');

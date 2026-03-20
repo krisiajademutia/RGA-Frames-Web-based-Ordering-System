@@ -15,7 +15,10 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 
 $customer_id = (int)$_SESSION['user_id'];
 $order_id    = (int)$_GET['id'];
-$service     = new CustomerOrderService($conn);
+//$service     = new CustomerOrderService($conn);
+$repo = new CustomerOrderRepository($conn);
+$itemRepo = new OrderItemRepository($conn);
+$service = new CustomerOrderService($repo, $itemRepo);
 $order       = $service->getOrderDetails($order_id, $customer_id);
 if (!$order) { header("Location: customer_orders.php"); exit(); }
 
@@ -278,27 +281,54 @@ if ($isErr) {
                 </span>
             </div>
 
-            <?php if (!$isErr && !empty($proofs)): ?>
-            <div class="cst-ord-dtls-proof-btns">
-                <button class="cst-ord-dtls-view-proof-btn" onclick="openProofViewer()">
-                    View Proof of Payment
-                </button>
-                <a href="../process/download_payment_proof.php?payment_id=<?= $payment_id ?>"
-                   class="cst-ord-dtls-dl-proof-btn">
-                    <i class="fas fa-download"></i> Download Proof of Payment
-                </a>
-            </div>
-            <?php elseif (!$isErr && $isGcash && $isPending): ?>
-            <div class="cst-ord-dtls-upload-wrap">
-                <p class="cst-ord-dtls-upload-note">
-                    <i class="fas fa-info-circle"></i>
-                    Please upload your GCash receipt to confirm your payment.
-                </p>
-                <button class="cst-ord-dtls-upload-btn" onclick="openUploadModal()">
-                    <i class="fas fa-upload"></i> Upload Receipt
-                </button>
-            </div>
-            <?php endif; ?>
+         
+<?php
+$canUpload = !$isErr && $isGcash && $payment_status !== 'FULL';
+?>
+
+<?php if (!$isErr && !empty($proofs)): ?>
+<div class="cst-ord-dtls-proofs-list">
+    <?php foreach ($proofs as $idx => $proof):
+        $vsClass = match($proof['verification_status']) {
+            'Verified' => 'cst-ord-dtls-vs-verified',
+            'Rejected' => 'cst-ord-dtls-vs-rejected',
+            default    => 'cst-ord-dtls-vs-pending',
+        };
+    ?>
+    <div class="cst-ord-dtls-proof-row">
+        <div class="cst-ord-dtls-proof-row-left">
+            <img src="../<?= htmlspecialchars($proof['payment_proof']) ?>"
+                 alt="Receipt <?= $idx + 1 ?>"
+                 class="cst-ord-dtls-proof-row-thumb"
+                 onclick="openDocViewer('../<?= htmlspecialchars($proof['payment_proof']) ?>', 'Receipt #<?= $idx + 1 ?>')">
+        </div>
+        <div class="cst-ord-dtls-proof-row-right">
+            <span class="cst-ord-dtls-proof-row-label">Receipt #<?= $idx + 1 ?></span>
+            <span class="cst-ord-dtls-proof-row-amount">₱<?= number_format($proof['uploaded_amount'], 2) ?></span>
+            <span class="cst-ord-dtls-proof-row-date"><?= date('M d, Y g:i A', strtotime($proof['upload_date'])) ?></span>
+            <span class="cst-ord-dtls-vs-badge <?= $vsClass ?>"><?= $proof['verification_status'] ?></span>
+        </div>
+    </div>
+    <?php endforeach; ?>
+</div>
+<?php endif; ?>
+
+<?php if ($canUpload): ?>
+<div class="cst-ord-dtls-upload-wrap">
+    <p class="cst-ord-dtls-upload-note">
+        <i class="fas fa-info-circle"></i>
+        <?php if (empty($proofs)): ?>
+            Please upload your GCash receipt to confirm your payment.
+        <?php else: ?>
+            Balance remaining: <strong>₱<?= number_format($balance_due, 2) ?></strong>. Upload your next receipt.
+        <?php endif; ?>
+    </p>
+    <button class="cst-ord-dtls-upload-btn" onclick="openUploadModal()">
+        <i class="fas fa-upload"></i>
+        <?= empty($proofs) ? 'Upload Receipt' : 'Upload Another Receipt' ?>
+    </button>
+</div>
+<?php endif; ?>
         </div>
 
     </div>
@@ -525,7 +555,7 @@ if ($isErr) {
 </div>
 
 <!-- ── Upload Receipt Modal ── -->
-<?php if ($isGcash && $isPending): ?>
+<?php if ($canUpload): ?>
 <div id="cst-upload-modal" class="cst-upload-modal-overlay" style="display:none;">
     <div class="cst-upload-modal">
         <div class="cst-upload-modal-header">

@@ -31,11 +31,16 @@ $status_order = ['PENDING'=>0,'PROCESSING'=>1,'READY_FOR_PICKUP'=>2,'FOR_DELIVER
 $current_step = $status_order[$order['order_status']] ?? 0;
 
 $total_price    = (float)($order['total_price']  ?? 0);
-$amount_paid    = (float)($order['amount_paid']  ?? 0); // SUM of uploaded_amount from proofs
+$proofs         = $order['proofs'] ?? [];
+$amount_paid = 0;
+foreach ($proofs as $proof) {
+    if (($proof['verification_status'] ?? '') === 'Verified') {
+        $amount_paid += (float)$proof['uploaded_amount'];
+    }
+}
 $balance_due    = max(0, $total_price - $amount_paid);
 $payment_status = $order['payment_status'] ?? null;
 $payment_id     = (int)($order['payment_id'] ?? 0);
-$proofs         = $order['proofs'] ?? [];
 
 $isPending   = $order['order_status'] === 'PENDING';
 $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
@@ -203,14 +208,12 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
                 <div class="admn-ordr-dtls-card-body">
                     <div class="admn-ordr-dtls-row">
                         <span class="admn-ordr-dtls-label">Method</span>
-                        <span class="admn-ordr-dtls-value">
-                            <?php if (($order['payment_method'] ?? '') === 'GCASH'): ?>
-                                <img src="../assets/images/gcash-logo.png" alt="GCash" style="height:20px;"
-                                     onerror="this.style.display='none'; this.nextSibling.style.display='inline'">
-                                <span style="display:none" class="badge bg-primary">GCash</span>
-                            <?php else: ?>
-                                <span class="admn-ordr-dtls-cash-badge"><i class="fas fa-money-bill-wave"></i> Cash</span>
-                            <?php endif; ?>
+                            <span class="admn-ordr-dtls-value">
+                                <?php if (strtoupper($order['payment_method'] ?? '') === 'GCASH'): ?>
+                                    <span class="badge bg-primary" style="font-size: 14px; padding: 5px 10px;"><i class="fas fa-mobile-alt"></i> GCash</span>
+                                <?php else: ?>
+                                    <span class="admn-ordr-dtls-cash-badge"><i class="fas fa-money-bill-wave"></i> Cash</span>
+                                <?php endif; ?>
                         </span>
                     </div>
                     <div class="admn-ordr-dtls-row">
@@ -483,7 +486,7 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
                             <span>Matboard (Primary)</span>
                             <span><?= htmlspecialchars($item['matboard_color_name'] ?? 'None') ?></span>
                         </div>
-                        <?php if (!empty($item['secondary_matboard_color_name'])): ?>
+                        <?php if (isset($item['secondary_matboard_color_name']) && $item['secondary_matboard_color_name'] !== ''): ?>
                         <div class="admn-ordr-dtls-spec-row">
                             <span>Matboard (Secondary)</span>
                             <span><?= htmlspecialchars($item['secondary_matboard_color_name']) ?></span>
