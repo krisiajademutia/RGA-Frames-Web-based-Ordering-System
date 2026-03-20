@@ -23,69 +23,81 @@ class CheckoutRepository {
     }
 
     public function getCartItemsForCheckout(int $customer_id): array {
-       
-        $selectedIds = $_SESSION['selected_cart_items'] ?? [];
-        $selectedIds = array_values(
-            array_filter(array_map('intval', $selectedIds), fn($id) => $id > 0)
-        );
- 
-       
-        $ph    = implode(',', array_fill(0, count($selectedIds), '?'));
-        $types = 'i' . str_repeat('i', count($selectedIds));
-        $stmt1 = $this->conn->prepare("
-            SELECT
-                ci.*,
-                'FRAME' as category_type,
-                rm.product_name    AS ready_name,
-                fd.design_name     AS custom_design_name,
-                cfp.custom_width   AS width, 
-                cfp.custom_height  AS height
-            FROM tbl_frame_order_items ci
-            JOIN tbl_cart c                        ON ci.cart_id        = c.cart_id
-            LEFT JOIN tbl_ready_made_product rm    ON ci.r_product_id   = rm.r_product_id
-            LEFT JOIN tbl_custom_frame_product cfp ON ci.c_product_id   = cfp.c_product_id
-            LEFT JOIN tbl_frame_designs fd         ON cfp.frame_design_id = fd.frame_design_id
-            WHERE c.customer_id = ? AND ci.source_type = 'CART'
-              AND ci.item_id IN ($ph)
-        ");
-        $stmt1->bind_param($types, $customer_id, ...$selectedIds);
-        $stmt1->execute();
-        $frames = $stmt1->get_result()->fetch_all(MYSQLI_ASSOC);
+    $selectedIds = $_SESSION['selected_cart_items'] ?? [];
+    $selectedIds = array_values(
+        array_filter(array_map('intval', $selectedIds), fn($id) => $id > 0)
+    );
 
-        // DEBUG - remove after
-        error_log('selectedIds: ' . json_encode($selectedIds));
-        error_log('frames found: ' . count($frames));
-        error_log('frame item_ids: ' . json_encode(array_column($frames, 'item_id')));
-        
-        // 2. Fetch only the Printing Items linked to the selected frame items
-        $linkedPrintingIds = array_values(array_filter(
-            array_column($frames, 'printing_order_item_id')
-        ));
- 
-        $prints = [];
-        if (!empty($linkedPrintingIds)) {
-            $pPh    = implode(',', array_fill(0, count($linkedPrintingIds), '?'));
-            $pTypes = 'i' . str_repeat('i', count($linkedPrintingIds));
- 
-            $stmt2 = $this->conn->prepare("
-                SELECT 
-                    pi.*, 
-                    'PRINTING' as category_type,
-                    pt.paper_name
-                FROM tbl_printing_order_items pi
-                JOIN tbl_cart c ON pi.cart_id = c.cart_id
-                LEFT JOIN tbl_paper_type pt ON pi.paper_type_id = pt.paper_type_id
-                WHERE c.customer_id = ? AND pi.order_id IS NULL
-                  AND pi.printing_order_item_id IN ($pPh)
-            ");
-            $stmt2->bind_param($pTypes, $customer_id, ...$linkedPrintingIds);
-            $stmt2->execute();
-            $prints = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
-        }
- 
-        // 3. Merge them together
-        return array_merge($frames, $prints);
+    if (empty($selectedIds)) return [];
+
+    $ph    = implode(',', array_fill(0, count($selectedIds), '?'));
+    $types = 'i' . str_repeat('i', count($selectedIds));
+
+    // 1. Fetch Selected Frames
+    $stmt1 = $this->conn->prepare("
+        SELECT ci.*, 'FRAME' as category_type, rm.product_name AS ready_name,
+               fd.design_name AS custom_design_name, cfp.custom_width AS width, cfp.custom_height AS height
+        FROM tbl_frame_order_items ci
+        JOIN tbl_cart c ON ci.cart_id = c.cart_id
+        LEFT JOIN tbl_ready_made_product rm ON ci.r_product_id = rm.r_product_id
+        LEFT JOIN tbl_custom_frame_product cfp ON ci.c_product_id = cfp.c_product_id
+        LEFT JOIN tbl_frame_designs fd ON cfp.frame_design_id = fd.frame_design_id
+        WHERE c.customer_id = ? AND ci.source_type = 'CART' AND ci.item_id IN ($ph)
+    ");
+    $stmt1->bind_param($types, $customer_id, ...$selectedIds);
+    $stmt1->execute();
+    $frames = $stmt1->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    // 2. Gather IDs for BOTH Linked Prints and Explicitly Selected Standalone Prints
+    $linkedPrintingIds = array_filter(array_column($frames, 'printing_order_item_id'));
+    $allPrintIdsToFetch = array_unique(array_merge($linkedPrintingIds, $selectedIds));
+
+    $prints = [];
+    if (!empty($allPrintIdsToFetch)) {
+        $pPh    = implode(',', array_fill(0, count($allPrintIdsToFetch), '?'));
+        $pTypes = 'i' . str_repeat('i', count($allPrintIdsToFetch));
+
+        $stmt2 = $this->conn->prepare("
+            SELECT pi.*, 'PRINTING' as category_type, pt.paper_name
+            FROM tbl_printing_order_items pi
+            JOIN tbl_cart c ON pi.cart_id = c.cart_id
+            LEFT JOIN tbl_paper_type pt ON pi.paper_type_id = pt.paper_type_id
+            WHERE c.customer_id = ? AND pi.order_id IS NULL AND pi.printing_order_item_id IN ($pPh)
+        ");
+        $stmt2->bind_param($pTypes, $customer_id, ...$allPrintIdsToFetch);
+        $stmt2->execute();
+        $prints = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
     }
+
+    // 3. Organize the final list
+    $finalCartItems = [];
+    
+    // Process Frames & Nest their attached prints
+    foreach ($frames as &$frame) {
+        $frame['print_details'] = null;
+        if (!empty($frame['printing_order_item_id'])) {
+            foreach ($prints as $key => $print) {
+                if ($print['printing_order_item_id'] == $frame['printing_order_item_id']) {
+                    $frame['print_details'] = $print;
+                    unset($prints[$key]); // Remove from pool so it doesn't show up twice
+                    break;
+                }
+            }
+        }
+        $finalCartItems[] = $frame;
+    }
+    unset($frame);
+
+    // Add any REMAINING prints (These are your "Print Only" standalone items)
+    foreach ($prints as $standalonePrint) {
+        // Double check it was actually explicitly selected
+        if (in_array($standalonePrint['printing_order_item_id'], $selectedIds)) {
+            $finalCartItems[] = $standalonePrint;
+        }
+    }
+
+    return $finalCartItems;
+}
 
     public function getCompletedOrderCount(int $customer_id): int {
         $stmt = $this->conn->prepare("
@@ -169,8 +181,15 @@ class CheckoutRepository {
 
             foreach ($cartItems as $item) {
                 if (($item['category_type'] ?? '') === 'FRAME') {
+                    // It's a Frame (or Frame & Print)
                     $frameItemIds[] = (int)($item['item_id'] ?? 0);
+                    
+                    // If it has a linked print, grab that ID too
+                    if (!empty($item['printing_order_item_id'])) {
+                        $printingIds[] = (int)$item['printing_order_item_id'];
+                    }
                 } elseif (($item['category_type'] ?? '') === 'PRINTING') {
+                    // It's a Standalone "Print Only" item
                     $printingIds[] = (int)($item['printing_order_item_id'] ?? 0);
                 }
             }
