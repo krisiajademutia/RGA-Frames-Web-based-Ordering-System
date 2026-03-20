@@ -161,30 +161,52 @@ class CheckoutRepository {
                 $saver->saveItem($this->conn, $order_id, $buyNowItemData, $subTotal, $qty);
 
             } else {
-                // IT'S A CART CHECKOUT - The completely bulletproof transfer
-                $cartQuery = $this->conn->query("SELECT cart_id FROM tbl_cart WHERE customer_id = $customer_id ORDER BY cart_id DESC LIMIT 1");
+                // ─────────────────────────────────────────────────────────────
+            // ✅ FIXED: Only move the SELECTED items (partial checkout)
+            // ─────────────────────────────────────────────────────────────
+            $frameItemIds   = [];
+            $printingIds    = [];
 
-                if ($cartQuery && $cartQuery->num_rows > 0) {
-                    $cartRow = $cartQuery->fetch_assoc();
-                    $c_id = (int)$cartRow['cart_id'];
-
-                    // 1. Safely move Frame Items to the new Order ID
-                    $this->conn->query("
-                        UPDATE tbl_frame_order_items 
-                        SET source_type = 'ORDER', order_id = $order_id, cart_id = NULL 
-                        WHERE cart_id = $c_id AND source_type = 'CART'
-                    ");
-                    
-                    // 2. Safely move Printing Items to the new Order ID
-                    $this->conn->query("
-                        UPDATE tbl_printing_order_items 
-                        SET order_id = $order_id, cart_id = NULL 
-                        WHERE cart_id = $c_id
-                    ");
-
-                    // 3. Clean up the empty cart so they can shop again!
-                    $this->conn->query("DELETE FROM tbl_cart WHERE cart_id = $c_id");
+            foreach ($cartItems as $item) {
+                if (($item['category_type'] ?? '') === 'FRAME') {
+                    $frameItemIds[] = (int)($item['item_id'] ?? 0);
+                } elseif (($item['category_type'] ?? '') === 'PRINTING') {
+                    $printingIds[] = (int)($item['printing_order_item_id'] ?? 0);
                 }
+            }
+
+            $frameItemIds   = array_values(array_filter(array_unique($frameItemIds)));
+            $printingIds    = array_values(array_filter(array_unique($printingIds)));
+
+            if (!empty($frameItemIds)) {
+                $ph  = implode(',', array_fill(0, count($frameItemIds), '?'));
+                $types = 'i' . str_repeat('i', count($frameItemIds));
+
+                $stmtF = $this->conn->prepare("
+                    UPDATE tbl_frame_order_items 
+                    SET source_type = 'ORDER', 
+                        order_id = ?, 
+                        cart_id = NULL 
+                    WHERE item_id IN ($ph) 
+                      AND source_type = 'CART'
+                ");
+                $stmtF->bind_param($types, $order_id, ...$frameItemIds);
+                $stmtF->execute();
+            }
+
+            if (!empty($printingIds)) {
+                $phP  = implode(',', array_fill(0, count($printingIds), '?'));
+                $typesP = 'i' . str_repeat('i', count($printingIds));
+
+                $stmtP = $this->conn->prepare("
+                    UPDATE tbl_printing_order_items 
+                    SET order_id = ?, 
+                        cart_id = NULL 
+                    WHERE printing_order_item_id IN ($phP)
+                ");
+                $stmtP->bind_param($typesP, $order_id, ...$printingIds);
+                $stmtP->execute();
+            }
             }
 
             $this->conn->commit();
