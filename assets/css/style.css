@@ -6986,7 +6986,80 @@ body {
     transition: background 0.15s;
 }
 .csc-btn-buy:hover { background: #0a3028; }
+/* ── Fixed Print Price Pills ── */
+.csc-fixed-price-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
 
+.csc-fixed-price-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 0.6rem 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #fff;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.csc-fixed-price-pill:hover {
+    border-color: #0F473A;
+    background: #f0f9f5;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(15,71,58,0.1);
+}
+
+.csc-fixed-price-pill.active {
+    background: #0F473A;
+    border-color: #0F473A;
+    box-shadow: 0 3px 10px rgba(15,71,58,0.2);
+    transform: translateY(-1px);
+}
+
+.csc-fixed-price-pill.active .csc-fixed-price-size {
+    color: #ffffff;
+}
+
+.csc-fixed-price-pill.active .csc-fixed-price-amount {
+    color: #a7f3d0;
+}
+
+.csc-fixed-price-size {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #111827;
+    white-space: nowrap;
+}
+
+.csc-fixed-price-amount {
+    font-size: 0.72rem;
+    color: #0F473A;
+    font-weight: 600;
+}
+
+.csc-fixed-price-note {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin: 0.25rem 0 0;
+    line-height: 1.6;
+}
+
+.csc-fixed-price-note i {
+    color: #C19A5F;
+    margin-right: 0.3rem;
+}
+
+.csc-fixed-price-note strong {
+    color: #0F473A;
+}
 /* ── Tablet (≤991px) ── */
 @media (max-width: 991px) {
     /* Summary unsticks and moves below the form */
@@ -7158,6 +7231,23 @@ body {
         font-size: 0.85rem;
         flex-shrink: 0;
     }
+    .csc-fixed-price-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.4rem;
+    }
+
+    .csc-fixed-price-pill {
+        padding: 0.5rem 0.35rem;
+    }
+
+    .csc-fixed-price-size {
+        font-size: 0.75rem;
+    }
+
+    .csc-fixed-price-amount {
+        font-size: 0.68rem;
+    }
+
 }
 /* ── Small phones (≤400px) ── */
 @media (max-width: 400px) {
@@ -7168,6 +7258,7 @@ body {
     .csc-summary-actions { grid-template-columns: 1fr; }
     .csc-btn-cart,
     .csc-btn-buy { width: 100%; justify-content: center; }
+    .csc-fixed-price-grid {grid-template-columns: repeat(2, 1fr);}
 }
 
 /* =========================================
