@@ -123,24 +123,67 @@ document.addEventListener('DOMContentLoaded', () => {
  * STANDARD DELETE (For Frame Types, Colors, etc.)
  */
 function confirmDelete(id, name, tab) {
-    document.getElementById('deleteOptionName').textContent = name;
-    document.getElementById('deleteOptionId').value = id;
-    document.getElementById('deleteOptionTab').value = tab;
-    
-    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-    modal.show();
+    Swal.fire({
+        title: 'Delete this option?',
+        html: `Are you sure you want to delete <strong>${name}</strong>? This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#9ca3af',
+        confirmButtonText: '<i class="fas fa-trash"></i> Yes, Delete',
+        cancelButtonText: 'Cancel',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '../process/posting_options.php';
+            form.innerHTML = `
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="tab" value="${tab}">
+                <input type="hidden" name="option_id" value="${id}">
+            `;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
 }
 
 /**
  * FIXED PRICE DELETE
  */
 function confirmDeleteFpm(id) {
-    const idInput = document.getElementById('delete_fpm_id');
-    if (idInput) {
-        idInput.value = id;
-    }
-    const modal = new bootstrap.Modal(document.getElementById('deleteFixedPriceModal'));
-    modal.show();
+    // Close the Bootstrap modal first so Swal can render on top
+    const fpmModal = bootstrap.Modal.getInstance(document.getElementById('fixedPriceModal'));
+    if (fpmModal) fpmModal.hide();
+
+    setTimeout(() => {
+        Swal.fire({
+            title: 'Delete this price entry?',
+            text: 'This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#9ca3af',
+            confirmButtonText: '<i class="fas fa-trash"></i> Yes, Delete',
+            cancelButtonText: 'Cancel',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '../process/posting_options.php?tab=paper_types';
+                form.innerHTML = `
+                    <input type="hidden" name="action" value="delete_fixed_price">
+                    <input type="hidden" name="fixed_price_id" value="${id}">
+                `;
+                document.body.appendChild(form);
+                form.submit();
+            } else {
+            
+                const fpmModalEl = document.getElementById('fixedPriceModal');
+                if (fpmModalEl) new bootstrap.Modal(fpmModalEl).show();
+            }
+        });
+    }, 300); 
 }
 
 /**

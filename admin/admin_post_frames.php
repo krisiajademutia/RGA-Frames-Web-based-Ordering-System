@@ -306,81 +306,42 @@ $posted_frames = $frameService->getAllFrames();
     <?php endif; ?>
 </div>
 
-<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow" style="border-radius: 15px;">
-            <div class="modal-body text-center">
-                <div class="mx-auto mb-3" style="width:60px; height:60px; border-radius:50%; background:#e6f0ee; color:#004030; display:flex; align-items:center; justify-content:center; font-size:24px;">
-                    <i class="fa-solid fa-trash-can"></i>
-                </div>
-                <p class="text-muted mb-1">Are you sure you want to delete this product?</p>
-                <h5 id="deleteProductName" class="fw-bold mb-4"></h5>
-            </div>
-            <div class="modal-footer border-0 justify-content-center pb-4">
-                <button type="button" class="btn border-secondary px-4" data-bs-dismiss="modal" style="border-radius:10px;">Cancel</button>
-                <a id="confirmDeleteLink" href="#" class="btn px-4" style="border-radius:10px; background:#004030; border-color:#004030; color: #fff;">Delete Product</a>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <?php if (isset($_SESSION['post_success_modal'])): ?>
-    <div class="modal fade" id="successOperationModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content post-alert-content shadow">
-                <div class="modal-header border-0 pt-3 pe-3">
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center pb-5">
-                    <div class="mb-4">
-                        <i class="fa-solid fa-circle-check" style="font-size: 60px; color: #004030;"></i>
-                    </div>
-                    <h5 class="post-alert-title px-4" style="color: #4B5563; font-weight: 400;">
-                        Ready-made frame <strong style="color: #111827;"><?= htmlspecialchars($_SESSION['post_success_modal']['name']) ?></strong> 
-                        <?= htmlspecialchars($_SESSION['post_success_modal']['action']) ?> successfully!
-                    </h5>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            new bootstrap.Modal(document.getElementById('successOperationModal')).show();
-        });
-    </script>
-    <?php unset($_SESSION['post_success_modal']); ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    Swal.fire({
+        icon: 'success',
+        title: '<?= htmlspecialchars($_SESSION['post_success_modal']['action']) === 'deleted' ? 'Deleted!' : 'Success!' ?>',
+        html: 'Ready-made frame <strong><?= htmlspecialchars($_SESSION['post_success_modal']['name']) ?></strong> <?= htmlspecialchars($_SESSION['post_success_modal']['action']) ?> successfully.',
+        confirmButtonColor: '#0F473A',
+        timer: 2500,
+        timerProgressBar: true,
+        showConfirmButton: true,
+        confirmButtonText: 'OK'
+    });
+});
+</script>
+<?php unset($_SESSION['post_success_modal']); ?>
 <?php endif; ?>
 
 <?php if (isset($_SESSION['post_error_modal'])): ?>
-    <div class="modal fade" id="postErrorModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content post-alert-content shadow" style="border-radius: 20px;">
-                <div class="modal-header border-0 pt-3 pe-3">
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center pb-5">
-                    <div class="mb-4">
-                        <i class="fa-solid fa-circle-xmark" style="font-size: 60px; color: #dc3545;"></i>
-                    </div>
-                    <h4 class="fw-bold mb-2" style="color: #111827;">
-                        <?= htmlspecialchars($_SESSION['post_error_modal']['title']) ?>
-                    </h4>
-                    <p class="post-alert-title px-4" style="color: #4B5563; font-weight: 400;">
-                        <?= htmlspecialchars($_SESSION['post_error_modal']['message']) ?>
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            new bootstrap.Modal(document.getElementById('postErrorModal')).show();
-        });
-    </script>
-    <?php unset($_SESSION['post_error_modal']); ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    Swal.fire({
+        icon: 'error',
+        title: '<?= htmlspecialchars($_SESSION['post_error_modal']['title']) ?>',
+        text: '<?= htmlspecialchars($_SESSION['post_error_modal']['message']) ?>',
+        confirmButtonColor: '#0F473A',
+    });
+});
+</script>
+<?php unset($_SESSION['post_error_modal']); ?>
 <?php endif; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="/rga_frames/assets/js/post_script.js"></script>
 </body>
 </html>

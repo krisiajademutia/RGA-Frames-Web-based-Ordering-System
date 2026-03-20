@@ -86,7 +86,7 @@
                             </div>
 
                             <!-- Inline expanded detail panel -->
-                            <div class="cart-item-expanded" id="cart-details-<?= $item['id']; ?>">
+                            <div class="cart-item-expanded" id="cart-details-<?= $item['id']; ?>" onclick="event.stopPropagation()">
                                 <div class="cart-detail-grid">
                                     <div class="cart-detail-row">
                                         <span class="cart-detail-label">Service</span>
@@ -174,10 +174,7 @@
                                 <span class="total-label">Total</span>
                                 <span class="cart-total-value" id="running-total">₱0.00</span>
                             </div>
-                            <!-- Posts selected_items to customer_checkout.php -->
-                            <!-- CheckoutService::getCartItems() reads from DB using the session customer_id -->
-                            <!-- selected_items is stored in session so checkout knows which items were chosen -->
-                            <form action="customer_checkout.php" method="POST">
+                            <form action="../process/shopping_cart_process.php?action=save_selected" method="POST" onsubmit="console.log('selected_items value:', document.getElementById('selected-items-input').value)">
                                 <input type="hidden" name="selected_items" id="selected-items-input">
                                 <button type="submit" id="checkout-btn" class="cart-checkout-btn" disabled>Proceed to Checkout</button>
                             </form>
@@ -190,7 +187,6 @@
     </div>
 </div>
 
-<!-- Delete confirmation modal -->
 <div id="deleteModal" class="-cart-modal-overlay" style="display:none;">
     <div class="-cart-modal-card">
         <div class="-cart-modal-icon-circle">

@@ -23,7 +23,33 @@ if (!$customer_id) {
 $repository  = new CartRepository($conn);
 $cartService = new CartService($repository);
 
-$action = $_GET['action'] ?? null;
+$action = $_GET['action'] ?? $_POST['action'] ?? null;
+
+// ── Save selected items to session then redirect to checkout ─────────────────
+if ($action === 'save_selected' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $raw = $_POST['selected_items'] ?? '[]';
+    $ids = json_decode($raw, true);
+
+    if (!is_array($ids) || empty($ids)) {
+        header("Location: ../customer/customer_cart.php");
+        exit;
+    }
+
+    // Sanitize: keep only positive integers
+    $sanitized = array_values(
+        array_filter(array_map('intval', $ids), fn($id) => $id > 0)
+    );
+
+    if (empty($sanitized)) {
+        header("Location: ../customer/customer_cart.php");
+        exit;
+    }
+
+    $_SESSION['selected_cart_items'] = $sanitized;
+    unset($_SESSION['buy_now_item']);
+    header("Location: ../customer/customer_checkout.php");
+    exit;
+}
 
 // ── Remove single item ───────────────────────────────────────────────────────
 if ($action === 'delete' && isset($_GET['id'])) {

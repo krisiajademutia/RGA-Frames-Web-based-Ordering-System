@@ -62,7 +62,11 @@ class CartRepository implements CartRepositoryInterface
         }
 
         // Display name
-        $design          = $row['design_name']  ?? $row['product_name'] ?? 'Frame';
+        $isReadyMade = !empty($row['r_product_id']);
+        $design      = $isReadyMade
+            ? ($row['product_name'] ?? 'Frame')
+            : ($row['design_name']  ?? $row['product_name'] ?? 'Frame');
+
         $size            = $row['frame_size']    ?? ((float)$row['width_inch'] . '"X' . (float)$row['height_inch'] . '"');
         $color           = $row['color_name']   ?? '';
         $row['display_name'] = trim("$design $size $color");

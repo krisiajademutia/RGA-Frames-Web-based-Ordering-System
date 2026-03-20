@@ -2206,7 +2206,16 @@ div.posted-header-bar {
     font-weight: 600;
     cursor: pointer;
 }
-
+.opt-btn-fixed {
+    width: 280px;
+    height: 30px;
+    background: white;
+    color: #063a32;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
 .opt-btn-clear {
     width: 156px;
     height: 44px;
@@ -2273,7 +2282,11 @@ div.posted-header-bar {
     font-size: 12px;
     font-weight: 600;
 }
-
+.opted-item-price {
+    font-size: 13px;
+    font-weight: 700;
+    color: #7a7979;
+}
 .opted-list-wrapper {
     padding: 30px 40px;
     display: flex;
