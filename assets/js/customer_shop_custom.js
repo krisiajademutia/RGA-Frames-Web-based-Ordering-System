@@ -82,37 +82,54 @@ initSelector('.csc-service-option[data-value="FRAME_ONLY"], .csc-service-option[
 });
 
 function validateCanvasSize() {
-    const errorText = qs('#canvas-size-error');
+    const w = parseFloat(qs('#csc-width')?.value) || 0;
+    const h = parseFloat(qs('#csc-height')?.value) || 0;
     const wInput = qs('#csc-width');
     const hInput = qs('#csc-height');
+    const errorText = qs('#canvas-size-error');
 
-    if (!errorText || !wInput || !hInput) return;
-
-    // 1. Reset visual errors
-    errorText.style.display = 'none';
-    wInput.style.borderColor = '';
-    hInput.style.borderColor = '';
+    // Reset first
+    if (wInput) wInput.style.borderColor = '';
+    if (hInput) hInput.style.borderColor = '';
+    if (errorText) errorText.style.display = 'none';
     state.hasSizeError = false;
 
-    // 2. Check the rule
-    const w = state.frameWidth || 0;
-    const h = state.frameHeight || 0;
-    const isCanvas = state.paperName && state.paperName.toLowerCase().includes('canvas');
+    // Only check if both fields have values
+    if (w <= 0 || h <= 0) return;
 
-    // Only trigger if Frame & Print is selected, Paper is Canvas, and they have started typing
-    if (state.serviceType === 'FRAME_PRINT' && isCanvas && (w > 0 || h > 0)) {
-        const minSide = Math.min(w, h);
-        const maxSide = Math.max(w, h);
+    const maxSide = Math.max(w, h);
+    const minSide = Math.min(w, h);
 
-        // If either dimension is fully entered and fails the rule, show error
-        if ((w > 0 && h > 0 && (minSide < 12 || maxSide < 18)) || 
-            (w > 0 && h === 0 && w < 12) || 
-            (h > 0 && w === 0 && h < 12)) {
-            
+    // 1. Max size check — applies to everything
+    if (maxSide > 96 || minSide > 48) {
+        if (wInput) wInput.style.borderColor = '#ef4444';
+        if (hInput) hInput.style.borderColor = '#ef4444';
+        if (errorText) {
+            errorText.textContent = '⚠ Maximum frame size allowed is 48×96 inches.';
             errorText.style.display = 'block';
-            wInput.style.borderColor = '#ef4444'; // Red border
-            hInput.style.borderColor = '#ef4444'; // Red border
+        }
+        state.hasSizeError = true;
+        state.frameWidth  = 0;
+        state.frameHeight = 0;
+        updateTotal();
+        return;
+    }
+
+    // 2. Canvas minimum — only for Frame & Print + Canvas paper
+    const isCanvas = state.paperName && state.paperName.toLowerCase().includes('canvas');
+    if (state.serviceType === 'FRAME_PRINT' && isCanvas) {
+        if (minSide < 12 || maxSide < 18) {
+            if (wInput) wInput.style.borderColor = '#ef4444';
+            if (hInput) hInput.style.borderColor = '#ef4444';
+            if (errorText) {
+                errorText.textContent = '⚠ Minimum size for Canvas is 12×18 inches.';
+                errorText.style.display = 'block';
+            }
             state.hasSizeError = true;
+            state.frameWidth  = 0;
+            state.frameHeight = 0;
+            updateTotal();
+            return;
         }
     }
 }
@@ -172,29 +189,76 @@ qsa('.csc-size-pill').forEach(pill => {
     });
 });
 
-// ── Custom Width / Height ────────────────────────────────
 ['#csc-width', '#csc-height'].forEach(sel => {
     qs(sel)?.addEventListener('input', () => {
         let w = parseFloat(qs('#csc-width').value)  || 0;
         let h = parseFloat(qs('#csc-height').value) || 0;
 
-        let maxSide = Math.max(w, h);
-        let minSide = Math.min(w, h);
+        const wInput = qs('#csc-width');
+        const hInput = qs('#csc-height');
+        const errorText = qs('#canvas-size-error');
 
-        if (maxSide > 96 || minSide > 48) {
-            alert("Maximum frame size allowed is 48x96 inches.");
-            qs('#csc-width').value  = '';
-            qs('#csc-height').value = '';
-            w = 0; h = 0;
+        // Reset all error states first
+        wInput.style.borderColor = '';
+        hInput.style.borderColor = '';
+        if (errorText) errorText.style.display = 'none';
+        state.hasSizeError = false;
+
+        // Only validate if both fields have values
+        if (w > 0 && h > 0) {
+            const maxSide = Math.max(w, h);
+            const minSide = Math.min(w, h);
+
+            // 1. Max size check — applies to ALL paper types and service types
+            if (maxSide > 96 || minSide > 48) {
+                wInput.style.borderColor = '#ef4444';
+                hInput.style.borderColor = '#ef4444';
+                if (errorText) {
+                    errorText.textContent = '⚠ Maximum frame size allowed is 48×96 inches.';
+                    errorText.style.display = 'block';
+                }
+                state.hasSizeError = true;
+                state.frameWidth  = 0;
+                state.frameHeight = 0;
+                updateTotal();
+                return;
+            }
+
+            // 2. Design price range check
+            if (state.frameDesignPrice > 0 && state.frameDesignPrice <= 75 && (maxSide > 18 || minSide > 12)) {
+                wInput.style.borderColor = '#ef4444';
+                hInput.style.borderColor = '#ef4444';
+                if (errorText) {
+                    errorText.textContent = '⚠ Designs in this price range (₱75) are only available for sizes up to 12×18 inches.';
+                    errorText.style.display = 'block';
+                }
+                state.hasSizeError = true;
+                state.frameWidth  = 0;
+                state.frameHeight = 0;
+                updateTotal();
+                return;
+            }
+
+            // 3. Canvas minimum size check — only for Frame & Print + Canvas paper
+            const isCanvas = state.paperName && state.paperName.toLowerCase().includes('canvas');
+            if (state.serviceType === 'FRAME_PRINT' && isCanvas) {
+                if (minSide < 12 || maxSide < 18) {
+                    wInput.style.borderColor = '#ef4444';
+                    hInput.style.borderColor = '#ef4444';
+                    if (errorText) {
+                        errorText.textContent = '⚠ Minimum size for Canvas is 12×18 inches.';
+                        errorText.style.display = 'block';
+                    }
+                    state.hasSizeError = true;
+                    state.frameWidth  = 0;
+                    state.frameHeight = 0;
+                    updateTotal();
+                    return;
+                }
+            }
         }
 
-        if (state.frameDesignPrice > 0 && state.frameDesignPrice <= 75 && (maxSide > 18 || minSide > 12)) {
-            alert(" Designs in this price range (₱75) are only available for sizes up to 12x18 inches.");
-            qs('#csc-width').value  = '';
-            qs('#csc-height').value = '';
-            w = 0; h = 0;
-        }
-
+        // All valid — update state normally
         state.frameWidth  = w;
         state.frameHeight = h;
 
@@ -204,7 +268,6 @@ qsa('.csc-size-pill').forEach(pill => {
         state.frameSizeId = 'OTHER';
         updateSizeLabel();
         updateTotal();
-        validateCanvasSize();
     });
 });
 
@@ -274,7 +337,7 @@ qs('#csc-paper-type')?.addEventListener('change', function() {
         hideRow('sum-paper-row');
     }
     updateTotal();
-    validateCanvasSize();
+    validateCanvasSize(); // ← re-validates with new paper type
 });
 
 // ── Image Upload ─────────────────────────────────────────

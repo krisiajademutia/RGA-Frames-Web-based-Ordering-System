@@ -158,7 +158,46 @@ if ($customerId > 0) {
                     </div>
                 </div>
 
-                <!-- 4. FRAME DESIGN -->
+                <!-- 4. FRAME SIZE -->
+                <div class="csc-section mb-4">
+                    <div class="csc-section-header">FRAME SIZE</div>
+                    <div class="csc-section-body">
+                        <div class="csc-size-pills" id="csc-size-pills">
+                            <?php foreach ($frameSizes as $fs): ?>
+                                <label class="csc-size-pill"
+                                    data-value="<?= $fs['frame_size_id'] ?>"
+                                    data-width="<?= $fs['width_inch'] ?>"
+                                    data-height="<?= $fs['height_inch'] ?>">
+                                    <input type="radio" name="frame_size" value="<?= $fs['frame_size_id'] ?>" hidden>
+                                    <?= htmlspecialchars($fs['dimension']) ?>
+                                </label>
+                            <?php endforeach; ?>
+                            <label class="csc-size-pill active" data-value="OTHER" data-width="" data-height="" data-price="0">
+                                <input type="radio" name="frame_size" value="OTHER" checked hidden>
+                                Other
+                            </label>
+                        </div>
+
+                        <!-- Custom width/height inputs (shown only when Other is selected) -->
+                        <div class="csc-custom-size-wrap mt-3" id="csc-custom-size-wrap" style="display:none;">
+                            <div class="csc-custom-size-field">
+                                <label class="csc-field-label">WIDTH (IN)</label>
+                                <input type="number" class="csc-size-input" id="csc-width" placeholder="e.g. 22" min="1" step="0.5">
+                            </div>
+                            <span class="csc-size-x">×</span>
+                            <div class="csc-custom-size-field">
+                                <label class="csc-field-label">HEIGHT (IN)</label>
+                                <input type="number" class="csc-size-input" id="csc-height" placeholder="e.g. 28" min="1" step="0.5">
+                            </div>
+                        </div>
+
+                        <div id="canvas-size-error" style="color: #ef4444; font-size: 0.85rem; margin-top: 8px; font-weight: 500; display: none;">
+                            <i class="fas fa-exclamation-circle"></i> Minimum size for Canvas is 12x18 inches.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. FRAME DESIGN -->
                 <div class="csc-section mb-4">
                     <div class="csc-section-header">FRAME DESIGN</div>
                     <div class="csc-section-body">
@@ -209,7 +248,7 @@ if ($customerId > 0) {
                     </div>
                 </div>
 
-                <!-- 5. FRAME COLOR -->
+                <!-- 6. FRAME COLOR -->
                 <div class="csc-section mb-4">
                     <div class="csc-section-header">FRAME COLOR</div>
                     <div class="csc-section-body">
@@ -244,44 +283,7 @@ if ($customerId > 0) {
                     </div>
                 </div>
 
-                <!-- 6. FRAME SIZE -->
-                <div class="csc-section mb-4">
-                    <div class="csc-section-header">FRAME SIZE</div>
-                    <div class="csc-section-body">
-                        <div class="csc-size-pills" id="csc-size-pills">
-                            <?php foreach ($frameSizes as $fs): ?>
-                                <label class="csc-size-pill"
-                                    data-value="<?= $fs['frame_size_id'] ?>"
-                                    data-width="<?= $fs['width_inch'] ?>"
-                                    data-height="<?= $fs['height_inch'] ?>">
-                                    <input type="radio" name="frame_size" value="<?= $fs['frame_size_id'] ?>" hidden>
-                                    <?= htmlspecialchars($fs['dimension']) ?>
-                                </label>
-                            <?php endforeach; ?>
-                            <label class="csc-size-pill active" data-value="OTHER" data-width="" data-height="" data-price="0">
-                                <input type="radio" name="frame_size" value="OTHER" checked hidden>
-                                Other
-                            </label>
-                        </div>
 
-                        <!-- Custom width/height inputs (shown only when Other is selected) -->
-                        <div class="csc-custom-size-wrap mt-3" id="csc-custom-size-wrap" style="display:none;">
-                            <div class="csc-custom-size-field">
-                                <label class="csc-field-label">WIDTH (IN)</label>
-                                <input type="number" class="csc-size-input" id="csc-width" placeholder="e.g. 22" min="1" step="0.5">
-                            </div>
-                            <span class="csc-size-x">×</span>
-                            <div class="csc-custom-size-field">
-                                <label class="csc-field-label">HEIGHT (IN)</label>
-                                <input type="number" class="csc-size-input" id="csc-height" placeholder="e.g. 28" min="1" step="0.5">
-                            </div>
-                        </div>
-
-                        <div id="canvas-size-error" style="color: #ef4444; font-size: 0.85rem; margin-top: 8px; font-weight: 500; display: none;">
-                            <i class="fas fa-exclamation-circle"></i> Minimum size for Canvas is 12x18 inches.
-                        </div>
-                    </div>
-                </div>
 
                 <!-- 7. MAT-BOARD COLOR -->
                 <div class="csc-section mb-4">
@@ -395,6 +397,13 @@ if ($customerId > 0) {
                                 <span id="sum-frame-type-price" class="csc-summary-price"></span>
                             </div>
                         </div>
+                         <div class="csc-summary-row" id="sum-size-row" style="display:none;">
+                            <span>Size</span>
+                            <div class="csc-summary-val-wrap">
+                                <span id="sum-size" class="csc-summary-val"></span>
+                                <span id="sum-size-price" class="csc-summary-price"></span>
+                            </div>
+                        </div>
                         <div class="csc-summary-row" id="sum-design-row" style="display:none;">
                             <span>Design</span>
                             <div class="csc-summary-val-wrap">
@@ -408,13 +417,7 @@ if ($customerId > 0) {
                                 <span id="sum-color" class="csc-summary-val"></span>
                             </div>
                         </div>
-                        <div class="csc-summary-row" id="sum-size-row" style="display:none;">
-                            <span>Size</span>
-                            <div class="csc-summary-val-wrap">
-                                <span id="sum-size" class="csc-summary-val"></span>
-                                <span id="sum-size-price" class="csc-summary-price"></span>
-                            </div>
-                        </div>
+                       
                         <div class="csc-summary-row" id="sum-matboard-row" style="display:none;">
                             <span>Mat-board</span>
                             <div class="csc-summary-val-wrap">
