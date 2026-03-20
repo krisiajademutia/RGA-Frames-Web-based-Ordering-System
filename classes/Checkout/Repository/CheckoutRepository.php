@@ -1,7 +1,6 @@
 <?php
 // classes/Checkout/Repository/CheckoutRepository.php
 
-// 🟢 NEW: Pull in our SOLID Strategies
 require_once __DIR__ . '/OrderStrategies.php';
 
 class CheckoutRepository {
