@@ -121,6 +121,15 @@ if ($customerId > 0) {
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
+                                <!-- Fixed Print Price Menu -->
+                                <div id="csc-fixed-price-wrap" style="display:none; margin-top:1rem;">
+                                    <label class="csc-field-label">AVAILABLE SIZES & PRICES</label>
+                                    <div class="csc-fixed-price-grid" id="csc-fixed-price-grid"></div>
+                                    <p class="csc-fixed-price-note">
+                                        <i class="fas fa-info-circle"></i> 
+                                        Don't see your size? Use <strong>Other</strong> in Frame Size below — pricing will be computed per sq.in.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>

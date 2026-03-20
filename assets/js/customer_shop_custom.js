@@ -331,14 +331,88 @@ qs('#csc-paper-type')?.addEventListener('change', function() {
     state.paperTypeId     = this.value || null;
     state.paperMultiplier = parseFloat(opt.dataset.multiplier) || 0;
     state.paperName       = opt.textContent.trim();
+
     if (this.value) {
         showRow('sum-paper-row', 'sum-paper', state.paperName);
+        renderFixedPricePills(parseInt(this.value));
     } else {
         hideRow('sum-paper-row');
+        hideFixedPricePills();
     }
     updateTotal();
-    validateCanvasSize(); // ← re-validates with new paper type
+    validateCanvasSize();
 });
+
+function renderFixedPricePills(paperId) {
+    const wrap = qs('#csc-fixed-price-wrap');
+    const grid = qs('#csc-fixed-price-grid');
+    if (!wrap || !grid) return;
+
+    // Filter prices for selected paper type
+    const prices = CSC_DATA.fixedPrintPrices.filter(p => parseInt(p.paper_id) === parseInt(paperId));
+
+    if (prices.length === 0) {
+        wrap.style.display = 'none';
+        return;
+    }
+
+    // Clear existing pills
+    grid.innerHTML = '';
+
+    // Reset fixed price selection
+    state.fixedPriceSelected = false;
+
+    prices.forEach(p => {
+        const pill = document.createElement('label');
+        pill.className = 'csc-fixed-price-pill';
+        pill.dataset.width  = p.width;
+        pill.dataset.height = p.height;
+        pill.dataset.price  = p.price;
+        pill.innerHTML = `
+            <span class="csc-fixed-price-size">${p.width}" × ${p.height}"</span>
+            <span class="csc-fixed-price-amount">₱${parseFloat(p.price).toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+        `;
+
+        pill.addEventListener('click', () => {
+            qsa('.csc-fixed-price-pill').forEach(el => el.classList.remove('active'));
+            pill.classList.add('active');
+
+            state.frameWidth  = parseFloat(pill.dataset.width);
+            state.frameHeight = parseFloat(pill.dataset.height);
+            state.frameSizeId = 'FIXED';
+            state.fixedPriceSelected = true;
+
+            // Sync with frame size pills — deselect all
+            qsa('.csc-size-pill').forEach(s => s.classList.remove('active'));
+
+            // Hide custom size inputs
+            const customWrap = qs('#csc-custom-size-wrap');
+            if (customWrap) customWrap.style.display = 'none';
+
+            // Clear any size errors
+            const errorText = qs('#canvas-size-error');
+            const wInput = qs('#csc-width');
+            const hInput = qs('#csc-height');
+            if (errorText) errorText.style.display = 'none';
+            if (wInput) wInput.style.borderColor = '';
+            if (hInput) hInput.style.borderColor = '';
+            state.hasSizeError = false;
+
+            updateSizeLabel();
+            updateTotal();
+        });
+
+        grid.appendChild(pill);
+    });
+
+    wrap.style.display = 'block';
+}
+
+function hideFixedPricePills() {
+    const wrap = qs('#csc-fixed-price-wrap');
+    if (wrap) wrap.style.display = 'none';
+    state.fixedPriceSelected = false;
+}
 
 // ── Image Upload ─────────────────────────────────────────
 qs('#csc-image-input')?.addEventListener('change', function() {

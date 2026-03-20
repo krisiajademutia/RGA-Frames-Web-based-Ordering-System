@@ -30,13 +30,18 @@ function syncSidebar() {
             maximumFractionDigits: 2
         });
     }
-    if (hiddenInput)  hiddenInput.value      = JSON.stringify(selectedIds);
-    if (checkoutBtn)  checkoutBtn.disabled   = selectedIds.length === 0;
+    if (hiddenInput)  hiddenInput.value    = JSON.stringify(selectedIds);
+    if (checkoutBtn)  checkoutBtn.disabled = selectedIds.length === 0;
     if (emptyMsg)     emptyMsg.style.display = selectedIds.length === 0 ? 'block' : 'none';
 }
 
 /* ─── Select / deselect a single card ─── */
-function toggleSelection(card) {
+function toggleSelection(element) {
+    // Always resolve to the actual .cart-item-card regardless of which
+    // child element was clicked — prevents missed clicks on nested text/icons
+    const card = element.closest('.cart-item-card');
+    if (!card) return;
+
     const id          = card.getAttribute('data-id');
     const price       = parseFloat(card.getAttribute('data-price'));
     const summaryLine = document.getElementById(`summary-item-${id}`);
@@ -111,10 +116,10 @@ function closeDeleteModal() {
 /* ─── Clear selected items — dedicated modal ─── */
 function removeAllItems() {
     if (selectedIds.length === 0) {
-        const modal = document.getElementById('clearSelectedModal');
+        const modal      = document.getElementById('clearSelectedModal');
+        const confirmBtn = document.getElementById('confirmClearBtn');
         document.getElementById('clearModalTitle').innerText = 'No Items Selected';
         document.getElementById('clearModalText').innerText  = 'Please select at least one item to remove.';
-        const confirmBtn = document.getElementById('confirmClearBtn');
         confirmBtn.style.display = 'none';
         modal.style.display = 'flex';
         return;
@@ -123,7 +128,7 @@ function removeAllItems() {
     const modal      = document.getElementById('clearSelectedModal');
     const confirmBtn = document.getElementById('confirmClearBtn');
     confirmBtn.style.display = '';
-    const n          = selectedIds.length;
+    const n = selectedIds.length;
 
     document.getElementById('clearModalTitle').innerText = `Remove ${n} Selected Item${n > 1 ? 's' : ''}`;
     document.getElementById('clearModalText').innerText  =
@@ -135,21 +140,6 @@ function removeAllItems() {
 
     modal.style.display = 'flex';
 }
-
-function closeClearModal() {
-    document.getElementById('clearSelectedModal').style.display = 'none';
-}
-
-function closeDeleteModal() {
-    document.getElementById('deleteModal').style.display = 'none';
-}
-
-window.onclick = function (event) {
-    const deleteModal = document.getElementById('deleteModal');
-    const clearModal  = document.getElementById('clearSelectedModal');
-    if (event.target === deleteModal) closeDeleteModal();
-    if (event.target === clearModal)  closeClearModal();
-};
 
 function closeClearModal() {
     document.getElementById('clearSelectedModal').style.display = 'none';
@@ -176,3 +166,23 @@ function toggleDetails(itemId, btn) {
         btn.innerHTML = '<i class="fa-solid fa-chevron-up cart-details-chevron cart-details-chevron--open"></i> Hide details';
     }
 }
+
+/* ─── Prevent double-submit on checkout ─── */
+document.addEventListener('DOMContentLoaded', function () {
+    const checkoutForm = document.querySelector('form[action*="save_selected"]');
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', function (e) {
+            const btn = document.getElementById('checkout-btn');
+            // Guard: if no items selected, block submission entirely
+            if (selectedIds.length === 0) {
+                e.preventDefault();
+                return;
+            }
+            // Disable button immediately to prevent double-click double-submit
+            if (btn) {
+                btn.disabled = true;
+              
+            }
+        });
+    }
+});

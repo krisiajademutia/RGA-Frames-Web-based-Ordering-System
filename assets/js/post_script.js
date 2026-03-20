@@ -53,12 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     runCalculation(true);
 
-    // Modal Trigger
-    const trigger = document.getElementById('triggerSuccessModal');
-    if (trigger) {
-        const successModal = new bootstrap.Modal(document.getElementById('successOperationModal'));
-        successModal.show();
-    }
+
 });
 
 function loadExistingPhotos(images, containerId, textId, inputId) {
@@ -155,23 +150,18 @@ function removeImage(event, index, containerId, textId, inputId) {
 }
 
 function confirmDelete(id, name) {
-    const modalElement = document.getElementById('deleteConfirmModal');
-    if (!modalElement) return;
-
-    // Set the product name in the modal text
-    document.getElementById('deleteProductName').innerText = name;
-    
-    // BUILD THE CORRECT URL: Point directly to the process file relative to the admin page
-    document.getElementById('confirmDeleteLink').href = `../process/postframe_process.php?action=delete&id=${id}`;
-
-    const modal = new bootstrap.Modal(modalElement);
-    modal.show();
+    Swal.fire({
+        title: 'Delete this product?',
+        html: `Are you sure you want to delete <strong>${name}</strong>? This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#9ca3af',
+        confirmButtonText: '<i class="fas fa-trash"></i> Yes, Delete',
+        cancelButtonText: 'Cancel',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = `../process/postframe_process.php?action=delete&id=${id}`;
+        }
+    });
 }
-
-// AUTO-SHOW SUCCESS MODAL
-document.addEventListener('DOMContentLoaded', function() {
-    if (document.getElementById('triggerSuccessModal')) {
-        var successModal = new bootstrap.Modal(document.getElementById('successOperationModal'));
-        successModal.show();
-    }
-});
