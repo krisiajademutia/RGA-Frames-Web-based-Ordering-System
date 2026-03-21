@@ -42,7 +42,7 @@ class OrderItemRepository {
                 -- Matboards
                 mc_pri.matboard_color_name,
                 mc_pri.base_price          AS matboard_base_price,
-                mc_sec.matboard_color_name AS sec_matboard_color_name,
+                mc_sec.matboard_color_name AS secondary_matboard_color_name,
                 mc_sec.base_price          AS sec_matboard_base_price,
 
                 -- PRINT DETAILS (EXACT names from your admin_order_details.php)

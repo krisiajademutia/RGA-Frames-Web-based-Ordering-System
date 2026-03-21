@@ -12,7 +12,7 @@ $mountTypes    = $service->getMountTypes();
 
 $printRow = $conn->query(
     "SELECT fixed_price FROM tbl_fixed_print_prices
-     WHERE dimension = 'Print Service' LIMIT 1"
+    WHERE dimension = 'Print Service' LIMIT 1"
 );
 $printServicePrice = ($printRow && $printRow->num_rows > 0)
     ? (float)$printRow->fetch_assoc()['fixed_price']
@@ -20,7 +20,7 @@ $printServicePrice = ($printRow && $printRow->num_rows > 0)
 
 $matRow = $conn->query(
     "SELECT fixed_price FROM tbl_fixed_print_prices
-     WHERE dimension = 'Matboard Service' LIMIT 1"
+    WHERE dimension = 'Matboard Service' LIMIT 1"
 );
 $matboardServicePrice = ($matRow && $matRow->num_rows > 0)
     ? (float)$matRow->fetch_assoc()['fixed_price']
@@ -29,14 +29,15 @@ $matboardServicePrice = ($matRow && $matRow->num_rows > 0)
 $matOptions     = [];
 $matColorsQuery = $conn->query(
     "SELECT matboard_color_id, matboard_color_name, base_price, image_name
-     FROM tbl_matboard_colors
-     WHERE is_active = 1
-     ORDER BY matboard_color_name ASC"
+    FROM tbl_matboard_colors
+    WHERE is_active = 1
+    ORDER BY matboard_color_name ASC"
 );
 if ($matColorsQuery && $matColorsQuery->num_rows > 0) {
     while ($m = $matColorsQuery->fetch_assoc()) { $matOptions[] = $m; }
 }
 
+// ── Paper types
 $paperOptions = [];
 $paperQuery   = $conn->query("SELECT * FROM tbl_paper_type WHERE is_active = 1");
 if ($paperQuery && $paperQuery->num_rows > 0) {
@@ -186,19 +187,19 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
                                     <label class="section-label">Primary Mat-board <small class="text-muted fw-normal">(optional)</small></label>
                                     <div class="swatch-group">
                                         <div class="swatch-item active"
-                                             style="background:#f3f4f6; font-size:9px; display:flex; align-items:center; justify-content:center;"
-                                             onclick="selectMat(this, 0, 'None', true)">None</div>
+                                            style="background:#f3f4f6; font-size:9px; display:flex; align-items:center; justify-content:center;"
+                                            onclick="selectMat(this, 0, 'None', true)">None</div>
                                         <?php foreach($matOptions as $mat):
                                             $matPrice = (float)$mat['base_price'] > 0
                                                 ? (float)$mat['base_price']
                                                 : $matboardServicePrice;
                                         ?>
                                             <div class="swatch-item"
-                                                 style="<?= $mat['image_name']
-                                                     ? "background-image:url('/rga_frames/uploads/" . htmlspecialchars($mat['image_name']) . "'); background-size:cover;"
-                                                     : "background:#ccc;" ?>"
-                                                 title="<?= htmlspecialchars($mat['matboard_color_name']) ?> <?= $matPrice > 0 ? '(+₱' . number_format($matPrice, 2) . ')' : '' ?>"
-                                                 onclick="selectMat(this, <?= $matPrice ?>, '<?= htmlspecialchars($mat['matboard_color_name']) ?>', false)">
+                                                style="<?= $mat['image_name']
+                                                    ? "background-image:url('/rga_frames/uploads/" . htmlspecialchars($mat['image_name']) . "'); background-size:cover;"
+                                                    : "background:#ccc;" ?>"
+                                                title="<?= htmlspecialchars($mat['matboard_color_name']) ?> <?= $matPrice > 0 ? '(+₱' . number_format($matPrice, 2) . ')' : '' ?>"
+                                                onclick="selectMat(this, <?= $matPrice ?>, '<?= htmlspecialchars($mat['matboard_color_name']) ?>', false)">
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
@@ -208,19 +209,19 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
                                     <label class="section-label">Secondary Mat-board</label>
                                     <div class="swatch-group">
                                         <div class="swatch-item active"
-                                             style="background:#f3f4f6; font-size:9px; display:flex; align-items:center; justify-content:center;"
-                                             onclick="selectSecondaryMat(this, 0, 'None')">None</div>
+                                            style="background:#f3f4f6; font-size:9px; display:flex; align-items:center; justify-content:center;"
+                                            onclick="selectSecondaryMat(this, 0, 'None')">None</div>
                                         <?php foreach($matOptions as $mat):
                                             $matPrice = (float)$mat['base_price'] > 0
                                                 ? (float)$mat['base_price']
                                                 : $matboardServicePrice;
                                         ?>
                                             <div class="swatch-item"
-                                                 style="<?= $mat['image_name']
-                                                     ? "background-image:url('/rga_frames/uploads/" . htmlspecialchars($mat['image_name']) . "'); background-size:cover;"
-                                                     : "background:#ccc;" ?>"
-                                                 title="<?= htmlspecialchars($mat['matboard_color_name']) ?> <?= $matPrice > 0 ? '(+₱' . number_format($matPrice, 2) . ')' : '' ?>"
-                                                 onclick="selectSecondaryMat(this, <?= $matPrice ?>, '<?= htmlspecialchars($mat['matboard_color_name']) ?>')">
+                                                style="<?= $mat['image_name']
+                                                    ? "background-image:url('/rga_frames/uploads/" . htmlspecialchars($mat['image_name']) . "'); background-size:cover;"
+                                                    : "background:#ccc;" ?>"
+                                                title="<?= htmlspecialchars($mat['matboard_color_name']) ?> <?= $matPrice > 0 ? '(+₱' . number_format($matPrice, 2) . ')' : '' ?>"
+                                                onclick="selectSecondaryMat(this, <?= $matPrice ?>, '<?= htmlspecialchars($mat['matboard_color_name']) ?>')">
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
@@ -233,7 +234,7 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
                                             $fee = (float)$mount['additional_fee'];
                                         ?>
                                         <div class="option-tile <?= $index === 0 ? 'active' : '' ?>"
-                                             onclick="selectMount(this, <?= $fee ?>, '<?= htmlspecialchars($mount['mount_name']) ?>')">
+                                            onclick="selectMount(this, <?= $fee ?>, '<?= htmlspecialchars($mount['mount_name']) ?>')">
                                             <strong><?= htmlspecialchars($mount['mount_name']) ?></strong>
                                             <span><?= $fee > 0 ? '+₱' . number_format($fee, 2) : 'No extra fee' ?></span>
                                         </div>
@@ -336,7 +337,7 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
     function selectMat(el, price, name, isNone) {
         el.closest('.swatch-group').querySelectorAll('.swatch-item').forEach(s => s.classList.remove('active'));
         el.classList.add('active');
-        pMatPrice = parseFloat(price) || 0;
+        pMatPrice = 0; // Primary mat alone is free — fee only applies on double-matting
         document.getElementById('selectedMat').value = name;
 
         const secSec = document.getElementById('secondaryMatSection');
