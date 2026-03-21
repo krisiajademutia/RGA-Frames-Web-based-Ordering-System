@@ -38,7 +38,7 @@ class CartRepository implements CartRepositoryInterface
             LEFT JOIN tbl_paper_type           pt  ON p.paper_type_id          = pt.paper_type_id
             LEFT JOIN tbl_matboard_colors      mat ON f.primary_matboard_id    = mat.matboard_color_id
             LEFT JOIN tbl_mount_type           mt  ON f.mount_type_id          = mt.mount_type_id
-            WHERE cart.customer_id = ? AND f.source_type = 'CART'
+            WHERE cart.customer_id = ? AND (f.source_type = 'CART' OR f.source_type = '')
         ";
 
         $stmt = $this->conn->prepare($sql);
@@ -119,31 +119,30 @@ class CartRepository implements CartRepositoryInterface
 
     // ── Build display fields for a standalone print item ────────────────────
     private function buildPrintDisplayFields(array $row): array
-    {
-                if (!empty($row['image_path'])) {
-            $path = $row['image_path'];
-            $row['display_image'] = str_starts_with($path, 'uploads/')
-                ? "../" . $path
-                : "../uploads/customer_images/" . $path;
-        } else {
-            $row['display_image'] = null;
-        }
-        $row['display_name']    = 'Photo Print ' . (float)$row['width_inch'] . '"×' . (float)$row['height_inch'] . '"';
-        $row['id']              = 'p_' . $row['printing_order_item_id']; // prefix to distinguish from frame item_id
-        $row['service_type']    = 'PRINT_ONLY';
-        $row['detail_service']  = 'Print Only';
-        $row['detail_type']     = '—';
-        $row['detail_design']   = '—';
-        $row['detail_color']    = '—';
-        $row['detail_size']     = (float)$row['width_inch'] . '" × ' . (float)$row['height_inch'] . '"';
-        $row['detail_paper']    = $row['paper_name'] ?? null;
-        $row['detail_matboard'] = null;
-        $row['detail_mount']    = null;
-        $row['width_inch']      = $row['width_inch'];
-        $row['height_inch']     = $row['height_inch'];
-        return $row;
+{
+    if (!empty($row['image_path'])) {
+        $path = $row['image_path'];
+        $normalized = preg_replace('#^uploads/customer_print/#', '', $path);
+        $row['display_image'] = "../uploads/customer_print/" . $normalized;
+    } else {
+        $row['display_image'] = null;
     }
-
+    $row['display_name']    = 'Photo Print ' . (float)$row['width_inch'] . '"×' . (float)$row['height_inch'] . '"';
+    $row['id']              = 'p_' . $row['printing_order_item_id'];
+    $row['raw_print_id']    = $row['printing_order_item_id'];
+    $row['service_type']    = 'PRINT_ONLY';
+    $row['detail_service']  = 'Print Only';
+    $row['detail_type']     = '—';
+    $row['detail_design']   = '—';
+    $row['detail_color']    = '—';
+    $row['detail_size']     = (float)$row['width_inch'] . '" × ' . (float)$row['height_inch'] . '"';
+    $row['detail_paper']    = $row['paper_name'] ?? null;
+    $row['detail_matboard'] = null;
+    $row['detail_mount']    = null;
+    $row['width_inch']      = $row['width_inch'];
+    $row['height_inch']     = $row['height_inch'];
+    return $row;
+}
     // ── Delete single standalone print item ─────────────────────────────────
     public function deletePrintItem(int $printingOrderItemId): void
     {

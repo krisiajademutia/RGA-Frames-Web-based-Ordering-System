@@ -49,7 +49,7 @@
                         <div class="cart-item-card" data-id="<?= $item['id']; ?>" data-price="<?= $item['sub_total']; ?>" onclick="toggleSelection(this)">
                             <div class="cart-item-img">
                                 <?php if (!empty($item['display_image'])): ?>
-                                    <img src="<?= htmlspecialchars($item['display_image']); ?>" alt="Frame Image">
+                                    <img src="<?= htmlspecialchars(str_replace(' ', '%20', $item['display_image'])); ?>" alt="Frame Image">
                                 <?php else: ?>
                                     <i class="fa-regular fa-image"></i>
                                 <?php endif; ?>
@@ -57,22 +57,22 @@
                             <div class="cart-item-details">
                                 <h4 class="cart-item-name"><?= htmlspecialchars($item['display_name']); ?></h4>
                                 <p class="cart-item-meta">
-                                    <?= $item['service_type'] === 'FRAME&PRINT' ? 'Frame & Print' : 'Frame Only'; ?>
+                                    <?= $item['service_type'] === 'FRAME&PRINT' ? 'Frame & Print' : ($item['service_type'] === 'PRINT_ONLY' ? 'Print Only' : 'Frame Only'); ?>
                                     <?php if ($item['width_inch']): ?>
                                         | <?= (float)$item['width_inch'] . 'x' . (float)$item['height_inch']; ?>"
                                     <?php endif; ?>
                                 </p>
                                 <div class="cart-qty-controls" onclick="event.stopPropagation()">
-                                    <button type="button" class="cart-qty-btn" onclick="updateQty(<?= $item['id']; ?>, -1)">-</button>
+                                    <button type="button" class="cart-qty-btn" onclick="updateQty('<?= $item['service_type'] === 'PRINT_ONLY' ? 'print' : 'frame'; ?>', <?= $item['service_type'] === 'PRINT_ONLY' ? $item['raw_print_id'] : $item['id']; ?>, -1)">-</button>
                                     <input type="text" class="cart-qty-input" value="<?= $item['quantity']; ?>" readonly>
-                                    <button type="button" class="cart-qty-btn" onclick="updateQty(<?= $item['id']; ?>, 1)">+</button>
+                                    <button type="button" class="cart-qty-btn" onclick="updateQty('<?= $item['service_type'] === 'PRINT_ONLY' ? 'print' : 'frame'; ?>', <?= $item['service_type'] === 'PRINT_ONLY' ? $item['raw_print_id'] : $item['id']; ?>, 1)">+</button>
                                 </div>
 
                                 <!-- Inline expand toggle -->
                                 <button
                                     type="button"
                                     class="cart-details-toggle"
-                                    onclick="event.stopPropagation(); toggleDetails(<?= $item['id']; ?>, this)"
+                                    onclick="event.stopPropagation(); toggleDetails('<?= $item['id']; ?>', this)"
                                 >
                                     <i class="fa-solid fa-chevron-down cart-details-chevron"></i>
                                     View details
@@ -80,18 +80,19 @@
                             </div>
                             <div class="cart-item-right">
                                 <p class="cart-item-price">₱<?= number_format($item['sub_total'], 2); ?></p>
-                                <button type="button" class="cart-remove-btn" title="Remove item" onclick="event.stopPropagation(); removeItem(<?= $item['id']; ?>)">
+                               <button type="button" class="cart-remove-btn" title="Remove item" onclick="event.stopPropagation(); removeItem('<?= $item['service_type'] === 'PRINT_ONLY' ? 'print' : 'frame'; ?>', <?= $item['service_type'] === 'PRINT_ONLY' ? $item['raw_print_id'] : $item['id']; ?>)">
                                     <i class="fa-solid fa-trash-can"></i>
                                 </button>
                             </div>
 
                             <!-- Inline expanded detail panel -->
-                            <div class="cart-item-expanded" id="cart-details-<?= $item['id']; ?>" onclick="event.stopPropagation()">
+                            <div class="cart-item-expanded" id="cart-details-<?= htmlspecialchars($item['id']); ?>" onclick="event.stopPropagation()">
                                 <div class="cart-detail-grid">
                                     <div class="cart-detail-row">
                                         <span class="cart-detail-label">Service</span>
-                                        <span class="cart-detail-value"><?= htmlspecialchars($item['detail_service']); ?></span>
+                                        <span class="cart-detail-value"><?= htmlspecialchars($item['detail_service'] ?? ($item['service_type'] === 'PRINT_ONLY' ? 'Print Only' : ($item['service_type'] === 'FRAME&PRINT' ? 'Frame & Print' : 'Frame Only'))); ?></span>
                                     </div>
+                                    <?php if ($item['service_type'] !== 'PRINT_ONLY'): ?>
                                     <div class="cart-detail-row">
                                         <span class="cart-detail-label">Frame Type</span>
                                         <span class="cart-detail-value"><?= htmlspecialchars($item['detail_type']); ?></span>
@@ -104,6 +105,7 @@
                                         <span class="cart-detail-label">Color</span>
                                         <span class="cart-detail-value"><?= htmlspecialchars($item['detail_color']); ?></span>
                                     </div>
+                                    <?php endif; ?>
                                     <div class="cart-detail-row">
                                         <span class="cart-detail-label">Size</span>
                                         <span class="cart-detail-value"><?= htmlspecialchars($item['detail_size']); ?></span>
@@ -134,11 +136,11 @@
                                         <span class="cart-detail-label">Subtotal</span>
                                         <span class="cart-detail-value cart-detail-price">₱<?= number_format($item['sub_total'], 2); ?></span>
                                     </div>
-                                    <?php if ($item['service_type'] === 'FRAME&PRINT' && !empty($item['display_image'])): ?>
+                                    <?php if (($item['service_type'] === 'FRAME&PRINT' || $item['service_type'] === 'PRINT_ONLY') && !empty($item['display_image'])): ?>
                                     <div class="cart-detail-row" style="grid-column: span 2;">
                                         <span class="cart-detail-label">Uploaded Photo</span>
                                         <img 
-                                            src="<?= htmlspecialchars($item['display_image']); ?>" 
+                                            src="<?= htmlspecialchars(str_replace(' ', '%20', $item['display_image'])); ?>" 
                                             alt="Uploaded photo"
                                             style="width:100%; max-width:260px; height:140px; object-fit:cover; border-radius:8px; border:1px solid #e5e7eb; margin-top:4px;"
                                         >
@@ -161,7 +163,7 @@
                             <div class="cart-summary-line" id="summary-item-<?= $item['id']; ?>" style="display: none;">
                                 <div>
                                     <span class="cart-summary-item-name"><?= htmlspecialchars($item['display_name']); ?></span>
-                                    <span class="cart-summary-item-sub"><?= $item['service_type'] === 'FRAME&PRINT' ? 'Frame & Print' : 'Frame only'; ?></span>
+                                    <span class="cart-summary-item-sub"><?= $item['service_type'] === 'FRAME&PRINT' ? 'Frame & Print' : ($item['service_type'] === 'PRINT_ONLY' ? 'Print Only' : 'Frame only'); ?></span>
                                 </div>
                                 <div class="cart-summary-qty">×<?= $item['quantity']; ?></div>
                                 <div class="cart-summary-item-price">₱<?= number_format($item['sub_total'], 2); ?></div>
