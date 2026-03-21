@@ -1,26 +1,30 @@
 <?php
+ob_start(); // Start output buffering to trap any invisible errors
 // process/checkout_process.php
 session_start();
 require_once __DIR__ . '/../config/db_connect.php';
 require_once __DIR__ . '/../classes/Checkout/CheckoutService.php';
 require_once __DIR__ . '/../classes/CustomFrame/CustomFrameService.php';
+require_once __DIR__ . '/../classes/Notification/NotificationService.php';
 
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id']) || strtoupper($_SESSION['role'] ?? '') !== 'CUSTOMER') {
+    ob_clean();
     echo json_encode(['success' => false, 'message' => 'Please log in to place an order.']);
     exit();
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    ob_clean();
     echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
     exit();
 }
 
 $customer_id     = (int)$_SESSION['user_id'];
 $checkoutService = new CheckoutService($conn);
+$notifService    = new NotificationService($conn); 
 
-// Detect if this is a Buy Now checkout or a Cart checkout
 $isBuyNow = isset($_SESSION['buy_now_item']) && is_array($_SESSION['buy_now_item']) && !empty($_SESSION['buy_now_item']);
 
 try {
@@ -29,34 +33,47 @@ try {
         $buyNowItemData = $_SESSION['buy_now_item'];
         $itemType = $buyNowItemData['item_type'] ?? 'CUSTOM_FRAME';
 
-        // Calculate Subtotal based on product type
         if ($itemType === 'CUSTOM_FRAME') {
             $cfService = new CustomFrameService($conn);
             $prices = $cfService->calculatePrice($buyNowItemData);
             $cartTotal = $prices['grand_total'];
         } else {
-            // For Printing and Ready Made
             $cartTotal = (float)($buyNowItemData['total_price'] ?? 0);
         }
 
-        $cartItems = []; // Fake empty cart array since this is Buy Now
-        
-        // Pass to the CheckoutService which perfectly handles the database insert
+        $cartItems = []; 
         $response = $checkoutService->processCheckout($customer_id, $_POST, $_FILES, $cartItems, $cartTotal, true, $buyNowItemData);
         
         if ($response['success']) {
             unset($_SESSION['buy_now_item']);
-            $_SESSION['order_success_pending'] = true; // <-- ADDED THIS
+            $_SESSION['order_success_pending'] = true; 
+            
+            $new_order_id = $response['order_id'] ?? 0;
+            $ref = $response['ref_no'] ?? "New Order";
+
+            if ($new_order_id == 0) {
+                $stmt = $conn->prepare("SELECT order_id FROM tbl_orders WHERE customer_id = ? ORDER BY order_id DESC LIMIT 1");
+                $stmt->bind_param("i", $customer_id);
+                $stmt->execute();
+                $res = $stmt->get_result()->fetch_assoc();
+                $new_order_id = $res ? (int)$res['order_id'] : 0;
+                $stmt->close();
+            }
+
+            $notifService->notifyCustomer($customer_id, $new_order_id, "Order Received", "Thank you! We have received your order ($ref) and will review it shortly.");
+            $notifService->notifyAdmin($new_order_id, "New Order Alert", "A new order ($ref) has been placed by a customer.");
         }
+        
+        ob_clean(); // WIPE AWAY ANY HIDDEN ERRORS
         echo json_encode($response);
         exit();
 
     } else {
         // ── NORMAL CART FLOW ──
-        // This grabs Frames, Printing, AND Ready-Made items beautifully!
         $cartItems = $checkoutService->getCartItems($customer_id);
         
         if (empty($cartItems)) {
+            ob_clean();
             echo json_encode(['success' => false, 'message' => 'Your cart is empty.']);
             exit();
         }
@@ -66,15 +83,33 @@ try {
             $cartTotal += (float)($item['sub_total'] ?? 0);
         }
 
-        // Pass to the CheckoutService
         $response = $checkoutService->processCheckout($customer_id, $_POST, $_FILES, $cartItems, $cartTotal, false, null);
         
         if ($response['success']) {
-            $_SESSION['order_success_pending'] = true; // <-- ADDED THIS
+            $_SESSION['order_success_pending'] = true; 
+            
+            $new_order_id = $response['order_id'] ?? 0;
+            $ref = $response['ref_no'] ?? "New Order";
+
+            if ($new_order_id == 0) {
+                $stmt = $conn->prepare("SELECT order_id FROM tbl_orders WHERE customer_id = ? ORDER BY order_id DESC LIMIT 1");
+                $stmt->bind_param("i", $customer_id);
+                $stmt->execute();
+                $res = $stmt->get_result()->fetch_assoc();
+                $new_order_id = $res ? (int)$res['order_id'] : 0;
+                $stmt->close();
+            }
+
+            $notifService->notifyCustomer($customer_id, $new_order_id, "Order Received", "Thank you! We have received your order ($ref) and will review it shortly.");
+            $notifService->notifyAdmin($new_order_id, "New Order Alert", "A new order ($ref) has been placed by a customer.");
         }
+        
+        ob_clean(); // WIPE AWAY ANY HIDDEN ERRORS
         echo json_encode($response);
         exit();
     }
 } catch (Throwable $e) {
+    ob_clean(); // WIPE AWAY ANY HIDDEN ERRORS
     echo json_encode(['success' => false, 'message' => 'System Error: ' . $e->getMessage()]);
 }
+?>

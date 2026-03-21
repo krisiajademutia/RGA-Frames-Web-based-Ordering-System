@@ -2,6 +2,8 @@
 // process/cancel_order.php
 session_start();
 include __DIR__ . '/../config/db_connect.php';
+require_once __DIR__ . '/../classes/Notification/NotificationService.php';
+
 
 header('Content-Type: application/json');
 
@@ -26,7 +28,7 @@ if (!$order_id) {
 
 // Verify the order belongs to this customer AND is still PENDING
 $stmt = $conn->prepare("
-    SELECT order_id, order_status
+    SELECT order_id, order_status, order_reference_no
     FROM tbl_orders
     WHERE order_id = ? AND customer_id = ?
 ");
@@ -44,6 +46,7 @@ if ($order['order_status'] !== 'PENDING') {
     exit();
 }
 
+$ref_no = $order['order_reference_no'] ?? "#" . $order_id;
 // Update status to CANCELLED
 $update = $conn->prepare("
     UPDATE tbl_orders SET order_status = 'CANCELLED' WHERE order_id = ?
@@ -51,6 +54,10 @@ $update = $conn->prepare("
 $update->bind_param("i", $order_id);
 
 if ($update->execute()) {
+    // --- NOTIFICATION TRIGGER: CUSTOMER CANCELLED ---
+    $notifService = new NotificationService($conn);
+    $notifService->notifyAdmin($order_id, "Order Cancelled", "Order ($ref_no) has been cancelled by the customer.");
+    
     echo json_encode(['success' => true, 'message' => 'Order cancelled successfully.']);
 } else {
     echo json_encode(['success' => false, 'message' => 'Failed to cancel order. Please try again.']);

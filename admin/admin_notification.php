@@ -1,26 +1,26 @@
 <?php
-// customer/customer_notifications.php
+// admin/admin_notifications.php
 session_start();
 
-if (!isset($_SESSION['user_id']) || strtoupper($_SESSION['role'] ?? '') !== 'CUSTOMER') {
-    header('Location: login.php');
+// Security check: Only Admins allowed here
+if (!isset($_SESSION['user_id']) || strtoupper($_SESSION['role'] ?? '') !== 'ADMIN') {
+    header('Location: login.php'); 
     exit();
 }
-
-include __DIR__ . '/../includes/customer_header.php'; 
+include __DIR__ . '/../includes/admin_header.php'; 
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Notifications - RGA Frames</title>
-    <!-- CSS links are already in customer_header.php -->
+    <title>Admin Notifications - RGA Frames</title>
+    <!-- All CSS links are already in admin_header.php, so we don't repeat them -->
 </head>
 <body>
 
     <div class="container my-5" style="max-width: 900px;">
-        <h2 class="mb-4">My Notifications</h2>
+        <h2 class="mb-4">Admin Notifications</h2>
         
         <div id="notifications-list" class="list-group shadow-sm rounded">
             <div class="text-center py-5 text-muted">Loading your notifications...</div>
@@ -31,13 +31,13 @@ include __DIR__ . '/../includes/customer_header.php';
     document.addEventListener('DOMContentLoaded', function() {
         const listContainer = document.getElementById('notifications-list');
 
-        fetch('../process/fetch_customer_notifications.php')
+        fetch('../process/fetch_admin_notifications.php')
             .then(response => response.json())
             .then(data => {
                 listContainer.innerHTML = '';
 
                 if (!data.success || data.notifications.length === 0) {
-                    listContainer.innerHTML = '<div style="padding: 30px; text-align: center; color: #888;">You have no notifications right now.</div>';
+                    listContainer.innerHTML = '<div style="padding: 30px; text-align: center; color: #888;">No notifications yet. You are all caught up!</div>';
                     return;
                 }
 
@@ -74,8 +74,8 @@ include __DIR__ . '/../includes/customer_header.php';
                     }
 
                     if (orderId > 0) {
-                        // For customer page → always go to customer order details
-                        window.location.href = `customer_order_details.php?id=${orderId}`;
+                        // For admin page → always go to admin order details
+                        window.location.href = `admin_order_details.php?id=${orderId}`;
                     }
                 });
             })
@@ -85,11 +85,12 @@ include __DIR__ . '/../includes/customer_header.php';
             });
 
         setTimeout(() => {
-            fetch('../process/mark_customer_notif_read.php');
+            fetch('../process/mark_admin_notif_read.php');
         }, 1000); 
     });
     </script>
 
+    <!-- If you need Bootstrap JS and it's not already in the header -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>

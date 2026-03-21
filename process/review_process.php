@@ -63,6 +63,27 @@ if ($action === 'add') {
     $stmt->bind_param('iis', $customer_id, $rating, $review_text);
 
     if ($stmt->execute()) {
+        
+        // ========================================================================
+        // --- NOTIFICATION TRIGGER: NEW CUSTOMER REVIEW ---
+        // ========================================================================
+        require_once __DIR__ . '/../classes/Notification/NotificationService.php';
+        $notifService = new NotificationService($conn);
+        
+        // Generate stars for the title (e.g., ⭐⭐⭐⭐⭐)
+        $stars = str_repeat('⭐', $rating);
+        
+        // Get a short preview of the review text (first 40 chars)
+        $preview = mb_substr($review_text, 0, 40) . (mb_strlen($review_text) > 40 ? '...' : '');
+        
+        // We pass 0 as the order_id since this is a general store review
+        $notifService->notifyAdmin(
+            0, 
+            "New Review! {$stars}", 
+            "A customer just left a {$rating}-star review: \"{$preview}\""
+        );
+        // ========================================================================
+
         echo json_encode(['success' => true, 'message' => 'Thank you for your review!']);
     } else {
         echo json_encode(['success' => false, 'message' => 'Failed to submit review. Please try again.']);
@@ -96,3 +117,4 @@ if ($action === 'delete') {
 
 echo json_encode(['success' => false, 'message' => 'Unknown action.']);
 exit();
+?>

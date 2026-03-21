@@ -37,12 +37,13 @@ try {
     $total_paid = (float)($paid_result['total_paid'] ?? 0);
     $stmt->close();
 
-    // 3. Get the required total amount
-    $stmt = $conn->prepare("SELECT total_amount FROM tbl_payment WHERE payment_id = ?");
+    // 3. Get the required total amount AND the order_id (Modified to get order_id)
+    $stmt = $conn->prepare("SELECT total_amount, order_id FROM tbl_payment WHERE payment_id = ?");
     $stmt->bind_param("i", $payment_id);
     $stmt->execute();
     $payment_row = $stmt->get_result()->fetch_assoc();
     $total_required = (float)($payment_row['total_amount'] ?? 0);
+    $order_id = (int)($payment_row['order_id'] ?? 0);
     $stmt->close();
 
     // 4. Update the payment status (PARTIAL or FULL)
@@ -53,9 +54,36 @@ try {
     $stmt->close();
 
     $conn->commit();
+
+    // ========================================================================
+    // --- NOTIFICATION TRIGGER: CASH PAYMENT LOGGED ---
+    // ========================================================================
+    require_once __DIR__ . '/../classes/Notification/NotificationService.php';
+    $notifService = new NotificationService($conn);
+
+    if ($order_id > 0) {
+        $stmtC = $conn->prepare("SELECT customer_id FROM tbl_orders WHERE order_id = ?");
+        $stmtC->bind_param("i", $order_id);
+        $stmtC->execute();
+        $resC = $stmtC->get_result()->fetch_assoc();
+        
+        if ($resC && isset($resC['customer_id'])) {
+            $formatted_amount = number_format($amount, 2);
+            $notifService->notifyCustomer(
+                $resC['customer_id'], 
+                $order_id, 
+                "Payment Received 💵", 
+                "We have successfully recorded your cash payment of ₱{$formatted_amount} for Order #{$order_id}."
+            );
+        }
+        $stmtC->close();
+    }
+    // ========================================================================
+
     echo json_encode(['success' => true, 'message' => 'Cash payment logged successfully.']);
 
 } catch (Exception $e) {
     $conn->rollback();
     echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
 }
+?>

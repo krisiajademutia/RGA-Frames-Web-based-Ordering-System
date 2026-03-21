@@ -4,19 +4,30 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
-// FIX 1: Initialize variables to prevent "Undefined variable" warnings
-$current_page = basename($_SERVER['PHP_SELF']); 
-$notif_count = $notif_count ?? 0; // Ensures the bell icon doesn't crash if count isn't set
-
+$current_page = basename($_SERVER['PHP_SELF']);
 include_once __DIR__ . '/../config/db_connect.php';
-
 $display_name = htmlspecialchars($_SESSION['first_name'] ?? 'Admin');
+$notif_count = 0;
+if (isset($_SESSION['user_id'])) {
+    $admin_id = (int)$_SESSION['user_id'];
+    $notifStmt = $conn->prepare("
+        SELECT COUNT(*) as unread_count 
+        FROM tbl_notifications 
+        WHERE customer_id IS NULL AND is_read = 0
+    ");
+    
+    if ($notifStmt) {
+        $notifStmt->execute();
+        $notif_count = $notifStmt->get_result()->fetch_assoc()['unread_count'] ?? 0;
+        $notifStmt->close();
+    }
+}
 ?>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="../assets/css/style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <header class="admn-hdr-container" id="mainHeader">
 
@@ -54,7 +65,7 @@ $display_name = htmlspecialchars($_SESSION['first_name'] ?? 'Admin');
     </nav>
 
     <div class="admn-hdr-right-actions">
-        <a href="admin_notification_list.php" class="admn-hdr-icon-btn">
+        <a href="admin_notification.php" class="admn-hdr-icon-btn">
             <i class="fas fa-bell"></i>
             <?php if ($notif_count > 0): ?>
                 <span class="cust-hdr-badge"><?php echo $notif_count; ?></span>
@@ -102,7 +113,7 @@ $display_name = htmlspecialchars($_SESSION['first_name'] ?? 'Admin');
             <i class="fas fa-toolbox"></i> Frame Options
         </a>
         
-        <a href="admin_notification_list.php" class="admn-hdr-nav-link">
+        <a href="admin_notification.php" class="admn-hdr-nav-link">
             <i class="fas fa-bell"></i> Notifications
         </a>
 
