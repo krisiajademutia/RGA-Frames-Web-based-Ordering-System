@@ -48,6 +48,7 @@ class CustomerOrderRepository {
             LEFT JOIN (
                 SELECT payment_id, SUM(uploaded_amount) AS amount_paid
                 FROM tbl_payment_proof_uploads
+                WHERE verification_status = 'Verified' 
                 GROUP BY payment_id
             ) pu_agg ON p.payment_id = pu_agg.payment_id
             LEFT JOIN tbl_frame_order_items i        ON o.order_id    = i.order_id
