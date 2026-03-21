@@ -90,21 +90,26 @@ function toggleSelectAll(checkbox) {
 }
 
 /* ─── Quantity update ─── */
-function updateQty(itemId, delta) {
+function updateQty(type, itemId, delta) {
     const qtyInput = event.target.parentElement.querySelector('.cart-qty-input');
     if (delta === -1 && parseInt(qtyInput.value) <= 1) return;
-    window.location.href = `../process/shopping_cart_process.php?action=update_qty&id=${itemId}&delta=${delta}`;
+    window.location.href = `../process/shopping_cart_process.php?action=update_qty&type=${type}&id=${itemId}&delta=${delta}`;
 }
 
 /* ─── Single item removal modal ─── */
-function removeItem(itemId) {
+function removeItem(type, itemId) {
     const modal      = document.getElementById('deleteModal');
     const confirmBtn = document.getElementById('confirmDeleteBtn');
 
     document.getElementById('modalTitle').innerText = "Remove Item";
     document.getElementById('modalText').innerText  = "Are you sure you want to remove this item? It cannot be recovered.";
     confirmBtn.innerText = "Remove";
-    confirmBtn.href      = `../process/shopping_cart_process.php?action=delete&id=${itemId}`;
+
+    if (type === 'print') {
+        confirmBtn.href = `../process/shopping_cart_process.php?action=delete_print&id=${itemId}`;
+    } else {
+        confirmBtn.href = `../process/shopping_cart_process.php?action=delete&id=${itemId}`;
+    }
 
     modal.style.display = 'flex';
 }
@@ -178,10 +183,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 e.preventDefault();
                 return;
             }
-            // Disable button immediately to prevent double-click double-submit
+            // Write latest selectedIds into hidden input before form data is collected
+            const hiddenInput = document.getElementById('selected-items-input');
+            if (hiddenInput) {
+                hiddenInput.value = JSON.stringify(selectedIds);
+            }
+            // Disable button after a tick to prevent double-submit without blocking submission
             if (btn) {
-                btn.disabled = true;
-              
+                setTimeout(() => { btn.disabled = true; }, 100);
             }
         });
     }

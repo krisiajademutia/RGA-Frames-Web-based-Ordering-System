@@ -46,7 +46,10 @@ class CartRepository implements CartRepositoryInterface
         $stmt->execute();
         $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        return array_map([$this, 'buildDisplayFields'], $rows);
+        return array_merge(
+            array_map([$this, 'buildDisplayFields'], $rows),
+            $this->fetchPrintItems($customerId)
+        );
     }
 
     // ── Build display-ready fields from a raw DB row ────────────────────────
@@ -87,6 +90,102 @@ class CartRepository implements CartRepositoryInterface
         $row['detail_mount']    = $row['mount_name']          ?? null;
 
         return $row;
+    }
+
+    // ── Fetch standalone print-only items in cart ───────────────────────────
+    public function fetchPrintItems(int $customerId): array
+    {
+        $sql = "
+            SELECT p.*,
+                   pt.paper_name,
+                   'PRINT_ONLY' AS item_type
+            FROM tbl_printing_order_items p
+            JOIN tbl_cart cart ON p.cart_id = cart.cart_id
+            LEFT JOIN tbl_paper_type pt ON p.paper_type_id = pt.paper_type_id
+            WHERE cart.customer_id = ?
+              AND p.order_id IS NULL
+              AND NOT EXISTS (
+                  SELECT 1 FROM tbl_frame_order_items f
+                  WHERE f.printing_order_item_id = p.printing_order_item_id
+                    AND f.source_type = 'CART'
+              )
+        ";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("i", $customerId);
+        $stmt->execute();
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        return array_map([$this, 'buildPrintDisplayFields'], $rows);
+    }
+
+    // ── Build display fields for a standalone print item ────────────────────
+    private function buildPrintDisplayFields(array $row): array
+    {
+                if (!empty($row['image_path'])) {
+            $path = $row['image_path'];
+            $row['display_image'] = str_starts_with($path, 'uploads/')
+                ? "../" . $path
+                : "../uploads/customer_images/" . $path;
+        } else {
+            $row['display_image'] = null;
+        }
+        $row['display_name']    = 'Photo Print ' . (float)$row['width_inch'] . '"×' . (float)$row['height_inch'] . '"';
+        $row['id']              = 'p_' . $row['printing_order_item_id']; // prefix to distinguish from frame item_id
+        $row['service_type']    = 'PRINT_ONLY';
+        $row['detail_service']  = 'Print Only';
+        $row['detail_type']     = '—';
+        $row['detail_design']   = '—';
+        $row['detail_color']    = '—';
+        $row['detail_size']     = (float)$row['width_inch'] . '" × ' . (float)$row['height_inch'] . '"';
+        $row['detail_paper']    = $row['paper_name'] ?? null;
+        $row['detail_matboard'] = null;
+        $row['detail_mount']    = null;
+        $row['width_inch']      = $row['width_inch'];
+        $row['height_inch']     = $row['height_inch'];
+        return $row;
+    }
+
+    // ── Delete single standalone print item ─────────────────────────────────
+    public function deletePrintItem(int $printingOrderItemId): void
+    {
+        $stmt = $this->conn->prepare(
+            "DELETE FROM tbl_printing_order_items WHERE printing_order_item_id = ? AND order_id IS NULL"
+        );
+        $stmt->bind_param("i", $printingOrderItemId);
+        $stmt->execute();
+    }
+
+    // ── Delete selected standalone print items ───────────────────────────────
+    public function deleteSelectedPrintItems(array $printIds, int $customerId): void
+    {
+        if (empty($printIds)) return;
+        $ph    = implode(',', array_fill(0, count($printIds), '?'));
+        $types = str_repeat('i', count($printIds));
+        $stmt  = $this->conn->prepare("
+            DELETE p FROM tbl_printing_order_items p
+            JOIN tbl_cart c ON p.cart_id = c.cart_id
+            WHERE p.printing_order_item_id IN ($ph)
+              AND c.customer_id = ?
+              AND p.order_id IS NULL
+        ");
+        $stmt->bind_param($types . 'i', ...[...$printIds, $customerId]);
+        $stmt->execute();
+    }
+
+    // ── Delete all standalone print items for this customer ──────────────────
+    public function deleteAllPrintItems(int $customerId): void
+    {
+        $stmt = $this->conn->prepare("
+            DELETE p FROM tbl_printing_order_items p
+            JOIN tbl_cart c ON p.cart_id = c.cart_id
+            WHERE c.customer_id = ? AND p.order_id IS NULL
+              AND NOT EXISTS (
+                  SELECT 1 FROM tbl_frame_order_items f
+                  WHERE f.printing_order_item_id = p.printing_order_item_id
+                    AND f.source_type = 'CART'
+              )
+        ");
+        $stmt->bind_param("i", $customerId);
+        $stmt->execute();
     }
 
     // ── Delete single item ───────────────────────────────────────────────────

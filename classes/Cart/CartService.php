@@ -30,5 +30,20 @@ class CartService
     public function removeAllItems(int $customerId): void
     {
         $this->repository->deleteAllItems($customerId);
+        $this->repository->deleteAllPrintItems($customerId);
+    }
+
+    public function removePrintItem(int $printingOrderItemId): void
+    {
+        $this->repository->deletePrintItem($printingOrderItemId);
+    }
+
+    public function removeSelectedPrintItems(array $rawIds, int $customerId): void
+    {
+        $sanitized = array_values(
+            array_filter(array_map('intval', $rawIds), fn($id) => $id > 0)
+        );
+        if (empty($sanitized)) return;
+        $this->repository->deleteSelectedPrintItems($sanitized, $customerId);
     }
 }
