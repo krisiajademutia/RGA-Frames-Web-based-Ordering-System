@@ -255,11 +255,18 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
                     </div>
                     <hr class="admn-ordr-dtls-divider-line">
                     <?php endif; ?>
-                    <div class="admn-ordr-dtls-row admn-ordr-dtls-balance-row">
+                    <div class="admn-ordr-dtls-row admn-ordr-dtls-balance-row" style="align-items: center;">
                         <span class="admn-ordr-dtls-balance-label">Balance Due</span>
-                        <span class="admn-ordr-dtls-balance-amount">
-                            <?= $isRejected ? '—' : '₱' . number_format($balance_due, 2) ?>
-                        </span>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span class="admn-ordr-dtls-balance-amount">
+                                <?= $isRejected ? '—' : '₱' . number_format($balance_due, 2) ?>
+                            </span>
+                            <?php if ($balance_due > 0 && !$isRejected && $payment_id > 0): ?>
+                            <button type="button" onclick="logCashPayment(<?= $payment_id ?>, <?= $balance_due ?>)" style="background: #0f3d33; color: white; border: none; padding: 5px 12px; border-radius: 5px; font-size: 13px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <i class="fas fa-coins"></i> Add Cash
+                            </button>
+                            <?php endif; ?>
+                        </div>
                     </div>
 
                     <!-- Payment Proof Uploads -->
@@ -278,12 +285,19 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
                         ?>
                         <div class="admn-ordr-dtls-proof-item" id="proof-item-<?= $proof['upload_id'] ?>">
                             <div class="admn-ordr-dtls-proof-item-left">
-                                <img src="../<?= htmlspecialchars($proof['payment_proof']) ?>"
-                                     alt="Receipt <?= $i+1 ?>"
-                                     class="admn-ordr-dtls-proof-thumb"
-                                     data-fullsrc="../<?= htmlspecialchars($proof['payment_proof']) ?>"
-                                     data-label="Receipt #<?= $i+1 ?> — ₱<?= number_format($proof['uploaded_amount'], 2) ?>"
-                                     onclick="openImageViewer(this)">
+                                <?php if ($proof['payment_proof'] === 'Admin: Walk-in Cash Payment'): ?>
+                                    <div class="admn-ordr-dtls-proof-thumb" style="display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #e2eaec; border: 2px dashed #0f3d33; color: #0f3d33; padding: 10px; cursor: default;">
+                                        <i class="fas fa-money-bill-wave" style="font-size: 24px; margin-bottom: 5px;"></i>
+                                        <span style="font-size: 11px; font-weight: bold; text-align: center;">CASH<br>RECEIVED</span>
+                                    </div>
+                                <?php else: ?>
+                                    <img src="../<?= htmlspecialchars($proof['payment_proof']) ?>"
+                                         alt="Receipt <?= $i+1 ?>"
+                                         class="admn-ordr-dtls-proof-thumb"
+                                         data-fullsrc="../<?= htmlspecialchars($proof['payment_proof']) ?>"
+                                         data-label="Receipt #<?= $i+1 ?> — ₱<?= number_format($proof['uploaded_amount'], 2) ?>"
+                                         onclick="openImageViewer(this)">
+                                <?php endif; ?>
                             </div>
                             <div class="admn-ordr-dtls-proof-item-right">
                                 <div class="admn-ordr-dtls-proof-amount">
@@ -308,12 +322,14 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
                                     </button>
                                 </div>
                                 <?php endif; ?>
+                                <?php if ($proof['payment_proof'] !== 'Admin: Walk-in Cash Payment'): ?>
                                 <div class="admn-ordr-dtls-proof-dl mt-1">
                                     <a href="download_image.php?path=<?= urlencode($proof['payment_proof']) ?>&name=receipt_<?= $order_id ?>_<?= $i+1 ?>"
                                        class="admn-ordr-dtls-download-link">
                                         <i class="fas fa-download"></i> Download
                                     </a>
                                 </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                         <?php endforeach; ?>
@@ -703,31 +719,8 @@ function updateOrderStatus(orderId, newStatus) {
     })
     .catch(() => Swal.fire('Error', 'Request failed.', 'error'));
 }
-</script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Image Viewer Lightbox -->
-<div id="admn-img-viewer" style="display:none;">
-    <div id="admn-img-viewer-backdrop" onclick="closeImageViewer()"></div>
-    <div id="admn-img-viewer-content">
-        <button id="admn-img-viewer-close" onclick="closeImageViewer()">
-            <i class="fas fa-times"></i>
-        </button>
-        <div id="admn-img-viewer-label"></div>
-        <div id="admn-img-viewer-imgwrap">
-            <img id="admn-img-viewer-img" src="" alt="">
-        </div>
-        <div id="admn-img-viewer-footer">
-            <a id="admn-img-viewer-download" href="#" class="admn-img-viewer-dl-btn">
-                <i class="fas fa-download"></i> Download Original
-            </a>
-            <span id="admn-img-viewer-size" class="admn-img-viewer-size-info"></span>
-        </div>
-    </div>
-</div>
-
-<script>
 function openImageViewer(imgEl) {
     const src   = imgEl.dataset.fullsrc || imgEl.src;
     const label = imgEl.dataset.label   || 'Image';
@@ -762,6 +755,80 @@ function closeImageViewer() {
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeImageViewer();
 });
+
+function logCashPayment(paymentId, maxAmount) {
+    Swal.fire({
+        title: '<span style="font-size: 22px;">Log Cash Payment 💵</span>',
+        html: `
+            <p style="font-size: 14px; color: #555; margin-bottom: 15px;">Enter the exact cash amount received from the customer.</p>
+            <div style="text-align: left; margin-bottom: 5px; font-size: 14px; font-weight: bold; color: #0f3d33;">Amount Received (₱):</div>
+            <input type="number" id="cash-amount" class="swal2-input" style="margin: 0; width: 100%; box-sizing: border-box;" min="1" max="${maxAmount}" step="0.01" placeholder="e.g. 500">
+        `,
+        iconColor: '#0f3d33',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-save"></i> Save Payment',
+        confirmButtonColor: '#0f3d33',
+        cancelButtonColor: '#9ca3af',
+        preConfirm: () => {
+            const amount = document.getElementById('cash-amount').value;
+            if (!amount || amount <= 0 || isNaN(amount)) {
+                Swal.showValidationMessage('Please enter a valid amount');
+                return false;
+            }
+            if (amount > maxAmount) {
+                Swal.showValidationMessage('Amount cannot exceed the balance due (₱' + maxAmount.toFixed(2) + ')');
+                return false;
+            }
+            return amount;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const amount = result.value;
+            fetch('../process/admin_log_cash_payment.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `payment_id=${paymentId}&amount=${amount}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Payment Saved! 🎉',
+                        text: 'The cash payment was successfully recorded.',
+                        icon: 'success',
+                        confirmButtonColor: '#0f3d33'
+                    }).then(() => location.reload());
+                } else {
+                    Swal.fire('Error', data.message || 'Something went wrong.', 'error');
+                }
+            })
+            .catch(() => Swal.fire('Error', 'Request failed.', 'error'));
+        }
+    });
+}
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Image Viewer Lightbox -->
+<div id="admn-img-viewer" style="display:none;">
+    <div id="admn-img-viewer-backdrop" onclick="closeImageViewer()"></div>
+    <div id="admn-img-viewer-content">
+        <button id="admn-img-viewer-close" onclick="closeImageViewer()">
+            <i class="fas fa-times"></i>
+        </button>
+        <div id="admn-img-viewer-label"></div>
+        <div id="admn-img-viewer-imgwrap">
+            <img id="admn-img-viewer-img" src="" alt="">
+        </div>
+        <div id="admn-img-viewer-footer">
+            <a id="admn-img-viewer-download" href="#" class="admn-img-viewer-dl-btn">
+                <i class="fas fa-download"></i> Download Original
+            </a>
+            <span id="admn-img-viewer-size" class="admn-img-viewer-size-info"></span>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

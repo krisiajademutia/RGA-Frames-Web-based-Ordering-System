@@ -94,12 +94,43 @@ document.getElementById('checkout-form').addEventListener('submit', async e => {
         const data = await res.json();
 
         if (data.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Order Placed!',
-                text: data.message,
-                confirmButtonColor: '#0f3d33'
-            }).then(() => { window.location.href = 'customer_orders.php'; });
+          // Check which payment method they actually used
+            const selectedPayment = document.querySelector('input[name="payment_method"]:checked').value;
+
+            if (selectedPayment === 'GCASH') {
+                // ─── GCASH SUCCESS MESSAGE ───
+                Swal.fire({
+                    title: '<span style="font-size: 24px;">Order Placed! 🎉</span>',
+                    html: '<style>.swal2-icon { transform: scale(0.7); margin: 0 auto 5px auto !important; }</style>' + 
+                          '<p style="font-size: 15px; color: #555; margin-bottom: 15px;">Your order and payment receipt have been received.</p>' +
+                          '<div style="font-size: 13.5px; background: #fff3cd; padding: 10px 15px; border-radius: 5px; border-left: 4px solid #d9534f; text-align: left; line-height: 1.4;">' +
+                          '<span style="color: #d9534f; font-weight: bold;">Note:</span> Your balance updates automatically once our staff verifies the payment.</div>',
+                    icon: 'success',
+                    iconColor: '#0f3d33',
+                    confirmButtonText: 'Got it',
+                    confirmButtonColor: '#0f3d33',
+                    allowOutsideClick: false,
+                    width: '450px',
+                    padding: '1.25em 1.5em 1.5em 1.5em'
+                }).then(() => { window.location.href = 'customer_orders.php'; });
+                
+            } else {
+                // ─── CASH SUCCESS MESSAGE ───
+                Swal.fire({
+                    title: '<span style="font-size: 24px;">Order Placed! 🎉</span>',
+                    html: '<style>.swal2-icon { transform: scale(0.7); margin: 0 auto 5px auto !important; }</style>' + 
+                          '<p style="font-size: 15px; color: #555; margin-bottom: 15px;">Your order has been successfully submitted.</p>' +
+                          '<div style="font-size: 13.5px; background: #e2eaec; padding: 10px 15px; border-radius: 5px; border-left: 4px solid #0f3d33; text-align: left; line-height: 1.4;">' +
+                          '<span style="color: #0f3d33; font-weight: bold;">Note:</span> Please prepare the exact cash amount for your payment upon claiming or delivery.</div>',
+                    icon: 'success',
+                    iconColor: '#0f3d33',
+                    confirmButtonText: 'Got it',
+                    confirmButtonColor: '#0f3d33',
+                    allowOutsideClick: false,
+                    width: '450px',
+                    padding: '1.25em 1.5em 1.5em 1.5em'
+                }).then(() => { window.location.href = 'customer_orders.php'; });
+            }
         } else {
             Swal.fire('Error', data.message, 'error');
             btn.disabled  = false;

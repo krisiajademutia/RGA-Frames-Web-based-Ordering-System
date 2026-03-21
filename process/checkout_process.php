@@ -46,6 +46,7 @@ try {
         
         if ($response['success']) {
             unset($_SESSION['buy_now_item']);
+            $_SESSION['order_success_pending'] = true; // <-- ADDED THIS
         }
         echo json_encode($response);
         exit();
@@ -67,6 +68,10 @@ try {
 
         // Pass to the CheckoutService
         $response = $checkoutService->processCheckout($customer_id, $_POST, $_FILES, $cartItems, $cartTotal, false, null);
+        
+        if ($response['success']) {
+            $_SESSION['order_success_pending'] = true; // <-- ADDED THIS
+        }
         echo json_encode($response);
         exit();
     }

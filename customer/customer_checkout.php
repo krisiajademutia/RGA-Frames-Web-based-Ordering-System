@@ -338,6 +338,6 @@ $discountedTotal  = round($cartTotal - $discount['discount_amount'], 2);
     const discountedSubtotal = <?= $discountedTotal ?>;
     const deliveryUnlocked   = <?= $deliveryUnlocked ? 'true' : 'false' ?>;
 </script>
-<script src="../assets/js/customer_checkout.js"></script>
+<script src="../assets/js/customer_checkout.js? v=3"></script>
 </body>
 </html>

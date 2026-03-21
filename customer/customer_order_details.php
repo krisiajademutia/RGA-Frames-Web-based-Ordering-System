@@ -297,10 +297,17 @@ $canUpload = !$isErr && $isGcash && $payment_status !== 'FULL';
     ?>
     <div class="cst-ord-dtls-proof-row">
         <div class="cst-ord-dtls-proof-row-left">
-            <img src="../<?= htmlspecialchars($proof['payment_proof']) ?>"
-                 alt="Receipt <?= $idx + 1 ?>"
-                 class="cst-ord-dtls-proof-row-thumb"
-                 onclick="openDocViewer('../<?= htmlspecialchars($proof['payment_proof']) ?>', 'Receipt #<?= $idx + 1 ?>')">
+            <?php if ($proof['payment_proof'] === 'Admin: Walk-in Cash Payment'): ?>
+                <div class="cst-ord-dtls-proof-row-thumb" style="display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #e2eaec; border: 2px dashed #0f3d33; color: #0f3d33; cursor: default; height: 100%; box-sizing: border-box; padding: 5px;">
+                    <i class="fas fa-money-bill-wave" style="font-size: 1.5rem; margin-bottom: 2px;"></i>
+                    <span style="font-size: 0.6rem; font-weight: bold; text-align: center; line-height: 1.1;">CASH<br>RECEIVED</span>
+                </div>
+            <?php else: ?>
+                <img src="../<?= htmlspecialchars($proof['payment_proof']) ?>"
+                     alt="Receipt <?= $idx + 1 ?>"
+                     class="cst-ord-dtls-proof-row-thumb"
+                     onclick="openDocViewer('../<?= htmlspecialchars($proof['payment_proof']) ?>', 'Receipt #<?= $idx + 1 ?>')">
+            <?php endif; ?>
         </div>
         <div class="cst-ord-dtls-proof-row-right">
             <span class="cst-ord-dtls-proof-row-label">Receipt #<?= $idx + 1 ?></span>
@@ -479,7 +486,10 @@ $canUpload = !$isErr && $isGcash && $payment_status !== 'FULL';
         <?php
         $docs = [];
         foreach ($proofs as $proof) {
-            $docs[] = ['src' => '../'.$proof['payment_proof'], 'label' => 'Payment Proof'];
+            // Only add actual images to the document gallery, hide Cash text
+            if ($proof['payment_proof'] !== 'Admin: Walk-in Cash Payment') {
+                $docs[] = ['src' => '../'.$proof['payment_proof'], 'label' => 'Payment Proof'];
+            }
         }
         foreach ($items as $idx => $item) {
             if (!empty($item['image_path'])) {
@@ -530,9 +540,17 @@ $canUpload = !$isErr && $isGcash && $payment_status !== 'FULL';
                     <span class="cst-ord-dtls-vs-badge <?= $vsClass ?>"><?= $proof['verification_status'] ?></span>
                     <span class="cst-ord-dtls-proof-date"><?= date('M d, Y g:i A', strtotime($proof['upload_date'])) ?></span>
                 </div>
-                <img src="../<?= htmlspecialchars($proof['payment_proof']) ?>"
-                     alt="Receipt #<?= $idx + 1 ?>"
-                     style="width:100%;border-radius:10px;margin-top:0.5rem;">
+                <?php if ($proof['payment_proof'] === 'Admin: Walk-in Cash Payment'): ?>
+                    <div style="width:100%; border-radius:10px; margin-top:0.5rem; background-color: #e2eaec; border: 2px dashed #0f3d33; color: #0f3d33; padding: 40px; text-align: center;">
+                        <i class="fas fa-money-bill-wave" style="font-size: 48px; margin-bottom: 10px;"></i>
+                        <h3 style="margin: 0; font-size: 1.2rem;">CASH RECEIVED</h3>
+                        <p style="margin: 0; color: #555; font-size: 0.9rem;">Walk-in payment processed by Admin</p>
+                    </div>
+                <?php else: ?>
+                    <img src="../<?= htmlspecialchars($proof['payment_proof']) ?>"
+                         alt="Receipt #<?= $idx + 1 ?>"
+                         style="width:100%;border-radius:10px;margin-top:0.5rem;">
+                <?php endif; ?>
             </div>
             <?php endforeach; ?>
         </div>

@@ -13,7 +13,6 @@ $customer_id = (int)$_SESSION['user_id'];
 $repo = new CustomerOrderRepository($conn);
 $itemRepo = new OrderItemRepository($conn);
 $service = new CustomerOrderService($repo, $itemRepo);
-//$service     = new CustomerOrderService($conn);
 
 $activeTab = $_GET['status'] ?? 'ALL';
 $search    = trim($_GET['search'] ?? '');
@@ -205,8 +204,7 @@ $statusBadge = [
         </div><!-- /.cst-ord-wrap -->
     </div><!-- /.cst-ord-page-inner -->
 </div><!-- /.cst-ord-page -->
-
-
 <?php include __DIR__ . '/../includes/idx_footer.php'; ?>
+
 </body>
 </html>
