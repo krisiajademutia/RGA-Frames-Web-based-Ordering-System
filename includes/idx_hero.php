@@ -7,7 +7,7 @@
                 Transform Your<br>Memories Into Art
             </h1>
             <p class="idx-hero-text animate-fade-in-up animation-delay-1">
-                Professional framing and large-format printing services with<br>custom designs tailored to your style.
+                Welcome to RGA Frames — where your photos find their perfect home. <br>Frame it right. Frame it yours.
             </p>
             <div class="idx-hero-buttons animate-fade-in-up animation-delay-2">
                 <a href="login.php" class="btn idx-btn-cta">
