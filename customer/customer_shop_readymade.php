@@ -12,7 +12,7 @@ $mountTypes    = $service->getMountTypes();
 
 $printRow = $conn->query(
     "SELECT fixed_price FROM tbl_fixed_print_prices
-    WHERE dimension = 'Print Service' LIMIT 1"
+     WHERE dimension = 'Print Service' LIMIT 1"
 );
 $printServicePrice = ($printRow && $printRow->num_rows > 0)
     ? (float)$printRow->fetch_assoc()['fixed_price']
@@ -20,7 +20,7 @@ $printServicePrice = ($printRow && $printRow->num_rows > 0)
 
 $matRow = $conn->query(
     "SELECT fixed_price FROM tbl_fixed_print_prices
-    WHERE dimension = 'Matboard Service' LIMIT 1"
+     WHERE dimension = 'Matboard Service' LIMIT 1"
 );
 $matboardServicePrice = ($matRow && $matRow->num_rows > 0)
     ? (float)$matRow->fetch_assoc()['fixed_price']
@@ -29,9 +29,9 @@ $matboardServicePrice = ($matRow && $matRow->num_rows > 0)
 $matOptions     = [];
 $matColorsQuery = $conn->query(
     "SELECT matboard_color_id, matboard_color_name, base_price, image_name
-    FROM tbl_matboard_colors
-    WHERE is_active = 1
-    ORDER BY matboard_color_name ASC"
+     FROM tbl_matboard_colors
+     WHERE is_active = 1
+     ORDER BY matboard_color_name ASC"
 );
 if ($matColorsQuery && $matColorsQuery->num_rows > 0) {
     while ($m = $matColorsQuery->fetch_assoc()) { $matOptions[] = $m; }
@@ -68,7 +68,7 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
     .btn-buy-now { background-color: #fff; color: var(--forest-dark); border: 2px solid var(--forest-dark); font-weight: 700; }
     .btn-buy-now:hover { background-color: var(--forest-dark); color: #fff; }
 
-    #rm-toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+\    #rm-toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
     .rm-toast { min-width: 260px; padding: 14px 18px; border-radius: 10px; font-size: 0.9rem; font-weight: 600;
                 color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,.18); opacity: 0; transform: translateY(12px);
                 transition: opacity .3s, transform .3s; pointer-events: none; }
@@ -190,6 +190,7 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
                                             style="background:#f3f4f6; font-size:9px; display:flex; align-items:center; justify-content:center;"
                                             onclick="selectMat(this, 0, 'None', true)">None</div>
                                         <?php foreach($matOptions as $mat):
+
                                             $matPrice = (float)$mat['base_price'] > 0
                                                 ? (float)$mat['base_price']
                                                 : $matboardServicePrice;
@@ -296,6 +297,28 @@ if ($paperQuery && $paperQuery->num_rows > 0) {
 
         document.getElementById('modalQtyInput').max   = product.stock;
         document.getElementById('modalQtyInput').value = 1;
+
+        const isOutOfStock = parseInt(product.stock) <= 0;
+        const cartBtn = document.querySelector('.btn-add-cart');
+        const buyBtn  = document.querySelector('.btn-buy-now');
+        cartBtn.disabled = isOutOfStock;
+        buyBtn.disabled  = isOutOfStock;
+        cartBtn.style.opacity = isOutOfStock ? '0.45' : '1';
+        buyBtn.style.opacity  = isOutOfStock ? '0.45' : '1';
+        cartBtn.style.cursor  = isOutOfStock ? 'not-allowed' : '';
+        buyBtn.style.cursor   = isOutOfStock ? 'not-allowed' : '';
+        cartBtn.title = isOutOfStock ? 'This item is out of stock' : '';
+        buyBtn.title  = isOutOfStock ? 'This item is out of stock' : '';
+
+        let oosBanner = document.getElementById('oos-banner');
+        if (!oosBanner) {
+            oosBanner = document.createElement('div');
+            oosBanner.id = 'oos-banner';
+            oosBanner.style.cssText = 'background:#fee2e2;color:#991b1b;border:1.5px solid #fca5a5;border-radius:10px;padding:0.6rem 1rem;font-size:0.875rem;font-weight:700;display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;';
+            oosBanner.innerHTML = '<i class="fas fa-ban"></i> This item is currently out of stock and cannot be ordered.';
+            document.querySelector('.d-flex.gap-2.mt-4').before(oosBanner);
+        }
+        oosBanner.style.display = isOutOfStock ? 'flex' : 'none';
 
         document.querySelectorAll('#addToCartForm .option-tile').forEach((t, i) => {
             t.classList.toggle('active', i === 0 || 
