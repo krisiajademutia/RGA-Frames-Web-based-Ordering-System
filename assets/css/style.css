@@ -11752,3 +11752,144 @@ body {
     font-weight: 700;
     color: #0F473A;
 }
+
+/*notification styles*/
+
+ .notif-main-wrapper {
+            background: #ffffff;
+            padding-top: 110px;
+            min-height: 100vh;
+        }
+
+        .notif-page-header {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .notif-page-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #0F473A;
+            margin-bottom: 0.25rem;
+        }
+
+        .notif-page-header p {
+            font-size: 0.95rem;
+            color: #6b7280;
+            margin-bottom: 0;
+        }
+
+        .btn-mark-read {
+            padding: 0.45rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #0F473A;
+            background: #ffffff;
+            border: 1.5px solid #0F473A;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.15s ease, color 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .btn-mark-read:hover {
+            background: #0F473A;
+            color: #ffffff;
+        }
+
+        .notif-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0.5rem 1.5rem 2rem 1.5rem;
+        }
+
+        .notif-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        .notif-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 18px 22px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            cursor: pointer;
+            transition: background 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07), 0 0 1px rgba(0,0,0,0.04);
+        }
+
+        .notif-card.unread {
+            background: #fdf6e3;
+            border: 1px solid #e8ddb8;
+            border-left: 4px solid #0F473A;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.09), 0 0 1px rgba(0,0,0,0.04);
+        }
+
+        .notif-card.read {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-left: 4px solid transparent;
+        }
+
+        .notif-card.unread:hover { background: #f9edcc; box-shadow: 0 4px 14px rgba(0,0,0,0.11); }
+        .notif-card.read:hover   { background: #f9fafb; box-shadow: 0 4px 14px rgba(0,0,0,0.09); }
+
+        .notif-icon-wrap {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .notif-icon-wrap svg      { width: 18px; height: 18px; }
+        .notif-icon-pickup        { background: #ede9f8; }
+        .notif-icon-completed     { background: #dcf5e7; }
+        .notif-icon-delivery      { background: #dbeafe; }
+        .notif-icon-payment       { background: #fee2e2; }
+        .notif-icon-promo         { background: #fef9c3; }
+        .notif-icon-order         { background: #dcf5e7; }
+        .notif-icon-default       { background: #f3f4f6; }
+
+        .notif-body        { flex: 1; min-width: 0; }
+
+        .notif-title {
+            font-size: 0.975rem;
+            font-weight: 700;
+            color: #0F473A;
+            margin: 0 0 4px 0;
+            line-height: 1.4;
+        }
+
+        .notif-card.read .notif-title {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .notif-message {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin: 0 0 6px 0;
+            line-height: 1.5;
+        }
+
+        .notif-time {
+            font-size: 0.78rem;
+            color: #9ca3af;
+        }
+
+        .notif-empty, .notif-loading { padding: 48px 0; font-size: 0.95rem; color: #9ca3af; }
+        .notif-error                 { padding: 48px 0; font-size: 0.95rem; color: #dc2626; }

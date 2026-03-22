@@ -14,17 +14,21 @@ class CartRepository implements CartRepositoryInterface
         $sql = "
             SELECT f.*,
                    fd.design_name,
-                   fdi.image_name       AS design_image,
+                   fd.price            AS design_base_price,
+                   fdi.image_name      AS design_image,
                    fc.color_name,
-                   fs.dimension         AS frame_size,
+                   fs.dimension        AS frame_size,
                    COALESCE(p.width_inch,  c.custom_width,  r.width)  AS width_inch,
                    COALESCE(p.height_inch, c.custom_height, r.height) AS height_inch,
-                   p.image_path         AS print_image,
+                   p.image_path        AS print_image,
                    r.product_name,
                    ft.type_name,
+                   ft.type_price       AS frame_type_price,
                    pt.paper_name,
+                   pt.multiplier       AS paper_multiplier,
                    mat.matboard_color_name,
-                   mt.mount_name
+                   mt.mount_name,
+                   IFNULL(mt.additional_fee, 0) AS mount_fee
             FROM tbl_frame_order_items f
             JOIN tbl_cart cart ON f.cart_id = cart.cart_id
             LEFT JOIN tbl_custom_frame_product c   ON f.c_product_id           = c.c_product_id
@@ -89,6 +93,25 @@ class CartRepository implements CartRepositoryInterface
         $row['detail_matboard'] = $row['matboard_color_name'] ?? null;
         $row['detail_mount']    = $row['mount_name']          ?? null;
 
+        // ── Price breakdown fields ───────────────────────────────────────────
+        $w = (float)($row['width_inch']  ?? 0);
+        $h = (float)($row['height_inch'] ?? 0);
+
+        $designBasePrice   = (float)($row['design_base_price']  ?? 0);
+        $frameTypePrice    = (float)($row['frame_type_price']   ?? 0);
+        $paperMultiplier   = (float)($row['paper_multiplier']   ?? 0);
+        $mountFee          = (float)($row['mount_fee']          ?? 0);
+
+        // Frame price = ((w + h) / 6) * design_price + type_price  (matches post_script.js formula)
+        $row['price_frame']  = $w > 0 ? round((($w + $h) / 6) * $designBasePrice + $frameTypePrice, 2) : null;
+        // Paper price = multiplier * w * h
+        $row['price_paper']  = ($paperMultiplier > 0 && $w > 0) ? round($paperMultiplier * $w * $h, 2) : null;
+        // Mount fee
+        $row['price_mount']  = $mountFee > 0 ? $mountFee : null;
+        // Design base price label (shown as sub-label like "D111 (Base: ₱200.00)")
+        $row['design_base_price_display'] = $designBasePrice > 0 ? $designBasePrice : null;
+        $row['frame_type_price_display']  = $frameTypePrice  > 0 ? $frameTypePrice  : null;
+
         return $row;
     }
 
@@ -139,8 +162,8 @@ class CartRepository implements CartRepositoryInterface
     $row['detail_paper']    = $row['paper_name'] ?? null;
     $row['detail_matboard'] = null;
     $row['detail_mount']    = null;
-    $row['width_inch']      = $row['width_inch'];
-    $row['height_inch']     = $row['height_inch'];
+    $row['width_inch']      = (float)$row['width_inch'];
+    $row['height_inch']     = (float)$row['height_inch'];
     return $row;
 }
     // ── Delete single standalone print item ─────────────────────────────────

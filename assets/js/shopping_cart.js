@@ -53,7 +53,7 @@ function toggleSelection(element) {
         selectedIds    = selectedIds.filter(item => item !== id);
     } else {
         card.classList.add('selected');
-        if (summaryLine) summaryLine.style.display = 'grid';
+        if (summaryLine) summaryLine.style.display = 'block';
         selectedTotal += price;
         selectedIds.push(id);
     }
@@ -76,7 +76,7 @@ function toggleSelectAll(checkbox) {
 
         if (checkbox.checked) {
             card.classList.add('selected');
-            if (summaryLine) summaryLine.style.display = 'grid';
+            if (summaryLine) summaryLine.style.display = 'block';
             selectedTotal += price;
             selectedIds.push(id);
         } else {

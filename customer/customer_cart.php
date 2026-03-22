@@ -9,6 +9,58 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        /* ── Cart sidebar: detailed per-item breakdown ── */
+        .cart-summary-detail-block {
+            padding: 14px 0 8px;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 2px;
+        }
+        .cart-summary-detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 8px;
+            padding: 3px 0;
+        }
+        .cart-summary-detail-label {
+            font-size: 0.82rem;
+            color: #6b7280;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .cart-summary-detail-value {
+            font-size: 0.82rem;
+            color: #111827;
+            font-weight: 500;
+            text-align: right;
+        }
+        .cart-summary-detail-divider {
+            border-top: 1px solid #e5e7eb;
+            margin: 8px 0 4px;
+        }
+        .cart-summary-subtotal-row .cart-summary-detail-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #111827;
+        }
+        .cart-summary-detail-price {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #0F473A;
+            text-align: right;
+        }
+        .cart-summary-price-sub {
+            font-size: 0.78rem;
+            color: #6b7280;
+            font-weight: 400;
+        }
+        .cart-summary-price-line {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #0F473A;
+        }
+    </style>
 </head>
 <body>
 
@@ -160,13 +212,95 @@
                         <div id="empty-summary-msg" class="text-center py-3 text-muted small">Select items to view summary</div>
 
                         <?php foreach ($cart_items as $item): ?>
-                            <div class="cart-summary-line" id="summary-item-<?= $item['id']; ?>" style="display: none;">
-                                <div>
-                                    <span class="cart-summary-item-name"><?= htmlspecialchars($item['display_name']); ?></span>
-                                    <span class="cart-summary-item-sub"><?= $item['service_type'] === 'FRAME&PRINT' ? 'Frame & Print' : ($item['service_type'] === 'PRINT_ONLY' ? 'Print Only' : 'Frame only'); ?></span>
+                            <div class="cart-summary-line cart-summary-detail-block" id="summary-item-<?= $item['id']; ?>" style="display: none;">
+
+                                <div class="cart-summary-detail-row">
+                                    <span class="cart-summary-detail-label">Service</span>
+                                    <span class="cart-summary-detail-value"><?= htmlspecialchars($item['detail_service'] ?? ($item['service_type'] === 'PRINT_ONLY' ? 'Print Only' : ($item['service_type'] === 'FRAME&PRINT' ? 'Frame & Print' : 'Frame Only'))); ?></span>
                                 </div>
-                                <div class="cart-summary-qty">×<?= $item['quantity']; ?></div>
-                                <div class="cart-summary-item-price">₱<?= number_format($item['sub_total'], 2); ?></div>
+
+                                <?php if ($item['service_type'] !== 'PRINT_ONLY'): ?>
+                                <div class="cart-summary-detail-row">
+                                    <span class="cart-summary-detail-label">Frame Type</span>
+                                    <span class="cart-summary-detail-value">
+                                        <?= htmlspecialchars($item['detail_type'] ?? '—'); ?>
+                                        <?php if (!empty($item['frame_type_price_display'])): ?>
+                                            <br><span class="cart-summary-price-line">₱<?= number_format($item['frame_type_price_display'], 2); ?></span>
+                                        <?php endif; ?>
+                                    </span>
+                                </div>
+                                <?php endif; ?>
+
+                                <div class="cart-summary-detail-row">
+                                    <span class="cart-summary-detail-label">Size</span>
+                                    <span class="cart-summary-detail-value"><?= htmlspecialchars($item['detail_size'] ?? '—'); ?></span>
+                                </div>
+
+                                <?php if ($item['service_type'] !== 'PRINT_ONLY'): ?>
+                                <div class="cart-summary-detail-row">
+                                    <span class="cart-summary-detail-label">Design</span>
+                                    <span class="cart-summary-detail-value">
+                                        <?= htmlspecialchars($item['detail_design'] ?? '—'); ?>
+                                        <?php if (!empty($item['design_base_price_display'])): ?>
+                                            <span class="cart-summary-price-sub">(Base: ₱<?= number_format($item['design_base_price_display'], 2); ?>)</span>
+                                        <?php endif; ?>
+                                        <?php if (!empty($item['price_frame'])): ?>
+                                            <br><span class="cart-summary-price-line">₱<?= number_format($item['price_frame'], 2); ?></span>
+                                        <?php endif; ?>
+                                    </span>
+                                </div>
+                                <div class="cart-summary-detail-row">
+                                    <span class="cart-summary-detail-label">Color</span>
+                                    <span class="cart-summary-detail-value"><?= htmlspecialchars($item['detail_color'] ?? '—'); ?></span>
+                                </div>
+                                <?php endif; ?>
+
+                                <?php if (!empty($item['detail_mount'])): ?>
+                                <div class="cart-summary-detail-row">
+                                    <span class="cart-summary-detail-label">Mount</span>
+                                    <span class="cart-summary-detail-value">
+                                        <?= htmlspecialchars($item['detail_mount']); ?>
+                                        <?php if (!empty($item['price_mount'])): ?>
+                                            <br><span class="cart-summary-price-line">₱<?= number_format($item['price_mount'], 2); ?></span>
+                                        <?php endif; ?>
+                                    </span>
+                                </div>
+                                <?php endif; ?>
+
+                                <?php if (!empty($item['detail_paper'])): ?>
+                                <div class="cart-summary-detail-row">
+                                    <span class="cart-summary-detail-label">Paper</span>
+                                    <span class="cart-summary-detail-value">
+                                        <?= htmlspecialchars($item['detail_paper']); ?>
+                                        <?php if (!empty($item['paper_multiplier'])): ?>
+                                            <span class="cart-summary-price-sub">(₱<?= number_format($item['paper_multiplier'], 2); ?>/sq.in)</span>
+                                        <?php endif; ?>
+                                        <?php if (!empty($item['price_paper'])): ?>
+                                            <br><span class="cart-summary-price-line">₱<?= number_format($item['price_paper'], 2); ?></span>
+                                        <?php endif; ?>
+                                    </span>
+                                </div>
+                                <?php endif; ?>
+
+                                <?php if (!empty($item['detail_matboard'])): ?>
+                                <div class="cart-summary-detail-row">
+                                    <span class="cart-summary-detail-label">Matboard</span>
+                                    <span class="cart-summary-detail-value"><?= htmlspecialchars($item['detail_matboard']); ?></span>
+                                </div>
+                                <?php endif; ?>
+
+                                <div class="cart-summary-detail-row">
+                                    <span class="cart-summary-detail-label">Qty</span>
+                                    <span class="cart-summary-detail-value">×<?= $item['quantity']; ?></span>
+                                </div>
+
+                                <div class="cart-summary-detail-divider"></div>
+
+                                <div class="cart-summary-detail-row cart-summary-subtotal-row">
+                                    <span class="cart-summary-detail-label">Subtotal</span>
+                                    <span class="cart-summary-detail-price">₱<?= number_format($item['sub_total'], 2); ?></span>
+                                </div>
+
                             </div>
                         <?php endforeach; ?>
 
