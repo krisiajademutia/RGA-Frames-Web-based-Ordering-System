@@ -15,6 +15,7 @@ include __DIR__ . '/../includes/customer_header.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Notifications - RGA Frames</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
 
