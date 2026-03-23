@@ -60,8 +60,6 @@
             padding: 6rem 1.5rem 3rem;
         }
         .rv-inner { max-width: 900px; margin: 0 auto; }
-
-        /* ── Header ── */
         .rv-page-header {
             display: flex;
             align-items: center;
@@ -84,8 +82,6 @@
         }
         .rv-back-btn:hover { background: #f3f4f6; color: #111827; border-color: #d1d5db; }
         .rv-page-title { font-size: 1.5rem; font-weight: 800; color: #111827; margin: 0; }
-
-        /* ── Summary card ── */
         .rv-summary {
             display: flex;
             align-items: center;
@@ -107,8 +103,6 @@
         .rv-dist-num  { font-size: 0.78rem; font-weight: 700; color: #374151; width: 10px; text-align: right; flex-shrink: 0; }
         .rv-dist-track { flex: 1; height: 8px; background: #f3f4f6; border-radius: 999px; overflow: hidden; }
         .rv-dist-fill  { height: 100%; background: #f59e0b; border-radius: 999px; min-width: 4px; }
-
-        /* ── Write review card ── */
         .rv-write-card {
             background: #fff;
             border: 1.5px solid #e5e7eb;
@@ -156,8 +150,6 @@
             border-radius: 10px; padding: 0.75rem 1rem;
             font-size: 0.82rem; color: #854d0e; line-height: 1.5;
         }
-
-        /* ── My review display ── */
         .rv-my-review {
             background: #f0fdf4;
             border: 1.5px solid #a7f3d0;
@@ -170,16 +162,6 @@
         }
         .rv-my-review-body { flex: 1; }
         .rv-my-review-meta { font-size: 0.75rem; color: #6b7280; margin-top: 0.35rem; }
-        .rv-delete-btn {
-            background: #fee2e2; color: #991b1b;
-            border: none; border-radius: 8px;
-            padding: 0.4rem 0.75rem; font-size: 0.78rem; font-weight: 700;
-            cursor: pointer; display: flex; align-items: center; gap: 0.3rem;
-            flex-shrink: 0; transition: background 0.15s;
-        }
-        .rv-delete-btn:hover { background: #fecaca; }
-
-        /* ── All reviews list ── */
         .rv-list-header {
             font-size: 0.82rem; font-weight: 800; letter-spacing: 0.07em;
             text-transform: uppercase; color: #374151; margin-bottom: 0.85rem;
@@ -224,14 +206,11 @@
 
     <div class="rv-page">
         <div class="rv-inner">
-
-        <!-- ── Page header ── -->
             <div class="rv-page-header">
                 <a href="customer_dashboard.php" class="rv-back-btn"><i class="fas fa-arrow-left"></i></a>
                 <h1 class="rv-page-title">Customer Reviews</h1>
             </div>
 
-        <!-- ── Rating summary ── -->
             <div class="rv-summary">
                 <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:100px;">
                     <div class="rv-big-score"><?= number_format($avgRating, 1) ?></div>
@@ -254,12 +233,10 @@
                 </div>
             </div>
 
-        <!-- ── Write / manage review ── -->
             <div class="rv-write-card">
                 <div class="rv-write-title"><i class="fas fa-pen-to-square" style="color:#0f3d33;"></i> Your Review</div>
 
                 <?php if ($myReview): ?>
-                <!-- Already has a review — show it with a delete button -->
                     <div class="rv-my-review">
                         <div class="rv-my-review-body">
                             <div class="rv-stars-row mb-1">
@@ -270,18 +247,13 @@
                             <p style="margin:0;font-size:0.9rem;color:#374151;line-height:1.6;"><?= htmlspecialchars($myReview['review_text']) ?></p>
                             <div class="rv-my-review-meta"><i class="fas fa-clock"></i> <?= $myReview['review_date'] ?></div>
                         </div>
-                        <button class="rv-delete-btn" onclick="deleteReview(<?= $myReview['review_id'] ?>)">
-                            <i class="fas fa-trash-can"></i> Delete
-                        </button>
                     </div>
                 <?php elseif (!$canReview): ?>
-                <!-- No completed order yet -->
                     <div class="rv-locked-note">
                         <i class="fas fa-lock" style="margin-top:2px;flex-shrink:0;"></i>
                         <span>You can leave a review after completing your first order. Place an order and we'll unlock this for you!</span>
                     </div>
                 <?php else: ?>
-                <!-- Eligible — show the form -->
                     <p style="font-size:0.82rem;color:#6b7280;margin-bottom:0.75rem;">How was your experience with RGA Frames?</p>
                     <div class="rv-star-picker" id="starPicker">
                         <?php for ($i = 1; $i <= 5; $i++): ?>
@@ -298,7 +270,6 @@
                 <?php endif; ?>
             </div>
 
-        <!-- ── All reviews ── -->
             <div class="rv-list-header"><i class="fas fa-comments" style="color:#f59e0b;"></i> All Reviews</div>
 
             <?php if (empty($allReviews)): ?>
@@ -340,7 +311,6 @@
 <?php include __DIR__ . '/../includes/idx_footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// ── Star picker 
     document.querySelectorAll('.rv-star-pick').forEach(star => {
         star.addEventListener('mouseenter', () => highlightStars(+star.dataset.value));
         star.addEventListener('mouseleave', () => highlightStars(+document.getElementById('selectedRating').value));
@@ -356,15 +326,13 @@
         });
     }
 
-// ── Char counter 
-const reviewText = document.getElementById('reviewText');
+    const reviewText = document.getElementById('reviewText');
     if (reviewText) {
         reviewText.addEventListener('input', () => {
             document.getElementById('charCount').textContent = reviewText.value.length;
         });
     }
 
-// ── Submit
     async function submitReview() {
         const rating = +document.getElementById('selectedRating').value;
         const text   = reviewText?.value.trim() ?? '';
@@ -395,37 +363,6 @@ const reviewText = document.getElementById('reviewText');
             Swal.fire('Error', 'Network error. Please try again.', 'error');
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Review';
-        }
-    }
-
-// ── Delete
-    async function deleteReview(reviewId) {
-        const { isConfirmed } = await Swal.fire({
-            title: 'Delete your review?',
-            text: 'This cannot be undone.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#dc2626',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Yes, delete',
-        });
-        if (!isConfirmed) return;
-
-        try {
-            const res  = await fetch('../process/review_process.php', {
-                method: 'POST',
-                body: new URLSearchParams({ action: 'delete', review_id: reviewId })
-            });
-            const data = await res.json();
-            if (data.success) {
-                Swal.fire({ icon: 'success', title: 'Deleted', text: data.message,
-                    confirmButtonColor: '#0f3d33', timer: 1500, showConfirmButton: false })
-                .then(() => location.reload());
-            } else {
-                Swal.fire('Error', data.message, 'error');
-            }
-        } catch {
-            Swal.fire('Error', 'Network error. Please try again.', 'error');
         }
     }
 </script>
