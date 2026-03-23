@@ -55,59 +55,52 @@ if (!empty($errors)) {
     exit();
 }
 
-// Handle image upload
-$imagePath = '';
-if ($serviceType === 'FRAME&PRINT' && !empty($_FILES['customer_image']['name'])) {
-    $uploadDir = __DIR__ . '/../uploads/customer_print/';
-    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-    $ext = strtolower(pathinfo($_FILES['customer_image']['name'], PATHINFO_EXTENSION));
-    if (!in_array($ext, ['jpg','jpeg','png','webp'])) {
-        echo json_encode(['success' => false, 'message' => 'Invalid image format.']);
-        exit();
-    }
-    if ($_FILES['customer_image']['size'] > 10 * 1024 * 1024) {
-        echo json_encode(['success' => false, 'message' => 'Image too large. Max 10MB.']);
-        exit();
-    }
-    $fileName = 'CUSTOM_PRINT_' . $customerId . '_' . time() . '.' . $ext;
-    if (!move_uploaded_file($_FILES['customer_image']['tmp_name'], $uploadDir . $fileName)) {
-        echo json_encode(['success' => false, 'message' => 'Failed to upload image.']);
-        exit();
-    }
-    $imagePath = 'uploads/customer_print/' . $fileName;
-}
-
-$data = [
-    'service_type'          => $serviceType,
-    'frame_type_id'         => $frameTypeId,
-    'frame_design_id'       => $frameDesignId,
-    'frame_color_id'        => $frameColorId,
-    'frame_size_id'         => $frameSizeId,
-    'width'                 => $customWidth,
-    'height'         => $customHeight,
-    'primary_matboard_id'   => $primaryMat,
-    'secondary_matboard_id' => $secondaryMat,
-    'mount_type_id'         => $mountTypeId,
-    'paper_type_id'         => $paperTypeId,
-    'image_path'            => $imagePath,
-    'quantity'              => $quantity,
-    'base_price'            => isset($_POST['base_price']) ? (float)$_POST['base_price'] : 0,
-    'extra_price'           => isset($_POST['extra_price']) ? (float)$_POST['extra_price'] : 0,
-    'print_price'           => isset($_POST['print_price']) ? (float)$_POST['print_price'] : 0,
-    'sub_total'             => isset($_POST['sub_total']) ? (float)$_POST['sub_total'] : 0,
-];
-
 $service = new CustomFrameService($conn);
 
-if ($action === 'add_to_cart') {
-    // Save to cart — customer goes to checkout later
-    $result = $service->addToCart($customerId, $data);
-    echo json_encode($result);
+try {
+    // The clean, SOLID Image Upload logic!
+    $imagePath = '';
+    if ($serviceType === 'FRAME&PRINT' && !empty($_FILES['customer_image']['name'])) {
+        $target_dir = __DIR__ . '/../uploads/customer_print/';
+        
+        $filename = $service->uploadImage($_FILES['customer_image'], $target_dir);
+        if ($filename) {
+            $imagePath = 'uploads/customer_print/' . $filename;
+        }
+    }
+        $data = [
+            'service_type'          => $serviceType,
+            'frame_type_id'         => $frameTypeId,
+            'frame_design_id'       => $frameDesignId,
+            'frame_color_id'        => $frameColorId,
+            'frame_size_id'         => $frameSizeId,
+            'width'                 => $customWidth,
+            'height'         => $customHeight,
+            'primary_matboard_id'   => $primaryMat,
+            'secondary_matboard_id' => $secondaryMat,
+            'mount_type_id'         => $mountTypeId,
+            'paper_type_id'         => $paperTypeId,
+            'image_path'            => $imagePath,
+            'quantity'              => $quantity,
+            'base_price'            => isset($_POST['base_price']) ? (float)$_POST['base_price'] : 0,
+            'extra_price'           => isset($_POST['extra_price']) ? (float)$_POST['extra_price'] : 0,
+            'print_price'           => isset($_POST['print_price']) ? (float)$_POST['print_price'] : 0,
+            'sub_total'             => isset($_POST['sub_total']) ? (float)$_POST['sub_total'] : 0,
+        ];
 
-} else {
-    // Buy Now — save item data in SESSION, redirect to checkout
-    // Checkout will read from session instead of cart
-    $_SESSION['buy_now_item'] = $data;
-    echo json_encode(['success' => true, 'message' => 'Ready for checkout.']);
+
+        if ($action === 'add_to_cart') {
+            // Save to cart — customer goes to checkout later
+            $result = $service->addToCart($customerId, $data);
+            echo json_encode($result);
+
+        } else {
+            // Buy Now — save item data in SESSION, redirect to checkout
+            // Checkout will read from session instead of cart
+            $_SESSION['buy_now_item'] = $data;
+            echo json_encode(['success' => true, 'message' => 'Ready for checkout.']);
+        }
+    } catch (Exception $e) {
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
 exit();

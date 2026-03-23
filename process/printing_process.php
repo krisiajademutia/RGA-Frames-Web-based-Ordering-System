@@ -15,7 +15,6 @@ $customerId = (int)$_SESSION['user_id'];
 $action = $_POST['action'] ?? '';
 $imageFile = $_FILES['image'] ?? null;
 
-// 🔥 RESTORED: Exactly how your old code defined the folder!
 $target_dir = "../uploads/customer_print/";
 
 $service = new PrintingService($conn);

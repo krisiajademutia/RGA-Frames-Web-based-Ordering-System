@@ -54,26 +54,13 @@ $print_subtotal = 0;
 if ($service_type === 'FRAME&PRINT') {
     if (!$paper_type_id) { ob_clean(); echo json_encode(['success' => false, 'message' => 'Please select a paper type.']); exit(); }
     
-    if (!isset($_FILES['print_image']) || $_FILES['print_image']['error'] !== UPLOAD_ERR_OK) {
-        ob_clean(); echo json_encode(['success' => false, 'message' => 'Please upload an image for printing.']); exit();
-    }
-    
-    $file      = $_FILES['print_image'];
-    $allowed   = ['image/jpeg', 'image/png', 'image/gif'];
-    
     $targetDir = __DIR__ . '/../uploads/customer_print/';
-    if (!is_dir($targetDir)) { mkdir($targetDir, 0777, true); }
     
-    $ext       = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $newFile   = "READY_MADE_PRINT_" . uniqid() . "." . $ext;
-    $targetFile = $targetDir . $newFile;
-    
-    if (!in_array($file['type'], $allowed) || $file['size'] > 5000000) { 
-        ob_clean(); echo json_encode(['success' => false, 'message' => 'Invalid image type or size (limit 5MB).']); exit();
-    }
-    
-    if (!move_uploaded_file($file['tmp_name'], $targetFile)) {
-        ob_clean(); echo json_encode(['success' => false, 'message' => 'Failed to save the image.']); exit();
+    try {
+        // 🔥 The SOLID Upload Logic!
+        $newFile = $service->uploadImage($_FILES['print_image'] ?? null, $targetDir);
+    } catch (\Exception $e) {
+        ob_clean(); echo json_encode(['success' => false, 'message' => $e->getMessage()]); exit();
     }
     
     $multiplier = $service->getPaperTypeMultiplier($paper_type_id);
