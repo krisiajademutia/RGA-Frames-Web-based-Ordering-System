@@ -72,7 +72,7 @@ try {
             $notifService->notifyCustomer(
                 $resC['customer_id'], 
                 $order_id, 
-                "Payment Received 💵", 
+                "Payment Received ", 
                 "We have successfully recorded your cash payment of ₱{$formatted_amount} for Order #{$order_id}."
             );
         }

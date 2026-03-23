@@ -107,9 +107,35 @@ class CustomFrameService {
             'height'      => $h,
         ];
     }
-   /**
-     * Add to cart (NO DISCOUNT APPLIED HERE)
-     */
+
+    // Add this inside CustomFrameService.php
+    public function uploadImage($file, string $target_dir): ?string {
+        if (!$file || $file['error'] !== UPLOAD_ERR_OK) return null;
+
+        if (!is_dir($target_dir)) {
+            mkdir($target_dir, 0755, true);
+        }
+
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        
+        // Security check
+        if (!in_array($ext, ['jpg','jpeg','png','webp'])) {
+            throw new Exception('Invalid image format.');
+        }
+        if ($file['size'] > 10 * 1024 * 1024) {
+            throw new Exception('Image too large. Max 10MB.');
+        }
+
+        // Using our beautiful naming convention!
+        $filename = 'CUSTOM_PRINT_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
+        
+        if (move_uploaded_file($file["tmp_name"], $target_dir . $filename)) {
+            return $filename;
+        }
+        
+        throw new Exception('Failed to move uploaded file.');
+    }
+  
     public function addToCart(int $customerId, array $data): array {
         $this->conn->begin_transaction();
 

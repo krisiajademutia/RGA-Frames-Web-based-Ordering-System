@@ -13,7 +13,7 @@ class DirectOrderFactory {
                 return new CustomDirectOrderService($conn);
                 
             case 'READY_MADE':
-                /*return new ReadyMadeDirectOrderService($conn);*/
+                return new ReadyMadeDirectOrderService($conn);
                 
             case 'PRINTING':
                 return new PrintingDirectOrderService($conn); 

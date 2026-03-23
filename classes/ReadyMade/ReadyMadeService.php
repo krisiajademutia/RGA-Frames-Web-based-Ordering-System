@@ -15,11 +15,8 @@ class ReadyMadeService
     public function getFrames(string $search = ''): array
     {
         $all = $this->repo->getAll();
-
-        if ($search === '') {
-            return $all;
-        }
-
+        if ($search === '') return $all;
+        
         $term = strtolower(trim($search));
         return array_values(array_filter($all, function (array $frame) use ($term): bool {
             return str_contains(strtolower($frame['product_name'] ?? ''), $term)
@@ -29,75 +26,95 @@ class ReadyMadeService
         }));
     }
 
-    public function getFrameById(int $id): ?array
+    public function getFrameById(int $id): ?array { return $this->repo->getById($id); }
+    public function getMatboardColors(): array { return $this->repo->getMatboardColors(); }
+    public function getMatboardColorPrice(int $colorId): float { return $this->repo->getMatboardColorPrice($colorId); }
+    public function getPaperTypes(): array { return $this->repo->getPaperTypes(); }
+    public function getPaperTypeMultiplier(int $paperTypeId): float { return $this->repo->getPaperTypeMultiplier($paperTypeId); }
+    public function getMountTypes(): array { return $this->repo->getMountTypes(); }
+    public function getMountTypeFee(int $mountTypeId): float { return $this->repo->getMountTypeFee($mountTypeId); }
+    public function decrementStock(int $productId, int $quantity): bool { return $this->repo->decrementStock($productId, $quantity); }
+
+    public function addToCart(int $customerId, array $itemData, int $cartId): array
     {
-        return $this->repo->getById($id);
-    }
+        if (($itemData['quantity'] ?? 0) < 1) return ['success' => false, 'message' => 'Quantity must be at least 1.'];
+        if (($itemData['r_product_id'] ?? 0) < 1) return ['success' => false, 'message' => 'Product not found.'];
 
-    public function addToCart(int $customerId, int $productId, int $quantity): array
-    {
-        if ($quantity < 1) {
-            return ['success' => false, 'message' => 'Quantity must be at least 1.'];
-        }
-
-        $product = $this->repo->getById($productId);
-
-        if (!$product) {
-            return ['success' => false, 'message' => 'Product not found.'];
-        }
-
-        if ((int)$product['stock'] < $quantity) {
-            return [
-                'success' => false,
-                'message' => 'Only ' . $product['stock'] . ' unit(s) left in stock.',
-            ];
-        }
-
-        $unitPrice = (float)$product['product_price'];
-        $ok        = $this->repo->addToCart($customerId, $productId, $quantity, $unitPrice);
+        $ok = $this->repo->addToCart($customerId, $itemData, $cartId);
 
         return $ok
             ? ['success' => true,  'message' => 'Added to cart successfully!']
-            : ['success' => false, 'message' => 'Failed to add to cart. Please try again.'];
+            : ['success' => false, 'message' => 'Failed to add to cart.'];
     }
 
-    public function getMountTypes(): array
+    // --- THIS IS THE FUNCTION THAT FIXES THE CHECKOUT PAGE! ---
+    public function buildBuyNowPayload(array $data): array
     {
-        return $this->repo->getMountTypes();
-    }
+        $productId = (int)($data['r_product_id'] ?? 0);
+        $quantity  = (int)($data['quantity'] ?? 1);
 
-    public function buildBuyNowPayload(int $productId, int $quantity): array
-    {
         if ($quantity < 1) {
             return ['success' => false, 'message' => 'Quantity must be at least 1.'];
         }
 
         $product = $this->repo->getById($productId);
-
         if (!$product) {
             return ['success' => false, 'message' => 'Product not found.'];
         }
 
         if ((int)$product['stock'] < $quantity) {
-            return [
-                'success' => false,
-                'message' => 'Only ' . $product['stock'] . ' unit(s) left in stock.',
-            ];
+            return ['success' => false, 'message' => 'Only ' . $product['stock'] . ' unit(s) left in stock.'];
         }
 
-        $unitPrice  = (float)$product['product_price'];
-        $totalPrice = $unitPrice * $quantity;
-
+        // We perfectly package all the data so customer_checkout.php can read it!
         return [
             'success'      => true,
             'payload'      => [
-                'item_type'    => 'READY_MADE',
-                'r_product_id' => $productId,
-                'product_name' => $product['product_name'],
-                'quantity'     => $quantity,
-                'unit_price'   => $unitPrice,
-                'total_price'  => $totalPrice,
-            ],
+                'item_type'              => 'READY_MADE', // Forces checkout to recognize it as Ready-Made!
+                'r_product_id'           => $productId,
+                'product_name'           => $product['product_name'] ?? 'Unknown',
+                'width'                  => $product['width'] ?? 0,
+                'height'                 => $product['height'] ?? 0,
+                'quantity'               => $quantity,
+                'service_type'           => $data['service_type'] ?? 'FRAME_ONLY',
+                'primary_matboard_id'    => $data['primary_matboard_id'] ?? null,
+                'secondary_matboard_id'  => $data['secondary_matboard_id'] ?? null,
+                'mount_type_id'          => $data['mount_type_id'] ?? null,
+                'printing_order_item_id' => $data['printing_order_item_id'] ?? null,
+                'base_price'             => $data['base_price'] ?? 0,
+                'extra_price'            => $data['extra_price'] ?? 0,
+                'sub_total'              => $data['sub_total'] ?? 0,
+                'total_price'            => $data['total_price'] ?? 0
+            ]
         ];
+    }
+
+    public function uploadImage($file, string $target_dir): ?string 
+    {
+        if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
+            throw new \Exception('Please upload an image for printing.');
+        }
+
+        if (!is_dir($target_dir)) {
+            mkdir($target_dir, 0777, true);
+        }
+
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        
+        if (!in_array($ext, $allowed)) {
+            throw new \Exception('Invalid image format. Allowed: JPG, PNG, GIF, WEBP.');
+        }
+        
+        if ($file['size'] > 5 * 1024 * 1024) { 
+            throw new \Exception('Image too large. Max 5MB.');
+        }
+        $filename = 'READY_MADE_PRINT_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
+        
+        if (move_uploaded_file($file["tmp_name"], $target_dir . $filename)) {
+            return $filename;
+        }
+        
+        throw new \Exception('Failed to move uploaded file.');
     }
 }

@@ -82,14 +82,52 @@ class PrintingSaver implements OrderItemSaverInterface {
 // 4. READY MADE SAVER (Single Responsibility)
 class ReadyMadeSaver implements OrderItemSaverInterface {
     public function saveItem($conn, int $orderId, array $itemData, float $subTotal, int $qty): void {
-        $r_product_id = !empty($itemData['r_product_id']) ? $itemData['r_product_id'] : null;
+        
+        $r_product_id = !empty($itemData['r_product_id']) ? (int)$itemData['r_product_id'] : null;
+        $service_type = $itemData['service_type'] ?? 'FRAME_ONLY';
+        
+        $priMat       = !empty($itemData['primary_matboard_id']) ? $itemData['primary_matboard_id'] : null;
+        $secMat       = !empty($itemData['secondary_matboard_id']) ? $itemData['secondary_matboard_id'] : null;
+        $mount        = !empty($itemData['mount_type_id']) ? $itemData['mount_type_id'] : null;
+        $printId      = !empty($itemData['printing_order_item_id']) ? $itemData['printing_order_item_id'] : null;
+        
+        $basePrice    = (float)($itemData['base_price'] ?? 0);
+        $extPrice     = (float)($itemData['extra_price'] ?? 0);
+
         $stmtRM = $conn->prepare("
             INSERT INTO tbl_frame_order_items 
-            (order_id, source_type, frame_category, r_product_id, service_type, quantity, base_price, extra_price, sub_total) 
-            VALUES (?, 'ORDER', 'READY_MADE', ?, 'FRAME_ONLY', ?, 0, 0, ?)
+            (order_id, source_type, frame_category, r_product_id, service_type, 
+             primary_matboard_id, secondary_matboard_id, mount_type_id, 
+             printing_order_item_id, quantity, base_price, extra_price, sub_total) 
+            VALUES (?, 'ORDER', 'READY_MADE', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $stmtRM->bind_param("iiid", $orderId, $r_product_id, $qty, $subTotal);
+        
+        $stmtRM->bind_param("iisssssiddd", 
+            $orderId, 
+            $r_product_id, 
+            $service_type, 
+            $priMat, 
+            $secMat, 
+            $mount, 
+            $printId,
+            $qty, 
+            $basePrice, 
+            $extPrice, 
+            $subTotal
+        );
+        
         $stmtRM->execute();
+
+        // 🔥 FIX: Go back and update the printing item to link it to this final order!
+        if (!empty($printId)) {
+            $stmtPrintUpdate = $conn->prepare("
+                UPDATE tbl_printing_order_items 
+                SET order_id = ?, cart_id = NULL 
+                WHERE printing_order_item_id = ?
+            ");
+            $stmtPrintUpdate->bind_param("ii", $orderId, $printId);
+            $stmtPrintUpdate->execute();
+        }
     }
 }
 
