@@ -21,13 +21,17 @@ class PrintingService {
         return true;
     }
 
-    // Notice we now accept the exact $target_dir from the process file
     private function handleImageUpload($file, string $target_dir): ?string {
         if (!$file || $file['error'] !== UPLOAD_ERR_OK) return null;
 
         if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
 
-        $filename = time() . '_' . basename($file["name"]);
+        // Get the clean extension (jpg, png, etc.)
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        
+        // Create the beautifully organized filename
+        $filename = 'PRINT_ONLY_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
+        
         if (move_uploaded_file($file["tmp_name"], $target_dir . $filename)) {
             return $filename;
         }

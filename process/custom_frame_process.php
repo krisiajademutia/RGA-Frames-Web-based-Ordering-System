@@ -58,7 +58,7 @@ if (!empty($errors)) {
 // Handle image upload
 $imagePath = '';
 if ($serviceType === 'FRAME&PRINT' && !empty($_FILES['customer_image']['name'])) {
-    $uploadDir = __DIR__ . '/../uploads/customer_images/';
+    $uploadDir = __DIR__ . '/../uploads/customer_print/';
     if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
     $ext = strtolower(pathinfo($_FILES['customer_image']['name'], PATHINFO_EXTENSION));
     if (!in_array($ext, ['jpg','jpeg','png','webp'])) {
@@ -69,12 +69,12 @@ if ($serviceType === 'FRAME&PRINT' && !empty($_FILES['customer_image']['name']))
         echo json_encode(['success' => false, 'message' => 'Image too large. Max 10MB.']);
         exit();
     }
-    $fileName = 'cust_' . $customerId . '_' . time() . '.' . $ext;
+    $fileName = 'CUSTOM_PRINT_' . $customerId . '_' . time() . '.' . $ext;
     if (!move_uploaded_file($_FILES['customer_image']['tmp_name'], $uploadDir . $fileName)) {
         echo json_encode(['success' => false, 'message' => 'Failed to upload image.']);
         exit();
     }
-    $imagePath = 'uploads/customer_images/' . $fileName;
+    $imagePath = 'uploads/customer_print/' . $fileName;
 }
 
 $data = [
