@@ -17,7 +17,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $customer_id = (int)$_SESSION['user_id'];
 $action      = trim($_POST['action'] ?? '');
 
-// ── ADD REVIEW 
 if ($action === 'add') {
     $rating      = (int)($_POST['rating']      ?? 0);
     $review_text = trim($_POST['review_text'] ?? '');
@@ -35,7 +34,6 @@ if ($action === 'add') {
         exit();
     }
 
-    // Only customers with at least one completed order may review
     $chk = $conn->prepare("
         SELECT COUNT(*) AS cnt FROM tbl_orders
         WHERE customer_id = ? AND order_status = 'COMPLETED'
@@ -47,12 +45,11 @@ if ($action === 'add') {
         exit();
     }
 
-    // One review per customer
     $dup = $conn->prepare("SELECT review_id FROM tbl_reviews WHERE customer_id = ? LIMIT 1");
     $dup->bind_param('i', $customer_id);
     $dup->execute();
     if ($dup->get_result()->num_rows > 0) {
-        echo json_encode(['success' => false, 'message' => 'You have already submitted a review. Delete it first to submit a new one.']);
+        echo json_encode(['success' => false, 'message' => 'You have already submitted a review.']);
         exit();
     }
 
@@ -63,54 +60,20 @@ if ($action === 'add') {
     $stmt->bind_param('iis', $customer_id, $rating, $review_text);
 
     if ($stmt->execute()) {
-        
-        // ========================================================================
-        // --- NOTIFICATION TRIGGER: NEW CUSTOMER REVIEW ---
-        // ========================================================================
         require_once __DIR__ . '/../classes/Notification/NotificationService.php';
         $notifService = new NotificationService($conn);
-        
-        // Generate stars for the title (e.g., ⭐⭐⭐⭐⭐)
         $stars = str_repeat('⭐', $rating);
-        
-        // Get a short preview of the review text (first 40 chars)
         $preview = mb_substr($review_text, 0, 40) . (mb_strlen($review_text) > 40 ? '...' : '');
         
-        // We pass 0 as the order_id since this is a general store review
         $notifService->notifyAdmin(
             0, 
             "New Review! {$stars}", 
             "A customer just left a {$rating}-star review: \"{$preview}\""
         );
-        // ========================================================================
 
         echo json_encode(['success' => true, 'message' => 'Thank you for your review!']);
     } else {
         echo json_encode(['success' => false, 'message' => 'Failed to submit review. Please try again.']);
-    }
-    exit();
-}
-
-// ── DELETE REVIEW 
-if ($action === 'delete') {
-    $review_id = (int)($_POST['review_id'] ?? 0);
-
-    if ($review_id <= 0) {
-        echo json_encode(['success' => false, 'message' => 'Invalid review.']);
-        exit();
-    }
-
-    // customer may only delete their own review
-    $stmt = $conn->prepare("
-        DELETE FROM tbl_reviews
-        WHERE review_id = ? AND customer_id = ?
-    ");
-    $stmt->bind_param('ii', $review_id, $customer_id);
-
-    if ($stmt->execute() && $stmt->affected_rows > 0) {
-        echo json_encode(['success' => true, 'message' => 'Your review has been deleted.']);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Could not delete review.']);
     }
     exit();
 }
