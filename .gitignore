@@ -1,2 +1,5 @@
 config/db_connect.php
 config/config.php
+/vendor/
+/uploads/
+.DS_Store
