@@ -12041,3 +12041,167 @@ body.modal-open { overflow: auto !important; padding-right: 0 !important; }
 .cust-rdymd-toast.show    { opacity: 1; transform: translateY(0); }
 .cust-rdymd-toast.success { background: #0F473A; }
 .cust-rdymd-toast.error   { background: #dc2626; }
+
+/* =========================================
+   ADMIN TODAY'S BREAKDOWN PAGE (PREMIUM UI)
+   ========================================= */
+
+.admn-bkdn-body {
+    background-color: #f3f4f6; /* Modern, soft dashboard gray */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.admn-bkdn-wrapper {
+    padding: 100px 30px 10px 20px; 
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* Back Button */
+.admn-bkdn-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #6b7280;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+    transition: color 0.2s ease;
+}
+
+.admn-bkdn-back-btn:hover {
+    color: #111827;
+}
+
+/* Page Title */
+.admn-bkdn-title {
+    margin-bottom: 32px;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #111827;
+    letter-spacing: -0.025em;
+}
+
+/* Grid Layout */
+.admn-bkdn-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 24px;
+}
+
+/* White Container Cards */
+.admn-bkdn-card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+    overflow: hidden; /* Keeps the table corners perfectly rounded */
+}
+
+/* Card Header */
+.admn-bkdn-card-title {
+    margin: 0;
+    padding: 20px 24px;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    background-color: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* Table Styling */
+.admn-bkdn-table {
+    width: 100%;
+    text-align: left;
+    border-collapse: collapse;
+}
+
+/* Table Headers */
+.admn-bkdn-table th {
+    padding: 12px 24px;
+    color: #6b7280;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* Table Rows */
+.admn-bkdn-table td {
+    padding: 16px 24px;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+    font-size: 0.875rem;
+}
+
+.admn-bkdn-table tr:hover td {
+    background-color: #f8fafc; /* Very subtle hover effect */
+}
+
+.admn-bkdn-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Empty State */
+.admn-bkdn-empty {
+    padding: 32px 24px !important;
+    text-align: center;
+    color: #9ca3af;
+    font-style: normal;
+    font-size: 0.9rem;
+}
+
+/* Typography Utilities */
+.admn-bkdn-text-right { text-align: right; }
+.admn-bkdn-text-center { text-align: center; }
+
+.admn-bkdn-fw-600 { 
+    font-weight: 600; 
+    color: #111827; 
+}
+
+.admn-bkdn-fw-bold { 
+    font-weight: 700; 
+    color: #111827; 
+    background: #f3f4f6; 
+    padding: 4px 12px; 
+    border-radius: 9999px; /* Pill shape for quantities */
+    display: inline-block;
+}
+
+.admn-bkdn-text-muted { 
+    color: #6b7280; 
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; /* Makes Ref # look technical */
+    font-size: 0.8rem;
+}
+
+/* Success Badge for Money */
+.admn-bkdn-text-success { 
+    color: #065f46; 
+    font-weight: 600; 
+    background-color: #d1fae5;
+    padding: 6px 12px;
+    border-radius: 6px;
+    display: inline-block;
+}
+/* Typography Utilities */
+.admn-bkdn-text-right { text-align: right !important; }
+.admn-bkdn-text-center { text-align: center !important; }
+.admn-bkdn-btn-export {
+    display: inline-flex;
+    align-items: center;
+    background-color: #10b981; 
+    color: #ffffff;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out;
+    border: 1px solid #059669;
+}
+.admn-bkdn-btn-export:hover {
+    background-color: #059669;
+}

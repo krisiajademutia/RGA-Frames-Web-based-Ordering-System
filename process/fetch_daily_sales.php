@@ -4,10 +4,12 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once '../config/db_connect.php'; 
-require_once '../classes/DailySalesRepository.php';
-require_once '../classes/DailySalesService.php';
-// Instantiate the classes and fetch the data into a variable
-$repository = new DailySalesRepository($conn);
-$service = new DailySalesService($repository);
+require_once '../classes/Dashboard/Repository/DailySalesRepository.php';
+require_once '../classes/Dashboard/DailySalesService.php';
+
+$repository = new \Classes\Dashboard\Repository\DailySalesRepository($conn);
+$service = new \Classes\Dashboard\DailySalesService($repository);
+
 $salesData = $service->getFormattedSalesReport();
+$combinedBreakdown = $service->getTodaysCombinedBreakdown(); // This holds our single master table data!
 ?>

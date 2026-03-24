@@ -21,9 +21,16 @@ require_once '../process/fetch_daily_sales.php';
     <?php include_once '../includes/admin_header.php'; ?>
 
     <main class="admn-sales-wrapper">
-        <div class="admn-sales-header">
-            <h1 class="admn-sales-title">Daily Sales Report</h1>
-            <p class="admn-sales-subtitle">Sales breakdown by category per day</p>
+        <div class="admn-sales-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <div>
+                <h1 class="admn-sales-title" style="margin-bottom: 5px;">Daily Sales Report</h1>
+                <p class="admn-sales-subtitle" style="margin: 0;">Sales breakdown by category per day</p>
+            </div>
+            <div>
+                <a href="admin_order_breakdown.php" style="display: inline-block; background: #2b2b2b; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <i class="fas fa-list-ul" style="margin-right: 8px;"></i> View Breakdown
+                </a>
+            </div>
         </div>
 
         <!-- ── DESKTOP: original table (untouched) ── -->
@@ -34,6 +41,7 @@ require_once '../process/fetch_daily_sales.php';
                         <th>DATE</th>
                         <th>READY-MADE</th>
                         <th>CUSTOM</th>
+                        <th>PRINTING</th>
                         <th>TOTAL SOLD</th>
                         <th>EARNINGS</th>
                         <th><i class="fas fa-sliders-h"></i></th>
@@ -48,6 +56,7 @@ require_once '../process/fetch_daily_sales.php';
                             <td class="sales-date"><?php echo htmlspecialchars($row['date']); ?></td>
                             <td><span class="sales-pill pill-rm"><?php echo $row['ready_made']; ?></span></td>
                             <td><span class="sales-pill pill-custom"><?php echo $row['custom']; ?></span></td>
+                            <td><span class="sales-pill pill-printing"><?php echo $row['printing']; ?></span></td>
                             <td><span class="sales-pill pill-total"><?php echo $row['total_sold']; ?></span></td>
                             <td class="sales-earnings">₱<?php echo htmlspecialchars($row['earnings']); ?></td>
                             <td></td>
@@ -94,6 +103,8 @@ require_once '../process/fetch_daily_sales.php';
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
+
+        
 
     </main>
 

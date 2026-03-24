@@ -2,7 +2,7 @@
 // process/fetch_dashboard.php
 
 include_once __DIR__ . '/../config/db_connect.php';
-require_once '../classes/DashboardStats.php';
+require_once '../classes/Dashboard/DashboardStats.php';
 
 $databaseConnection = $conn;
 

@@ -324,9 +324,9 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
                                 <?php endif; ?>
                                 <?php if ($proof['payment_proof'] !== 'Admin: Walk-in Cash Payment'): ?>
                                 <div class="admn-ordr-dtls-proof-dl mt-1">
-                                    <a href="download_image.php?path=<?= urlencode($proof['payment_proof']) ?>&name=receipt_<?= $order_id ?>_<?= $i+1 ?>"
-                                       class="admn-ordr-dtls-download-link">
-                                        <i class="fas fa-download"></i> Download
+                                    <a href="download_image.php?path=<?= urlencode($item['image_path']) ?>&name=<?= $order['order_reference_no'] ?>_<?= $cleanName ?>_Print"
+                                        class="admn-ordr-dtls-img-download-btn">
+                                        <i class="fas fa-download"></i> Download Original
                                     </a>
                                 </div>
                                 <?php endif; ?>
@@ -539,20 +539,24 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
                     <?php endif; ?>
 
                     <?php if (($hasPrint || $isPrintOnly) && !empty($item['image_path'])): ?>
+                    <?php 
+                        $cleanName = str_replace(' ', '', $order['first_name'] . $order['last_name']); 
+                        $dynamicFileName = $order['order_reference_no'] . '_' . $cleanName . '_Print';
+                    ?>
                     <div class="admn-ordr-dtls-img-preview-wrap mt-3">
                         <img src="../<?= htmlspecialchars($item['image_path']) ?>"
-                             alt="Customer Image"
-                             class="admn-ordr-dtls-img-thumb"
-                             data-fullsrc="../<?= htmlspecialchars($item['image_path']) ?>"
-                             data-label="Customer Print Image"
-                             onclick="openImageViewer(this)">
+                            alt="Customer Image"
+                            class="admn-ordr-dtls-img-thumb"
+                            data-fullsrc="../<?= htmlspecialchars($item['image_path']) ?>"
+                            data-label="<?= $dynamicFileName ?>"
+                            onclick="openImageViewer(this)">
                         <div class="admn-ordr-dtls-img-actions">
                             <button class="admn-ordr-dtls-proof-btn"
                                     onclick="openImageViewer(this.closest('.admn-ordr-dtls-img-preview-wrap').querySelector('img'))">
                                 <i class="fas fa-expand"></i> View Full
                             </button>
-                            <a href="download_image.php?path=<?= urlencode($item['image_path']) ?>&name=print_image_order_<?= $order_id ?>"
-                               class="admn-ordr-dtls-img-download-btn">
+                            <a href="download_image.php?path=<?= urlencode($item['image_path']) ?>&name=<?= $dynamicFileName ?>"
+                            class="admn-ordr-dtls-img-download-btn">
                                 <i class="fas fa-download"></i> Download Original
                             </a>
                         </div>
@@ -733,7 +737,7 @@ function openImageViewer(imgEl) {
     document.getElementById('admn-img-viewer-size').textContent  = '';
 
     const dlHref = 'download_image.php?path=' + encodeURIComponent(rawPath)
-                 + '&name=' + encodeURIComponent(label.replace(/\s+/g, '_').toLowerCase());
+             + '&name=' + encodeURIComponent(label.replace(/\s+/g, '_'));
     document.getElementById('admn-img-viewer-download').href = dlHref;
 
     document.getElementById('admn-img-viewer').style.display = 'flex';
