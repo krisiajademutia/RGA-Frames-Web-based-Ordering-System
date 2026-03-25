@@ -112,16 +112,41 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
         </div>
 
         <?php if ($isPending): ?>
-        <!-- Accept / Reject buttons (PENDING only) -->
-        <div class="admn-ordr-dtls-id-actions">
-            <button class="admn-ordr-dtls-accept-btn" id="btn-accept-order"
-                    data-id="<?= $order_id ?>">
-                <i class="fas fa-check"></i> Accept
-            </button>
-            <button class="admn-ordr-dtls-reject-btn" id="btn-reject-order"
-                    data-id="<?= $order_id ?>">
-                <i class="fas fa-times"></i> Reject
-            </button>
+        <div class="admn-ordr-dtls-id-actions" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+            <div style="display: flex; gap: 8px;">
+                <?php 
+                // SECURE LOGIC: Lock Accept button if GCash payment is not yet verified
+                $isGCash = strtoupper($order['payment_method'] ?? '') === 'GCASH';
+                $hasVerifiedReceipt = false;
+                
+                // Check if admin has verified at least one receipt
+                foreach ($proofs as $proof) {
+                    if (($proof['verification_status'] ?? '') === 'Verified') {
+                        $hasVerifiedReceipt = true;
+                        break;
+                    }
+                }
+                
+                // If it is GCash and no receipt is verified, lock the button
+                $lockAccept = $isGCash && !$hasVerifiedReceipt;
+                ?>
+                
+                <button class="admn-ordr-dtls-accept-btn" id="btn-accept-order"
+                        data-id="<?= $order_id ?>"
+                        <?= $lockAccept ? 'disabled style="background-color: #9ca3af; border-color: #9ca3af; cursor: not-allowed;"' : '' ?>>
+                    <i class="fas fa-check"></i> Accept
+                </button>
+                <button class="admn-ordr-dtls-reject-btn" id="btn-reject-order"
+                        data-id="<?= $order_id ?>">
+                    <i class="fas fa-times"></i> Reject
+                </button>
+            </div>
+            
+            <?php if ($lockAccept): ?>
+                <span style="font-size: 12px; color: #ef4444; font-weight: 500;">
+                    <i class="fas fa-exclamation-triangle"></i> Verify the GCash receipt below before accepting.
+                </span>
+            <?php endif; ?>
         </div>
         <?php elseif (!$isRejected): ?>
         <!-- Status change button for active orders -->
