@@ -33,13 +33,19 @@ $user = $finder->findByUsernameOrEmail($username);
 $auth = new AuthService($conn);
 
 if ($auth->attemptLogin($user, $password)) {
+    
+    // 🧹 Clean up any leftover password reset messages!
+    unset($_SESSION['success']); 
+    unset($_SESSION['error']);   
+
     // ── SOLID FIX: Redirect logic is now handled by the Controller ──
     if ($_SESSION['role'] === 'ADMIN') {
         header("Location: ../admin/admin_dashboard.php");
+        exit();
     } else {
         header("Location: ../customer/customer_dashboard.php"); 
+        exit();
     }
-    exit();
 } else {
     // Failure
     if ($user) {

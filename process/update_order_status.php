@@ -33,14 +33,37 @@ if (!$stmt->execute()) {
     exit();
 }
 
-// If completed — mark payment as FULL
+// Check balance before allowing COMPLETED status
 if ($new_status === 'COMPLETED') {
-    $stmtFull = $conn->prepare("UPDATE tbl_payment SET payment_status = 'FULL' WHERE order_id = ?");
-    if ($stmtFull) {
-        $stmtFull->bind_param("i", $order_id);
-        $stmtFull->execute();
+    $check_stmt = $conn->prepare("
+        SELECT 
+            o.total_price,
+            COALESCE((
+                SELECT SUM(uploaded_amount) 
+                FROM tbl_payment_proof_uploads 
+                WHERE payment_id = o.payment_id 
+                AND verification_status = 'Verified'
+            ), 0) AS paid_amount
+        FROM tbl_orders o
+        WHERE o.order_id = ?
+    ");
+    $check_stmt->bind_param("i", $order_id);
+    $check_stmt->execute();
+    $res = $check_stmt->get_result()->fetch_assoc();
+    $check_stmt->close();
+    
+    if ($res) {
+        $balance = $res['total_price'] - $res['paid_amount'];
+        if ($balance > 0) {
+            ob_clean();
+            echo json_encode(['success' => false, 'message' => 'Cannot complete order. There is an unpaid balance of ₱' . number_format($balance, 2)]);
+            exit();
+        }
     }
 }
+
+// Update order status (This is your existing line of code)
+$stmt = $conn->prepare("UPDATE tbl_orders SET order_status = ? WHERE order_id = ?");
 
 // If accepted (PROCESSING) — decrement stock
 if ($new_status === 'PROCESSING') {

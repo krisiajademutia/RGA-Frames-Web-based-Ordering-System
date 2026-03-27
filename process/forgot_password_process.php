@@ -44,14 +44,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_otp'])) {
         exit();
     }
 
-    if (!sendOTP($email, $otp, 'Password Reset')) {
+    if (!sendOTP($email, $otp, 'reset_password')) {
         $_SESSION['error'] = 'Failed to send OTP email.';
         header("Location: ../forgot_password.php");
         exit();
     }
 
     $_SESSION['success'] = 'OTP sent! Check your email.';
-    // Changed this path to match your other relative paths!
     header("Location: ../verify_reset_otp.php");
     exit();
 }

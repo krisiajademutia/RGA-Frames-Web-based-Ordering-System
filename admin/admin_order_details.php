@@ -148,9 +148,8 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
                 </span>
             <?php endif; ?>
         </div>
-        <?php elseif (!$isRejected): ?>
-        <!-- Status change button for active orders -->
-        <div class="admn-ordr-dtls-id-actions">
+       <?php elseif (!$isRejected): ?>
+        <div class="admn-ordr-dtls-id-actions" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
             <?php
             $nextStatus = match($order['order_status']) {
                 'PROCESSING'       => ['status' => 'READY_FOR_PICKUP', 'label' => 'Mark Ready for Pick-up', 'icon' => 'fa-store'],
@@ -158,13 +157,25 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
                 'FOR_DELIVERY'     => ['status' => 'COMPLETED',        'label' => 'Mark as Completed',      'icon' => 'fa-check-double'],
                 default            => null,
             };
-            if ($nextStatus):
+            
+            if ($nextStatus): 
+                // SECURE LOGIC: Check if next step is completion and if they still owe money
+                $isCompleting = $nextStatus['status'] === 'COMPLETED';
+                $lockComplete = $isCompleting && $balance_due > 0;
             ?>
             <button class="admn-ordr-dtls-next-btn" id="btn-next-status"
                     data-id="<?= $order_id ?>"
-                    data-status="<?= $nextStatus['status'] ?>">
+                    data-status="<?= $nextStatus['status'] ?>"
+                    <?= $lockComplete ? 'disabled style="background-color: #9ca3af; border-color: #9ca3af; cursor: not-allowed;"' : '' ?>>
                 <i class="fas <?= $nextStatus['icon'] ?>"></i> <?= $nextStatus['label'] ?>
             </button>
+            
+            <?php if ($lockComplete): ?>
+                <span style="font-size: 12px; color: #ef4444; font-weight: 500;">
+                    <i class="fas fa-exclamation-triangle"></i> Cannot complete. Unpaid Balance: ₱<?= number_format($balance_due, 2) ?>
+                </span>
+            <?php endif; ?>
+            
             <?php endif; ?>
         </div>
         <?php endif; ?>

@@ -16,8 +16,15 @@ function togglePassword(inputId, btn) {
         icon.classList.add('fa-eye-slash');
     }
 }
-
-// NOTE: Registration form validation has been removed from JS. 
-// We are now letting the PHP backend handle validation so that 
-// ALL error messages (empty fields, duplicates, etc.) show up 
-// perfectly under the inputs at the same time!
+// ==========================================
+// TOAST NOTIFICATIONS
+// ==========================================
+document.addEventListener("DOMContentLoaded", function() {
+    var toastElement = document.getElementById('successToast');
+    
+    // Only try to show the toast if it actually exists on the page
+    if (toastElement) {
+        var toast = new bootstrap.Toast(toastElement);
+        toast.show();
+    }
+});

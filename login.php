@@ -21,6 +21,23 @@ unset($_SESSION['errors'], $_SESSION['old_username']);
 <body class="log-body">
 
     <?php include 'includes/guest_header.php'; ?>
+                <?php if (isset($_SESSION['success'])): ?>
+                        <div class="toast-container position-fixed end-0 p-4" style="top: 80px; z-index: 1055;">
+                            <div id="successToast" class="toast align-items-center bg-white border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000" style="border-left: 5px solid #198754 !important; border-radius: 6px;">
+                                <div class="d-flex p-2">
+                                    <div class="toast-body d-flex align-items-center p-2">
+                                        <i class="fas fa-check-circle text-success me-3" style="font-size: 1.8rem;"></i>
+                                        <div>
+                                            <strong class="d-block text-dark mb-1" style="font-size: 1.1rem;">Success</strong>
+                                            <span class="text-secondary"><?php echo htmlspecialchars($_SESSION['success']); ?></span>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                                </div>
+                            </div>
+                        </div>                        
+                        <?php unset($_SESSION['success']); ?>
+                    <?php endif; ?>
 
     <div class="log-container">
         <div class="log-split-layout">
@@ -36,7 +53,7 @@ unset($_SESSION['errors'], $_SESSION['old_username']);
                         <h1 class="log-title">Welcome Back!</h1>
                         <p class="log-subtitle">Log in to access order history, view frame designs, and manage custom frame selections.</p>
                     </div>
-
+                   
                     <form action="process/login_process.php" method="POST" novalidate class="log-form">
 
                         <div class="log-form-group">
@@ -88,7 +105,7 @@ unset($_SESSION['errors'], $_SESSION['old_username']);
 
         </div>
     </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="assets/js/main.js"></script>
 </body>
 </html>

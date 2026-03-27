@@ -1,6 +1,5 @@
 <?php 
 session_start(); 
-// Grab the error from the session, then clear it so it doesn't stay there forever
 $error = $_SESSION['error'] ?? '';
 unset($_SESSION['error']);
 ?>

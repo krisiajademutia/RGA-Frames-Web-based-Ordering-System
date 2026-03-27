@@ -28,15 +28,13 @@ class RegistrationService {
             $stmt->close();
 
             // Auto-login
-            $_SESSION['user_id']     = $user_id;
-            $_SESSION['first_name']  = $first_name;
-            $_SESSION['role']        = 'CUSTOMER';
+            //$_SESSION['user_id']     = $user_id;
+            //$_SESSION['first_name']  = $first_name;
+            //$_SESSION['role']        = 'CUSTOMER';
 
             return ['success' => true, 'user_id' => $user_id, 'message' => 'Registration successful!'];
-        } else {
-            $error = $stmt->error;
-            $stmt->close();
-            return ['success' => false, 'message' => 'Database error: ' . $error];
-        }
+        } 
+            return ['success' => false, 'message' => 'Database error.Please try again ' ];
+        
     }
 }

@@ -3,11 +3,6 @@
 class PasswordResetService {
     private $conn;
 
-    private $roleConfigs = [
-        'ADMIN'    => ['table' => 'tbl_admin',    'id_column' => 'admin_id'],
-        'CUSTOMER' => ['table' => 'tbl_customer', 'id_column' => 'customer_id']
-    ];
-
     public function __construct($conn) {
         $this->conn = $conn;
     }
@@ -18,26 +13,33 @@ class PasswordResetService {
             return false;
         }
 
-        // 2. Type check
-        $type = strtoupper($user['type']); // Force uppercase to match keys
-        if (!isset($this->roleConfigs[$type])) {
-            return false; 
+        // 2. Identify the correct table and column based on role
+        $type = strtoupper($user['type'] ?? 'CUSTOMER');
+        $table = ($type === 'ADMIN') ? 'tbl_admin' : 'tbl_customer';
+        $id_column = ($type === 'ADMIN') ? 'admin_id' : 'customer_id';
+
+        // 3. UserFinder fetches the ID as 'id', so we grab it securely
+        $user_id = $user['id'] ?? 0;
+        
+        if (empty($user_id)) {
+            return false; // Failsafe
         }
 
-        $config = $this->roleConfigs[$type];
+        // 4. Hash the password using the modern standard (matches your AuthService)
         $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-        
-        // 3. Dynamic SQL
-        $sql = "UPDATE {$config['table']} SET password = ? WHERE {$config['id_column']} = ?";
+
+        // 5. Update the specific user by their exact ID
+        $sql = "UPDATE {$table} SET password = ? WHERE {$id_column} = ?";
 
         $stmt = $this->conn->prepare($sql);
-        
-        // Bind parameters: 's' for hashed string, 'i' for integer ID
-        $stmt->bind_param("si", $hashed_password, $user['id']);
+        $stmt->bind_param("si", $hashed_password, $user_id);
+        $stmt->execute();
 
-        $success = $stmt->execute();
-        $stmt->close();
+        // 6. Return true if we successfully updated the row
+        if ($stmt->affected_rows > 0) {
+            return true;
+        }
 
-        return $success;
+        return false;
     }
 }
