@@ -34,7 +34,7 @@ $total_price    = (float)($order['total_price']  ?? 0);
 $proofs         = $order['proofs'] ?? [];
 $amount_paid = 0;
 foreach ($proofs as $proof) {
-    if (($proof['verification_status'] ?? '') === 'Verified') {
+    if (strtoupper($proof['verification_status'] ?? '') === 'VERIFIED') {
         $amount_paid += (float)$proof['uploaded_amount'];
     }
 }
@@ -159,9 +159,8 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
             };
             
             if ($nextStatus): 
-                // SECURE LOGIC: Check if next step is completion and if they still owe money
                 $isCompleting = $nextStatus['status'] === 'COMPLETED';
-                $lockComplete = $isCompleting && $balance_due > 0;
+                $lockComplete = $isCompleting && $balance_due > 0.01;   // ← Use 0.01 tolerance
             ?>
             <button class="admn-ordr-dtls-next-btn" id="btn-next-status"
                     data-id="<?= $order_id ?>"
@@ -280,7 +279,7 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
 
                     <hr class="admn-ordr-dtls-divider-line">
 
-                    <div class="admn-ordr-dtls-row admn-ordr-dtls-total-row">
+                    <div class="ad  mn-ordr-dtls-row admn-ordr-dtls-total-row">
                         <span class="admn-ordr-dtls-label">Grand Total</span>
                         <span class="admn-ordr-dtls-total-amount">₱<?= number_format($total_price, 2) ?></span>
                     </div>
@@ -360,8 +359,8 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
                                 <?php endif; ?>
                                 <?php if ($proof['payment_proof'] !== 'Admin: Walk-in Cash Payment'): ?>
                                 <div class="admn-ordr-dtls-proof-dl mt-1">
-                                    <a href="download_image.php?path=<?= urlencode($item['image_path']) ?>&name=<?= $order['order_reference_no'] ?>_<?= $cleanName ?>_Print"
-                                        class="admn-ordr-dtls-img-download-btn">
+                                    <a href="download_image.php?path=<?= urlencode($proof['payment_proof']) ?>&name=<?= $order['order_reference_no'] ?>_Receipt_<?= $proof['upload_id'] ?>"
+                                    class="admn-ordr-dtls-img-download-btn">
                                         <i class="fas fa-download"></i> Download Original
                                     </a>
                                 </div>
@@ -740,7 +739,10 @@ function updateOrderStatus(orderId, newStatus) {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: `order_id=${orderId}&new_status=${newStatus}`
     })
-    .then(r => r.json())
+    .then(r => {
+        if (!r.ok) throw new Error(`HTTP error! Status: ${r.status}`);
+        return r.json();
+    })
     .then(data => {
         if (data.success) {
             Swal.fire({
@@ -757,7 +759,10 @@ function updateOrderStatus(orderId, newStatus) {
             Swal.fire('Error', data.message || 'Something went wrong.', 'error');
         }
     })
-    .catch(() => Swal.fire('Error', 'Request failed.', 'error'));
+    .catch(err => {
+        console.error('Update failed:', err);
+        Swal.fire('Error', 'Request failed. Check server error log or console.', 'error');
+    });
 }
 
 
@@ -833,7 +838,7 @@ function logCashPayment(paymentId, maxAmount) {
             .then(data => {
                 if (data.success) {
                     Swal.fire({
-                        title: 'Payment Saved! 🎉',
+                        title: 'Payment Saved!',
                         text: 'The cash payment was successfully recorded.',
                         icon: 'success',
                         confirmButtonColor: '#0f3d33'
