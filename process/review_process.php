@@ -34,41 +34,43 @@ if ($action === 'add') {
         exit();
     }
 
-    // Must have at least one completed order
-    $chk = $conn->prepare("
-        SELECT COUNT(*) AS cnt FROM tbl_orders
-        WHERE customer_id = ? AND order_status = 'COMPLETED'
-    ");
+    // Count completed orders
+    $chk = $conn->prepare("SELECT COUNT(*) AS cnt FROM tbl_orders WHERE customer_id = ? AND order_status = 'COMPLETED'");
     $chk->bind_param('i', $customer_id);
     $chk->execute();
-    if ((int)$chk->get_result()->fetch_assoc()['cnt'] === 0) {
+    $completedOrders = (int)$chk->get_result()->fetch_assoc()['cnt'];
+
+    if ($completedOrders === 0) {
         echo json_encode(['success' => false, 'message' => 'You need at least one completed order to leave a review.']);
         exit();
     }
 
-    // 🚀 TEAMMATE'S LOGIC: Removed the duplicate check here so they can leave infinite reviews!
+    // Count existing reviews by this customer
+    $rvChk = $conn->prepare("SELECT COUNT(*) AS cnt FROM tbl_reviews WHERE customer_id = ?");
+    $rvChk->bind_param('i', $customer_id);
+    $rvChk->execute();
+    $existingReviews = (int)$rvChk->get_result()->fetch_assoc()['cnt'];
 
-    $stmt = $conn->prepare("
-        INSERT INTO tbl_reviews (customer_id, rating, review_text)
-        VALUES (?, ?, ?)
-    ");
+    // One review allowed per completed order
+    if ($existingReviews >= $completedOrders) {
+        echo json_encode(['success' => false, 'message' => 'You have already used all your review slots. Complete another order to leave a new review.']);
+        exit();
+    }
+
+    $stmt = $conn->prepare("INSERT INTO tbl_reviews (customer_id, rating, review_text) VALUES (?, ?, ?)");
     $stmt->bind_param('iis', $customer_id, $rating, $review_text);
 
     if ($stmt->execute()) {
-        
-        // 🚀 YOUR LOGIC: Using your SOLID refactored classes!
-        require_once __DIR__ . '/../classes/Notification/NotificationRepository.php';
         require_once __DIR__ . '/../classes/Notification/NotificationService.php';
-        
-        $notifRepo = new NotificationRepository($conn);
-        $notifService = new NotificationService($notifRepo);
-        
-        $stars = str_repeat('⭐', $rating);
+        require_once __DIR__ . '/../classes/Notification/NotificationRepository.php';
+        $notificationRepo = new NotificationRepository($conn);
+        $notifService = new NotificationService($notificationRepo);
+        $stars   = str_repeat('⭐', $rating);
         $preview = mb_substr($review_text, 0, 40) . (mb_strlen($review_text) > 40 ? '...' : '');
-        
+
         $notifService->notifyAdmin(
-            0, 
-            "New Review! {$stars}", 
+            0,
+            "New Review! {$stars}",
             "A customer just left a {$rating}-star review: \"{$preview}\""
         );
 
@@ -81,4 +83,3 @@ if ($action === 'add') {
 
 echo json_encode(['success' => false, 'message' => 'Unknown action.']);
 exit();
-?>

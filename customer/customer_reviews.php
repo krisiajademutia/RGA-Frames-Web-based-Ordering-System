@@ -9,14 +9,20 @@
 
     $customer_id = (int)$_SESSION['user_id'];
 
-    // Check eligibility: at least one completed order
-    $eligCheck = $conn->prepare("
-        SELECT COUNT(*) AS cnt FROM tbl_orders
-        WHERE customer_id = ? AND order_status = 'COMPLETED'
-    ");
+    // Count completed orders
+    $eligCheck = $conn->prepare("SELECT COUNT(*) AS cnt FROM tbl_orders WHERE customer_id = ? AND order_status = 'COMPLETED'");
     $eligCheck->bind_param('i', $customer_id);
     $eligCheck->execute();
-    $canReview = (int)$eligCheck->get_result()->fetch_assoc()['cnt'] > 0;
+    $completedOrders = (int)$eligCheck->get_result()->fetch_assoc()['cnt'];
+
+    // Count existing reviews by this customer
+    $rvCheck = $conn->prepare("SELECT COUNT(*) AS cnt FROM tbl_reviews WHERE customer_id = ?");
+    $rvCheck->bind_param('i', $customer_id);
+    $rvCheck->execute();
+    $existingReviews = (int)$rvCheck->get_result()->fetch_assoc()['cnt'];
+
+    // Can review if they have more completed orders than reviews submitted
+    $canReview = $completedOrders > $existingReviews;
 
     // Fetch all reviews
     $allReviews = $conn->query("
@@ -217,10 +223,15 @@
             <div class="rv-write-card">
                 <div class="rv-write-title"><i class="fas fa-pen-to-square" style="color:#0f3d33;"></i> Write a Review</div>
 
-                <?php if (!$canReview): ?>
+                <?php if ($completedOrders === 0): ?>
                     <div class="rv-locked-note">
                         <i class="fas fa-lock" style="margin-top:2px;flex-shrink:0;"></i>
                         <span>You can leave a review after completing your first order. Place an order and we'll unlock this for you!</span>
+                    </div>
+                <?php elseif (!$canReview): ?>
+                    <div class="rv-locked-note">
+                        <i class="fas fa-info-circle" style="margin-top:2px;flex-shrink:0;"></i>
+                        <span>You have submitted a review for each of your completed orders. Complete another order to leave a new review.</span>
                     </div>
                 <?php else: ?>
                     <p style="font-size:0.82rem;color:#6b7280;margin-bottom:0.75rem;">How was your experience with RGA Frames?</p>
