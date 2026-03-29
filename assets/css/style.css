@@ -1875,170 +1875,6 @@ div.posted-header-bar {
     color: white;
 }
 
-/* --- Custom Delete Modal Styling --- */
-
-/* The post option delete modalcontainer */
-.custom-post-modal {
-    border: 1.5px solid #ADADAD !important;
-    border-radius: 20px !important;
-    overflow: hidden;
-    background-color: #ffffff;
-    box-shadow: 0 15px 50px rgba(0,0,0,0.1) !important;
-}
-
-.custom-post-modal .modal-header {
-    padding: 20px 35px;
-    border-bottom: none; /* Kept clean like your other headers */
-    background-color: #ffffff;
-}
-
-.custom-post-modal .modal-title {
-    font-family: var(--font-secondary);
-    font-size: 14px;
-    font-weight: 600;
-    color: #004030; 
-    text-transform: uppercase;
-}
-
-.custom-post-modal .modal-body {
-    padding: 30px 30px 10px 30px;
-}
-
-.modal-icon-box {
-    width: 65px;
-    height: 65px;
-    background-color: #e6f0ee; 
-    color: #004030;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 26px;
-    margin: 0 auto 20px auto;
-    border: 1px solid rgba(0, 64, 48, 0.1);
-}
-
-.modal-text-muted {
-    font-family: var(--font-secondary);
-    font-size: 15px;
-    color: #666;
-    margin-bottom: 5px;
-}
-
-.modal-product-name {
-    color: #004030;
-    font-weight: 700;
-    font-size: 20px;
-    word-break: break-word;
-}
-
-.custom-post-modal .modal-footer {
-    padding: 20px 30px 30px 30px;
-    background-color: #ffffff;
-    border-top: none; 
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-}
-
-/* --- Modal Button Styling --- */
-
-.modal-btn-cancel {
-    width: 140px;
-    height: 44px;
-    background: white;
-    border: 1.5px solid #559688;
-    color: #559688;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 14px;
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
-
-.modal-btn-cancel:hover {
-    background-color: #559688;
-    color: white;
-}
-
-/* Delete Button - Specialized Danger Button */
-.opt-delete-content {
-    border: 1.5px solid #ADADAD !important;
-    border-radius: 20px !important;
-    overflow: hidden;
-    background-color: #ffffff;
-    box-shadow: 0 15px 50px rgba(0,0,0,0.15) !important;
-}
-
-.opt-delete-icon-box {
-    width: 65px;
-    height: 65px;
-    background-color: #e6f0ee; 
-    color: #004030; 
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 26px;
-    margin: 0 auto 20px auto;
-    border: 1px solid rgba(0, 64, 48, 0.1);
-}
-
-.opt-delete-text-muted {
-    font-size: 15px;
-    color: #666;
-}
-
-.opt-delete-option-name {
-    color: #004030;
-    font-weight: 700;
-    font-size: 18px;
-}
-.opt-delete-btn-confirm {
-    width: 180px;
-    height: 44px;
-    background: #004030;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 14px;
-    transition: all 0.2s ease;
-}
-
-.opt-delete-btn-confirm:hover {
-    background: #063a32;
-    color: white;
-    box-shadow: 0 4px 12px rgba(0, 64, 48, 0.2);
-}
-.opt-delete-btn-cancel {
-    width: 120px;
-    height: 44px;
-    background: transparent;
-    color: #666;
-    border: 1.5px solid #ADADAD;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 14px;
-    transition: all 0.2s ease;
-}
-
-.opt-delete-btn-cancel:hover {
-    background: #f8f9fa;
-    color: #333;
-}
-.btn-close:focus {
-    box-shadow: none;
-    outline: none;
-}
-
 
 /* --- Admin Custom Frame Options Styles --- */
 .opt-admin-container {
@@ -2511,6 +2347,7 @@ color: #DC2626;
 .fpm-btn-add:hover {
     background: #0a5247;
 }
+
 .fpm-table-container {
     max-height: 350px;
     overflow-y: auto;
@@ -2549,10 +2386,6 @@ color: #DC2626;
     font-weight: 700;
 }
 
-#deleteFixedPriceModal {
-    z-index: 1070;
-}
-
 .fpm-delete-dialog {
     max-width: 300px;
 }
@@ -2572,6 +2405,7 @@ color: #DC2626;
     line-height: 1.5;
     margin-bottom: 1.5rem !important;
 }
+
 .fpm-btn-delete {
     width: 36px;
     height: 36px;
@@ -2610,12 +2444,93 @@ color: #DC2626;
     color: #004030;
     text-decoration: underline;
 }
+
 .fpm-table-container::-webkit-scrollbar {
     width: 6px;
 }
+
 .fpm-table-container::-webkit-scrollbar-thumb {
     background: #ADADAD;
     border-radius: 10px;
+}
+
+/* === MODAL POSITIONING FIX === */
+#fixedPriceModal.modal {
+    z-index: 1150;
+    padding-top: 0 !important;
+    align-items: flex-start;
+}
+
+#fixedPriceModal .modal-dialog {
+    margin: 90px auto 20px;
+    max-width: 700px;
+    max-height: calc(100vh - 110px);
+    display: flex;
+    flex-direction: column;
+}
+
+#fixedPriceModal .modal-content.fpm-modal-content {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 110px);
+    overflow: hidden;
+}
+
+#fixedPriceModal .modal-body {
+    overflow-y: auto;
+    flex: 1 1 auto;
+    padding: 25px 30px;
+}
+
+#fixedPriceModal .modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+#fixedPriceModal .modal-body::-webkit-scrollbar-thumb {
+    background: #ADADAD;
+    border-radius: 10px;
+}
+
+#deleteFixedPriceModal {
+    z-index: 1160;
+}
+
+.modal-backdrop {
+    z-index: 1140;
+}
+
+@media (max-width: 768px) {
+    #fixedPriceModal .modal-dialog {
+        margin: 86px 12px 12px;
+        max-width: 100%;
+        max-height: calc(100vh - 98px);
+    }
+
+    #fixedPriceModal .modal-content.fpm-modal-content {
+        max-height: calc(100vh - 98px);
+        border-radius: 14px !important;
+    }
+
+    .fpm-header {
+        padding: 16px 18px !important;
+    }
+
+    #fixedPriceModal .modal-body {
+        padding: 16px 14px;
+    }
+
+    .fpm-form-container {
+        padding: 16px;
+    }
+
+    .fpm-table-container {
+        max-height: 220px;
+    }
+
+    .fpm-btn-add {
+        width: 100%;
+        margin-top: 8px;
+    }
 }
 /* =========================================
    4. GUEST HEADER STYLES (gst-)
