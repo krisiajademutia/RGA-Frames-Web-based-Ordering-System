@@ -9,6 +9,7 @@
 
     $customer_id = (int)$_SESSION['user_id'];
 
+    // Check eligibility: at least one completed order
     $eligCheck = $conn->prepare("
         SELECT COUNT(*) AS cnt FROM tbl_orders
         WHERE customer_id = ? AND order_status = 'COMPLETED'
@@ -17,15 +18,7 @@
     $eligCheck->execute();
     $canReview = (int)$eligCheck->get_result()->fetch_assoc()['cnt'] > 0;
 
-    $myReviewStmt = $conn->prepare("
-        SELECT review_id, rating, review_text,
-            DATE_FORMAT(review_date_posted, '%M %d, %Y') AS review_date
-        FROM tbl_reviews WHERE customer_id = ? LIMIT 1
-    ");
-    $myReviewStmt->bind_param('i', $customer_id);
-    $myReviewStmt->execute();
-    $myReview = $myReviewStmt->get_result()->fetch_assoc();
-
+    // Fetch all reviews
     $allReviews = $conn->query("
         SELECT r.review_id, r.rating, r.review_text,
             DATE_FORMAT(r.review_date_posted, '%M %d, %Y') AS review_date,
@@ -150,18 +143,6 @@
             border-radius: 10px; padding: 0.75rem 1rem;
             font-size: 0.82rem; color: #854d0e; line-height: 1.5;
         }
-        .rv-my-review {
-            background: #f0fdf4;
-            border: 1.5px solid #a7f3d0;
-            border-radius: 12px;
-            padding: 1rem 1.25rem;
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 1rem;
-        }
-        .rv-my-review-body { flex: 1; }
-        .rv-my-review-meta { font-size: 0.75rem; color: #6b7280; margin-top: 0.35rem; }
         .rv-list-header {
             font-size: 0.82rem; font-weight: 800; letter-spacing: 0.07em;
             text-transform: uppercase; color: #374151; margin-bottom: 0.85rem;
@@ -234,21 +215,9 @@
             </div>
 
             <div class="rv-write-card">
-                <div class="rv-write-title"><i class="fas fa-pen-to-square" style="color:#0f3d33;"></i> Your Review</div>
+                <div class="rv-write-title"><i class="fas fa-pen-to-square" style="color:#0f3d33;"></i> Write a Review</div>
 
-                <?php if ($myReview): ?>
-                    <div class="rv-my-review">
-                        <div class="rv-my-review-body">
-                            <div class="rv-stars-row mb-1">
-                                <?php for ($i = 1; $i <= 5; $i++): ?>
-                                    <i class="fas fa-star <?= $i <= $myReview['rating'] ? 'rv-star-on' : 'rv-star-off' ?>" style="font-size:0.9rem;"></i>
-                                <?php endfor; ?>
-                            </div>
-                            <p style="margin:0;font-size:0.9rem;color:#374151;line-height:1.6;"><?= htmlspecialchars($myReview['review_text']) ?></p>
-                            <div class="rv-my-review-meta"><i class="fas fa-clock"></i> <?= $myReview['review_date'] ?></div>
-                        </div>
-                    </div>
-                <?php elseif (!$canReview): ?>
+                <?php if (!$canReview): ?>
                     <div class="rv-locked-note">
                         <i class="fas fa-lock" style="margin-top:2px;flex-shrink:0;"></i>
                         <span>You can leave a review after completing your first order. Place an order and we'll unlock this for you!</span>

@@ -34,6 +34,7 @@ if ($action === 'add') {
         exit();
     }
 
+    // Must have at least one completed order
     $chk = $conn->prepare("
         SELECT COUNT(*) AS cnt FROM tbl_orders
         WHERE customer_id = ? AND order_status = 'COMPLETED'
@@ -45,13 +46,7 @@ if ($action === 'add') {
         exit();
     }
 
-    $dup = $conn->prepare("SELECT review_id FROM tbl_reviews WHERE customer_id = ? LIMIT 1");
-    $dup->bind_param('i', $customer_id);
-    $dup->execute();
-    if ($dup->get_result()->num_rows > 0) {
-        echo json_encode(['success' => false, 'message' => 'You have already submitted a review.']);
-        exit();
-    }
+    // 🚀 TEAMMATE'S LOGIC: Removed the duplicate check here so they can leave infinite reviews!
 
     $stmt = $conn->prepare("
         INSERT INTO tbl_reviews (customer_id, rating, review_text)
@@ -60,10 +55,14 @@ if ($action === 'add') {
     $stmt->bind_param('iis', $customer_id, $rating, $review_text);
 
     if ($stmt->execute()) {
+        
+        // 🚀 YOUR LOGIC: Using your SOLID refactored classes!
         require_once __DIR__ . '/../classes/Notification/NotificationRepository.php';
         require_once __DIR__ . '/../classes/Notification/NotificationService.php';
+        
         $notifRepo = new NotificationRepository($conn);
         $notifService = new NotificationService($notifRepo);
+        
         $stars = str_repeat('⭐', $rating);
         $preview = mb_substr($review_text, 0, 40) . (mb_strlen($review_text) > 40 ? '...' : '');
         
