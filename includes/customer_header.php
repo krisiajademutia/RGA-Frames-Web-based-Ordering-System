@@ -20,15 +20,6 @@ if ($current_user_id > 0) {
         $notif_count = $row['total'];
     }
     $stmt->close();
-
-    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM tbl_cart WHERE customer_id = ?");
-    $stmt->bind_param("i", $current_user_id);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    if ($res && $row = $res->fetch_assoc()) {
-        $cart_count = $row['total'];
-    }
-    $stmt->close();
 }
 
 $current_page = basename($_SERVER['PHP_SELF']);
@@ -85,9 +76,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
         <a href="customer_cart.php" class="cust-hdr-icon-btn">
             <i class="fas fa-shopping-cart"></i>
-            <?php if ($cart_count > 0): ?>
-                <span class="cust-hdr-badge"><?php echo $cart_count; ?></span>
-            <?php endif; ?>
         </a>
 
         <a href="customer_notifications.php" class="cust-hdr-icon-btn">
