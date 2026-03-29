@@ -60,8 +60,10 @@ if ($action === 'add') {
     $stmt->bind_param('iis', $customer_id, $rating, $review_text);
 
     if ($stmt->execute()) {
+        require_once __DIR__ . '/../classes/Notification/NotificationRepository.php';
         require_once __DIR__ . '/../classes/Notification/NotificationService.php';
-        $notifService = new NotificationService($conn);
+        $notifRepo = new NotificationRepository($conn);
+        $notifService = new NotificationService($notifRepo);
         $stars = str_repeat('⭐', $rating);
         $preview = mb_substr($review_text, 0, 40) . (mb_strlen($review_text) > 40 ? '...' : '');
         

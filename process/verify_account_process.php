@@ -8,6 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 require_once __DIR__ . '/../config/db_connect.php';
+require_once __DIR__ . '/../classes/UserRepository.php';
 require_once __DIR__ . '/../classes/RegistrationService.php';
 
 // Security check
@@ -49,7 +50,8 @@ if ($otp !== $pending['otp']) {
 }
 
 // 🚀 4. SUCCESS! FINALLY SAVE THEM TO THE DATABASE! 🚀
-$service = new RegistrationService($conn);
+$userRepository = new UserRepository($conn);
+$service = new RegistrationService($userRepository);
 
 // We pass the original $_POST data we held in the session!
 $result = $service->register($pending['data']);

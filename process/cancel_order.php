@@ -2,6 +2,7 @@
 // process/cancel_order.php
 session_start();
 include __DIR__ . '/../config/db_connect.php';
+require_once __DIR__ . '/../classes/Notification/NotificationRepository.php';
 require_once __DIR__ . '/../classes/Notification/NotificationService.php';
 
 
@@ -55,7 +56,8 @@ $update->bind_param("i", $order_id);
 
 if ($update->execute()) {
     // --- NOTIFICATION TRIGGER: CUSTOMER CANCELLED ---
-    $notifService = new NotificationService($conn);
+    $notifRepo = new NotificationRepository($conn);
+    $notifService = new NotificationService($notifRepo);
     $notifService->notifyAdmin($order_id, "Order Cancelled", "Order ($ref_no) has been cancelled by the customer.");
     
     echo json_encode(['success' => true, 'message' => 'Order cancelled successfully.']);

@@ -3,6 +3,7 @@
 ob_start();                    // ← IMPORTANT for clean JSON
 session_start();
 include __DIR__ . '/../config/db_connect.php';
+require_once __DIR__ . '/../classes/Notification/NotificationRepository.php';
 require_once __DIR__ . '/../classes/Notification/NotificationService.php';
 
 header('Content-Type: application/json');
@@ -83,7 +84,8 @@ if ($new_status === 'COMPLETED') {
     }
 
     // --- NOTIFICATION ---
-    $notifService = new NotificationService($conn);
+    $notifRepo = new NotificationRepository($conn);
+    $notifService = new NotificationService($notifRepo);
 
     $stmtC = $conn->prepare("SELECT customer_id, order_reference_no FROM tbl_orders WHERE order_id = ?");
     $stmtC->bind_param("i", $order_id);

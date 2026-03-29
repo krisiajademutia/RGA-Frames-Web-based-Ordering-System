@@ -6,15 +6,20 @@ require_once __DIR__ . '/../CustomFrame/CustomFrameService.php';
 
 class CheckoutService {
     private $repo;
-    private $conn;
+    private $cfService;
 
     // ── Business rule constants ──────────────────────────
     const BULK_QTY_THRESHOLD = 30;   // min total frames
     const DISCOUNT_RATE      = 0.20; // 20%
 
-    public function __construct($conn) {
-        $this->repo = new CheckoutRepository($conn);
-        $this->conn = $conn;
+    public function __construct(CheckoutRepository $repo, CustomFrameService $cfService) {
+        $this->repo = $repo;
+        $this->cfService = $cfService;
+    }
+
+    // Helper for controllers to get latest order id
+    public function getLatestOrderId(int $customer_id): int {
+        return $this->repo->getLatestOrderId($customer_id);
     }
 
     public function getCustomerDetails(int $customer_id): ?array {
@@ -92,8 +97,7 @@ class CheckoutService {
             
             if ($itemType === 'CUSTOM_FRAME') {
                 // Only use CustomFrameService to recompute if it's actually a frame
-                $cfService = new CustomFrameService($this->conn);
-                $priceData = $cfService->calculatePrice($buyNowItemData);
+                $priceData = $this->cfService->calculatePrice($buyNowItemData);
                 $cartTotal = $priceData['grand_total'];
             } else {
                 // For PRINTING and READY_MADE, trust the price already calculated

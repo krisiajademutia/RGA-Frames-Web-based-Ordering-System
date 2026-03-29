@@ -133,6 +133,15 @@ class CheckoutRepository {
         return (int)($row['cnt'] ?? 0);
     }
 
+    public function getLatestOrderId(int $customer_id): int {
+        $stmt = $this->conn->prepare("SELECT order_id FROM tbl_orders WHERE customer_id = ? ORDER BY order_id DESC LIMIT 1");
+        $stmt->bind_param("i", $customer_id);
+        $stmt->execute();
+        $res = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        return $res ? (int)$res['order_id'] : 0;
+    }
+
     public function placeOrder(int $customer_id, array $orderData, array $cartItems, ?array $paymentProof, bool $isBuyNow = false, ?array $buyNowItemData = null): bool {
         $this->conn->begin_transaction();
 

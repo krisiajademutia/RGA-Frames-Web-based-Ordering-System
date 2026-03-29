@@ -1,40 +1,31 @@
 <?php
 class RegistrationService {
-    private $conn;
+    private $userRepository;
 
-    public function __construct($conn) {
-        $this->conn = $conn;
+    public function __construct(UserRepository $userRepository) {
+        $this->userRepository = $userRepository;
     }
 
     public function register(array $data): array {
-        $first_name   = trim($data['first_name']);
-        $last_name    = trim($data['last_name']);
-        $username     = trim($data['username']);
-        $email        = trim($data['email']);
-        $phone_number = !empty($data['phone_number']) ? preg_replace('/\D/', '', $data['phone_number']) : null;
-        $password     = $data['password'];
+        $data['first_name']   = trim($data['first_name']);
+        $data['last_name']    = trim($data['last_name']);
+        $data['username']     = trim($data['username']);
+        $data['email']        = trim($data['email']);
+        $data['phone_number'] = !empty($data['phone_number']) ? preg_replace('/\D/', '', $data['phone_number']) : null;
+        
+        $hashed_password = password_hash($data['password'], PASSWORD_DEFAULT);
 
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        $user_id = $this->userRepository->createCustomer($data, $hashed_password);
 
-        $stmt = $this->conn->prepare(
-            "INSERT INTO tbl_customer 
-             (first_name, last_name, username, email, phone_number, password) 
-             VALUES (?, ?, ?, ?, ?, ?)"
-        );
-        $stmt->bind_param("ssssss", $first_name, $last_name, $username, $email, $phone_number, $hashed_password);
-
-        if ($stmt->execute()) {
-            $user_id = $this->conn->insert_id;
-            $stmt->close();
-
+        if ($user_id) {
             // Auto-login
             //$_SESSION['user_id']     = $user_id;
-            //$_SESSION['first_name']  = $first_name;
+            //$_SESSION['first_name']  = $data['first_name'];
             //$_SESSION['role']        = 'CUSTOMER';
 
             return ['success' => true, 'user_id' => $user_id, 'message' => 'Registration successful!'];
         } 
-            return ['success' => false, 'message' => 'Database error.Please try again ' ];
-        
+            
+        return ['success' => false, 'message' => 'Database error.Please try again ' ];
     }
 }

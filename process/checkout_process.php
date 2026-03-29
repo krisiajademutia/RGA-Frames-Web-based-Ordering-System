@@ -3,8 +3,10 @@ ob_start(); // Start output buffering to trap any invisible errors
 // process/checkout_process.php
 session_start();
 require_once __DIR__ . '/../config/db_connect.php';
+require_once __DIR__ . '/../classes/Checkout/Repository/CheckoutRepository.php';
 require_once __DIR__ . '/../classes/Checkout/CheckoutService.php';
 require_once __DIR__ . '/../classes/CustomFrame/CustomFrameService.php';
+require_once __DIR__ . '/../classes/Notification/NotificationRepository.php';
 require_once __DIR__ . '/../classes/Notification/NotificationService.php';
 
 header('Content-Type: application/json');
@@ -22,8 +24,15 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $customer_id     = (int)$_SESSION['user_id'];
-$checkoutService = new CheckoutService($conn);
-$notifService    = new NotificationService($conn); 
+
+// Instantiate Repositories
+$checkoutRepo    = new CheckoutRepository($conn);
+$notifRepo       = new NotificationRepository($conn);
+
+// Instantiate Services with injected Repositories
+$cfService       = new CustomFrameService($conn);
+$checkoutService = new CheckoutService($checkoutRepo, $cfService);
+$notifService    = new NotificationService($notifRepo); 
 
 $isBuyNow = isset($_SESSION['buy_now_item']) && is_array($_SESSION['buy_now_item']) && !empty($_SESSION['buy_now_item']);
 
@@ -34,7 +43,6 @@ try {
         $itemType = $buyNowItemData['item_type'] ?? 'CUSTOM_FRAME';
 
         if ($itemType === 'CUSTOM_FRAME') {
-            $cfService = new CustomFrameService($conn);
             $prices = $cfService->calculatePrice($buyNowItemData);
             $cartTotal = $prices['grand_total'];
         } else {
@@ -52,12 +60,7 @@ try {
             $ref = $response['ref_no'] ?? "New Order";
 
             if ($new_order_id == 0) {
-                $stmt = $conn->prepare("SELECT order_id FROM tbl_orders WHERE customer_id = ? ORDER BY order_id DESC LIMIT 1");
-                $stmt->bind_param("i", $customer_id);
-                $stmt->execute();
-                $res = $stmt->get_result()->fetch_assoc();
-                $new_order_id = $res ? (int)$res['order_id'] : 0;
-                $stmt->close();
+                $new_order_id = $checkoutService->getLatestOrderId($customer_id);
             }
 
             $notifService->notifyCustomer($customer_id, $new_order_id, "Order Received", "Thank you! We have received your order ($ref) and will review it shortly.");
@@ -92,12 +95,7 @@ try {
             $ref = $response['ref_no'] ?? "New Order";
 
             if ($new_order_id == 0) {
-                $stmt = $conn->prepare("SELECT order_id FROM tbl_orders WHERE customer_id = ? ORDER BY order_id DESC LIMIT 1");
-                $stmt->bind_param("i", $customer_id);
-                $stmt->execute();
-                $res = $stmt->get_result()->fetch_assoc();
-                $new_order_id = $res ? (int)$res['order_id'] : 0;
-                $stmt->close();
+                $new_order_id = $checkoutService->getLatestOrderId($customer_id);
             }
 
             $notifService->notifyCustomer($customer_id, $new_order_id, "Order Received", "Thank you! We have received your order ($ref) and will review it shortly.");

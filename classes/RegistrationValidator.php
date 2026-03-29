@@ -2,10 +2,10 @@
 // classes/RegistrationValidator.php
 
 class RegistrationValidator {
-    private $conn;
+    private $userRepository;
 
-    public function __construct($conn) {
-        $this->conn = $conn;
+    public function __construct(UserRepository $userRepository) {
+        $this->userRepository = $userRepository;
     }
 
     // Validates inputs and returns an array of errors
@@ -62,30 +62,14 @@ class RegistrationValidator {
             }
         }
 
-        return $errors;
-    }
-
-    // Checks for duplicate email or username
-    public function checkDuplicates(string $email, string $username): array {
-        $errors = [];
-
-        // Check email
-        $stmt = $this->conn->prepare("SELECT 1 FROM tbl_customer WHERE email = ? LIMIT 1");
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        if ($stmt->get_result()->num_rows > 0) {
-            $errors['email'] = "This email is already registered.";
+        // Check for duplicates in the database BEFORE we proceed
+        if (empty($errors['email']) && $this->userRepository->emailExists($email)) {
+            $errors['email'] = "This email is already registered in our system. Please use a different email.";
         }
-        $stmt->close();
 
-        // Check username
-        $stmt = $this->conn->prepare("SELECT 1 FROM tbl_customer WHERE username = ? LIMIT 1");
-        $stmt->bind_param("s", $username);
-        $stmt->execute();
-        if ($stmt->get_result()->num_rows > 0) {
-            $errors['username'] = "This username is already taken.";
+        if (empty($errors['username']) && $this->userRepository->usernameExists($username)) {
+            $errors['username'] = "This username is already taken. Please choose another one.";
         }
-        $stmt->close();
 
         return $errors;
     }

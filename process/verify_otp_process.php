@@ -7,7 +7,7 @@ date_default_timezone_set('Asia/Manila');
 include_once __DIR__ . '/../config/db_connect.php';
 
 // Load classes
-require_once __DIR__ . '/../classes/UserFinder.php';
+require_once __DIR__ . '/../classes/UserRepository.php';
 require_once __DIR__ . '/../classes/OtpService.php';
 
 if (!isset($_SESSION['reset_email'])) {
@@ -30,8 +30,8 @@ if (strlen($entered_otp) !== 6 || !ctype_digit($entered_otp)) {
     exit();
 }
 
-$finder = new UserFinder($conn);
-$user = $finder->findByEmail($email);
+$userRepository = new UserRepository($conn);
+$user = $userRepository->findByEmail($email);
 
 if (!$user) {
     $_SESSION['error'] = 'User account not found.';

@@ -9,7 +9,7 @@ require_once __DIR__ . '/../config/config.php';
 include_once __DIR__ . '/../includes/email_functions.php';
 
 // Load classes
-require_once __DIR__ . '/../classes/UserFinder.php';
+require_once __DIR__ . '/../classes/UserRepository.php';
 require_once __DIR__ . '/../classes/OtpService.php';
 
 // ONLY run logic if it's a POST request with send_otp button
@@ -23,8 +23,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_otp'])) {
         exit();
     }
 
-    $finder = new UserFinder($conn);
-    $user = $finder->findByEmail($email);
+    $userRepository = new UserRepository($conn);
+    $user = $userRepository->findByEmail($email);
 
     if (!$user) {
         $_SESSION['error'] = 'No account found with that email.';

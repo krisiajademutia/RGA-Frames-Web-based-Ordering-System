@@ -1,7 +1,7 @@
 <?php
 session_start();
 include_once __DIR__ . '/../config/db_connect.php';
-require_once __DIR__ . '/../classes/UserFinder.php';
+require_once __DIR__ . '/../classes/UserRepository.php';
 require_once __DIR__ . '/../classes/AuthService.php';
 
 if (!isset($_POST['login_btn'])) {
@@ -27,10 +27,10 @@ if (!empty($errors)) {
     exit();
 }
 
-$finder = new UserFinder($conn);
-$user = $finder->findByUsernameOrEmail($username);
+$userRepository = new UserRepository($conn);
+$user = $userRepository->findByUsernameOrEmail($username);
 
-$auth = new AuthService($conn);
+$auth = new AuthService($userRepository);
 
 if ($auth->attemptLogin($user, $password)) {
     

@@ -2,6 +2,7 @@
 // customer/customer_checkout.php
 session_start();
 include __DIR__ . '/../config/db_connect.php';
+require_once __DIR__ . '/../classes/Checkout/Repository/CheckoutRepository.php';
 require_once __DIR__ . '/../classes/Checkout/CheckoutService.php';
 require_once __DIR__ . '/../classes/CustomFrame/CustomFrameService.php';
 
@@ -11,7 +12,10 @@ if (!isset($_SESSION['user_id']) || strtoupper($_SESSION['role'] ?? '') !== 'CUS
 }
 
 $customer_id     = (int)$_SESSION['user_id'];
-$checkoutService = new CheckoutService($conn);
+
+$checkoutRepo    = new CheckoutRepository($conn);
+$cfService       = new CustomFrameService($conn);
+$checkoutService = new CheckoutService($checkoutRepo, $cfService);
 $customer        = $checkoutService->getCustomerDetails($customer_id);
 $isBuyNow        = isset($_SESSION['buy_now_item']);
 $cartItems       = [];

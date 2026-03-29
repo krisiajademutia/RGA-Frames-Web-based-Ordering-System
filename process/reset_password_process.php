@@ -5,7 +5,7 @@ session_start();
 include_once __DIR__ . '/../config/db_connect.php';
 
 // Load classes
-require_once __DIR__ . '/../classes/UserFinder.php';
+require_once __DIR__ . '/../classes/UserRepository.php';
 require_once __DIR__ . '/../classes/PasswordResetService.php';
 
 // Security Check
@@ -36,8 +36,8 @@ if ($new_password !== $confirm_password) {
     exit();
 }
 
-$finder = new UserFinder($conn);
-$user = $finder->findByEmail($email);
+$userRepository = new UserRepository($conn);
+$user = $userRepository->findByEmail($email);
 
 if (!$user) {
     $_SESSION['error'] = 'User not found in database.';
@@ -45,7 +45,7 @@ if (!$user) {
     exit();
 }
 
-$resetService = new PasswordResetService($conn);
+$resetService = new PasswordResetService($userRepository);
 $success = $resetService->resetPassword($user, $new_password, $confirm_password);
 
 // ... after $success = $resetService->resetPassword(...)

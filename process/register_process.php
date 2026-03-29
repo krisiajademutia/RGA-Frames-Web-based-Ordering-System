@@ -4,50 +4,17 @@ session_start();
 require_once __DIR__ . '/../config/db_connect.php';
 require_once __DIR__ . '/../config/config.php'; 
 require_once __DIR__ . '/../includes/email_functions.php';
+require_once __DIR__ . '/../classes/UserRepository.php';
 require_once __DIR__ . '/../classes/RegistrationValidator.php';
 
 $errors = [];
 $old = $_POST;
 
-$validator = new RegistrationValidator($conn);
+$userRepository = new UserRepository($conn);
+$validator = new RegistrationValidator($userRepository);
 $errors = $validator->validate($_POST);
 
 $emailToCheck = $_POST['email'] ?? '';
-$usernameToCheck = $_POST['username'] ?? '';
-
-// Check for duplicates in the database BEFORE we proceed
-if (empty($errors['email']) && empty($errors['username'])) {
-    
-    // 🚨 1. CROSS-TABLE EMAIL CHECK (Checks Admin AND Customer tables)
-    $stmtEmail = $conn->prepare("
-        SELECT email FROM tbl_admin WHERE email = ? 
-        UNION 
-        SELECT email FROM tbl_customer WHERE email = ?
-    ");
-    $stmtEmail->bind_param("ss", $emailToCheck, $emailToCheck);
-    $stmtEmail->execute();
-    $stmtEmail->store_result();
-    
-    if ($stmtEmail->num_rows > 0) {
-        $errors['email'] = "This email is already registered in our system. Please use a different email.";
-    }
-    $stmtEmail->close();
-
-    // 🚨 2. CROSS-TABLE USERNAME CHECK (Checks Admin AND Customer tables)
-    $stmtUser = $conn->prepare("
-        SELECT username FROM tbl_admin WHERE username = ? 
-        UNION 
-        SELECT username FROM tbl_customer WHERE username = ?
-    ");
-    $stmtUser->bind_param("ss", $usernameToCheck, $usernameToCheck);
-    $stmtUser->execute();
-    $stmtUser->store_result();
-    
-    if ($stmtUser->num_rows > 0) {
-        $errors['username'] = "This username is already taken. Please choose another one.";
-    }
-    $stmtUser->close();
-}
 
 // If there are validation errors, send them back
 if (!empty($errors)) {

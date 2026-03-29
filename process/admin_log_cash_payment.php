@@ -58,8 +58,10 @@ try {
     // ========================================================================
     // --- NOTIFICATION TRIGGER: CASH PAYMENT LOGGED ---
     // ========================================================================
+    require_once __DIR__ . '/../classes/Notification/NotificationRepository.php';
     require_once __DIR__ . '/../classes/Notification/NotificationService.php';
-    $notifService = new NotificationService($conn);
+    $notifRepo = new NotificationRepository($conn);
+    $notifService = new NotificationService($notifRepo);
 
     if ($order_id > 0) {
         $stmtC = $conn->prepare("SELECT customer_id FROM tbl_orders WHERE order_id = ?");
