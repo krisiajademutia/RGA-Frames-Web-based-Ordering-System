@@ -1,5 +1,5 @@
 <?php
-require 'config/db_connect.php';
+require '../config/db_connect.php';
 
 $orderId = isset($_GET['order_id']) ? $_GET['order_id'] : null;
 
@@ -7,7 +7,7 @@ if (!$orderId) {
     die("Error: No Order ID provided.");
 }
 
-// 1. Fetch Order Details from tbl_orders
+// 1. Fetch Order Details
 $stmt = $conn->prepare("SELECT * FROM tbl_orders WHERE order_id = ?");
 $stmt->bind_param("i", $orderId);
 $stmt->execute();
@@ -17,25 +17,24 @@ if (!$order) {
     die("Order not found.");
 }
 
+// 2. Fetch Payment Data
 $stmtPay = $conn->prepare("SELECT total_amount FROM tbl_payment WHERE order_id = ?");
 $stmtPay->bind_param("i", $orderId);
 $stmtPay->execute();
 $paymentData = $stmtPay->get_result()->fetch_assoc();
 $actualAmountPaid = isset($paymentData['total_amount']) ? $paymentData['total_amount'] : 0;
 
-// 2. Fetch Frame Items
+// 3. Fetch Items (Frames & Printing)
 $stmtFrames = $conn->prepare("SELECT frame_category, service_type, quantity, sub_total FROM tbl_frame_order_items WHERE order_id = ?");
 $stmtFrames->bind_param("i", $orderId);
 $stmtFrames->execute();
 $framesResult = $stmtFrames->get_result();
 
-// 3. Fetch Printing Items
 $stmtPrint = $conn->prepare("SELECT 'Printing Service' as frame_category, CONCAT(width_inch, 'x', height_inch, ' inch') as service_type, quantity, sub_total FROM tbl_printing_order_items WHERE order_id = ?");
 $stmtPrint->bind_param("i", $orderId);
 $stmtPrint->execute();
 $printResult = $stmtPrint->get_result();
 
-// 4. Combine all items
 $allItems = [];
 while ($row = $framesResult->fetch_assoc()) { $allItems[] = $row; }
 while ($row = $printResult->fetch_assoc()) { $allItems[] = $row; }
@@ -47,86 +46,15 @@ while ($row = $printResult->fetch_assoc()) { $allItems[] = $row; }
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Receipt - <?= htmlspecialchars($order['order_reference_no']) ?></title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        body { 
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
-            background-color: #fff; 
-            margin: 0; 
-            padding: 40px; 
-            color: #333;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        .action-bar { 
-            max-width: 800px; 
-            margin: 0 auto 30px auto; 
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .cst-ord-dtls-back {
-            text-decoration: none;
-            color: #8B5E3C;
-            font-weight: 600;
-            font-size: 14px;
-            transition: color 0.3s;
-            display: flex;
-            align-items: center;
-        }
-        .cst-ord-dtls-back i { margin-right: 8px; }
-        .cst-ord-dtls-back:hover {
-            color: #5D3E28;
-        }
-
-        .btn-download { 
-            background: #8B5E3C; 
-            color: white; 
-            padding: 10px 20px; 
-            text-decoration: none; 
-            border-radius: 4px; 
-            font-weight: 600; 
-            display: inline-block; 
-            font-size: 14px;
-        }
-
-        .receipt-container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .header { margin-bottom: 25px; }
-        .logo-text { color: #8B5E3C; font-size: 24px; font-weight: bold; margin: 0 0 5px 0; }
-        .divider { border: 0; border-top: 1px solid #eee; margin: 15px 0; }
-
-        .info-section { margin-bottom: 30px; font-size: 13px; color: #666; line-height: 1.6; }
-        .order-title { color: #333; font-size: 18px; font-weight: bold; margin: 0 0 8px 0; }
-        .info-section strong { color: #444; font-weight: 600; }
-
-        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-        th { text-align: left; padding: 10px; border-bottom: 1px solid #eee; color: #8B5E3C; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; }
-        td { padding: 15px 10px; border-bottom: 1px solid #f8f8f8; font-size: 14px; vertical-align: top; }
-
-        .item-description { color: #333; font-weight: 500; }
-        .item-service { font-size: 11px; color: #888; margin-top: 2px; }
-
-        .totals-section { width: 100%; display: flex; justify-content: flex-end; margin-top: 20px; }
-        .totals-table { width: 250px; border-collapse: collapse; margin-bottom: 0; }
-        .totals-table td { border: none; padding: 5px 10px; font-size: 13px; color: #666; }
-        .totals-table .amount { text-align: right; color: #333; font-weight: bold; }
-        
-        .balance-row td { background-color: #FDF4EB; color: #8B5E3C; font-weight: bold; padding: 10px; }
-
-        .status-stamp { border: 2px solid #2ECC71; color: #2ECC71; padding: 5px 15px; font-weight: bold; display: inline-block; margin-top: 20px; border-radius: 4px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
-
-        .footer { text-align: center; font-size: 11px; color: #aaa; margin-top: 60px; padding-top: 20px; line-height: 1.5; }
-    </style>
+    <link rel="stylesheet" href="../assets/css/style.css"> 
 </head>
-<body>
+<body class="receipt-page">
 
     <div class="action-bar">
-        <a href="customer/customer_order_details.php?id=<?= $orderId ?>" class="cst-ord-dtls-back">
+        <a href="../customer/customer_order_details.php?id=<?= $orderId ?>" class="cst-ord-dtls-back">
             <i class="fas fa-arrow-left"></i> Back to Order Details
         </a>
 
@@ -136,11 +64,11 @@ while ($row = $printResult->fetch_assoc()) { $allItems[] = $row; }
     </div>
 
     <div class="receipt-container">
-        
         <div class="header">
-            <div class="logo-text">RGA Frames</div>
-            <hr class="divider">
+            <img src="../assets/img/rga_logo.png" alt="RGA Frames Logo" class="receipt-logo">
+            <div class="logo-text">RGA Frames</div>        
         </div>
+
 
         <div class="info-section">
             <div class="order-title">Acknowledgement Receipt</div>
@@ -150,7 +78,7 @@ while ($row = $printResult->fetch_assoc()) { $allItems[] = $row; }
             <strong>Payment Method:</strong> <?= htmlspecialchars($order['payment_method']) ?>
         </div>
 
-        <table>
+        <table class="receipt-table">
             <thead>
                 <tr>
                     <th style="width: 60%;">Item</th>
@@ -168,7 +96,7 @@ while ($row = $printResult->fetch_assoc()) { $allItems[] = $row; }
                         </td>
                         <td style="text-align: center;">×<?= $item['quantity'] ?></td>
                         <td style="text-align: right; font-weight: bold;">
-                            ₱<?= number_format($item['sub_total'], 2) ?>
+                            &#8369;<?= number_format($item['sub_total'], 2) ?>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -186,15 +114,15 @@ while ($row = $printResult->fetch_assoc()) { $allItems[] = $row; }
             <table class="totals-table">
                 <tr>
                     <td>Grand Total</td>
-                    <td class="amount">₱<?= number_format($order['total_price'], 2) ?></td>
+                    <td class="amount">&#8369;<?= number_format($order['total_price'], 2) ?></td>
                 </tr>
                 <tr>
                     <td style="color: #2ECC71;">Amount Paid</td>
-                    <td class="amount" style="color: #2ECC71;">-₱<?= number_format($actualAmountPaid, 2) ?></td>
+                    <td class="amount" style="color: #2ECC71;">-&#8369;<?= number_format($actualAmountPaid, 2) ?></td>
                 </tr>
                 <tr class="balance-row">
                     <td>Balance</td>
-                    <td class="amount">₱<?= number_format($order['total_price'] - $actualAmountPaid, 2) ?></td>
+                    <td class="amount">&#8369;<?= number_format($order['total_price'] - $actualAmountPaid, 2) ?></td>
                 </tr>
             </table>
         </div>

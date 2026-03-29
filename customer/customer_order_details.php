@@ -184,7 +184,7 @@ if ($isErr) {
         <div class="cst-ord-dtls-order-card-right">
             <span class="cst-ord-badge <?= $badgeClass ?>"><?= $badgeLabel ?></span>
             <?php if ($isCompleted): ?>
-            <a href="/rga_frames/acknowledgement_receipt.php?order_id=<?= $order_id ?>" class="cst-ord-dtls-dl-receipt-btn">
+            <a href="/rga_frames/process/acknowledgement_receipt.php?order_id=<?= $order_id ?>" class="cst-ord-dtls-dl-receipt-btn">
                 <i class="fas fa-eye"></i> Acknowledgement Receipt
             </a>
             <?php endif; ?>

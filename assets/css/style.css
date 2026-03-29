@@ -12604,3 +12604,210 @@ body.modal-open { overflow: auto !important; padding-right: 0 !important; }
     display: block;
     border: 1px solid #e5e7eb;
 }
+
+/* =========================================
+   ACKNOWLEDGEMENT RECEIPT
+   ========================================= */
+
+.receipt-page {
+    padding-top: 20px !important; 
+}
+
+.receipt-page .action-bar {
+    margin-top: 20px;
+}
+
+.action-bar { 
+    max-width: 800px; 
+    margin: 0 auto 30px auto; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+}
+
+.header {
+    width: 100%;
+    margin-bottom: 25px;
+    border-bottom: 1px solid #eee; 
+    padding-bottom: 10px;
+}
+
+.receipt-logo {
+    display: inline-block; 
+    vertical-align: middle;
+    width: 40px;
+    height: 40px;
+    border: 2px solid gold;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.logo-text {
+    display: inline-block; 
+    vertical-align: middle;
+    margin-left: 16px; 
+    font-size: 24px;
+    font-weight: bold;
+    color: #0F473A;
+}
+
+.cst-ord-dtls-back {
+    text-decoration: none;
+    color: var(--forest-dark);
+    font-weight: 600;
+    font-size: 14px;
+    transition: opacity 0.3s;
+    display: flex;
+    align-items: center;
+}
+
+.cst-ord-dtls-back i { margin-right: 8px; }
+
+.cst-ord-dtls-back:hover {
+    opacity: 0.8;
+}
+
+.btn-download { 
+    background: var(--forest-dark); 
+    color: white; 
+    padding: 10px 20px; 
+    text-decoration: none; 
+    border-radius: 4px; 
+    font-weight: 600; 
+    display: inline-block; 
+    font-size: 14px;
+}
+
+.receipt-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+
+.header { margin-bottom: 25px; }
+.logo-text { color: var(--forest-dark); font-size: 24px; font-weight: bold; margin: 0 0 5px 0; }
+.divider { border: 0; border-top: 1px solid #eee; margin: 15px 0; }
+
+.info-section { margin-bottom: 30px; font-size: 13px; color: #666; line-height: 1.6; }
+.order-title { color: var(--text-black); font-size: 18px; font-weight: bold; margin: 0 0 8px 0; }
+.info-section strong { color: #444; font-weight: 600; }
+
+.receipt-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+.receipt-table th { text-align: left; padding: 10px; border-bottom: 1px solid #eee; color: var(--forest-dark); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; }
+.receipt-table td { padding: 15px 10px; border-bottom: 1px solid #f8f8f8; font-size: 14px; vertical-align: top; }
+
+.item-description { color: var(--text-black); font-weight: 500; }
+.item-service { font-size: 11px; color: #888; margin-top: 2px; }
+
+.totals-section { width: 100%; display: flex; justify-content: flex-end; margin-top: 20px; }
+.totals-table { width: 250px; border-collapse: collapse; margin-bottom: 0; }
+.totals-table td { border: none; padding: 5px 10px; font-size: 13px; color: #666; }
+.totals-table .amount { text-align: right; color: var(--text-black); font-weight: bold; }
+
+.balance-row td { background-color: var(--cream-light); color: var(--forest-dark); font-weight: bold; padding: 10px; }
+
+.status-stamp { border: 2px solid #2ECC71; color: #2ECC71; padding: 5px 15px; font-weight: bold; display: inline-block; margin-top: 20px; border-radius: 4px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.footer { text-align: center; font-size: 11px; color: #aaa; margin-top: 60px; padding-top: 20px; border-top: 1px solid #eee; line-height: 1.5; }
+
+/* Print optimization */
+@media print {
+    .action-bar { display: none; }
+    body { padding: 0; }
+}
+
+/* =========================================
+    GENERATE PDF RECEIPT
+   ========================================= */
+
+.pdf-body { 
+    font-family: "DejaVu Sans", sans-serif; 
+    padding: 60px 40px 40px 40px; 
+    color: #333; 
+    font-size: 12px;
+    line-height: 1.5;
+    background-color: #fff;
+}
+
+.pdf-body .header { margin-bottom: 25px; }
+
+.pdf-body .logo-text { 
+    color: #0F473A; /* Forest Dark */
+    font-size: 24px; 
+    font-weight: bold; 
+    margin: 0 0 5px 0; 
+}
+
+/* Hairline divider for the header area */
+.pdf-body .divider { 
+    border: none;
+    border-top: 0.5pt solid #eee; 
+    margin: 15px 0; 
+}
+
+.pdf-body .info-section { margin-bottom: 30px; font-size: 13px; color: #666; line-height: 1.6; }
+
+.pdf-body .order-title { color: #000; font-size: 18px; font-weight: bold; margin: 0 0 8px 0; }
+
+.pdf-body table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+
+.pdf-body th { 
+    text-align: left; 
+    padding: 10px; 
+    border: none !important;
+    border-bottom: 0.5pt solid #0F473A !important; 
+    color: #0F473A; 
+    font-size: 11px; 
+    text-transform: uppercase; 
+    letter-spacing: 0.5px; 
+    font-weight: bold;
+}
+
+.pdf-body td { 
+    padding: 15px 10px; 
+    border-bottom: 0.1pt solid #f8f8f8; 
+    font-size: 14px; 
+    vertical-align: top; 
+}
+
+.pdf-body .item-description { color: #333; font-weight: 500; }
+
+.pdf-body .item-service { font-size: 11px; color: #888; margin-top: 2px; }
+
+.pdf-body .totals-wrapper { width: 100%; margin-top: 20px; }
+
+.pdf-body .totals-table { width: 250px; margin-left: auto; border-collapse: collapse; }
+
+.pdf-body .totals-table td { border: none !important; padding: 5px 10px; font-size: 13px; color: #666; }
+
+.pdf-body .totals-table .amount { text-align: right; color: #333; font-weight: bold; }
+
+.pdf-body .balance-row td { 
+    background-color: #ECE7D4 !important; 
+    color: #0F473A; 
+    font-weight: bold; 
+    padding: 10px; 
+}
+
+.pdf-body .status-stamp { 
+    border: 1pt solid #2ECC71; 
+    color: #2ECC71; 
+    padding: 5px 15px; 
+    font-weight: bold; 
+    display: inline-block; 
+    margin-top: 20px; 
+    border-radius: 4px; 
+    text-transform: uppercase; 
+    letter-spacing: 0.5px;
+}
+
+.pdf-body .footer { 
+    text-align: center; 
+    font-size: 11px; 
+    color: #aaa; 
+    margin-top: 60px; 
+    padding-top: 20px; 
+    border-top: 0.5pt solid #f9f9f9; 
+}
