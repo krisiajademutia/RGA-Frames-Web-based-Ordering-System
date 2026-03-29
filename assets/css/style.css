@@ -12446,3 +12446,161 @@ body.modal-open { overflow: auto !important; padding-right: 0 !important; }
     }
     .vrfy-acc-otp-box { gap: 5px; }
 }
+
+/* --- Customer Reviews Page Styles --- */
+.rv-page {
+    background: #f9fafb;
+    min-height: 100vh;
+    padding: 6rem 1.5rem 3rem;
+}
+.rv-inner { max-width: 900px; margin: 0 auto; }
+.rv-page-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1.75rem;
+}
+.rv-back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid #e5e7eb;
+    background: #fff;
+    color: #374151;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: background 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+}
+.rv-back-btn:hover { background: #f3f4f6; color: #111827; border-color: #d1d5db; }
+.rv-page-title { font-size: 1.5rem; font-weight: 800; color: #111827; margin: 0; }
+.rv-summary {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.rv-big-score { font-size: 3.5rem; font-weight: 900; color: #111827; line-height: 1; margin-bottom: 0.4rem; }
+.rv-stars-row { display: flex; gap: 0.2rem; margin-bottom: 0.3rem; }
+.rv-star-on  { color: #f59e0b; }
+.rv-star-off { color: #d1d5db; }
+.rv-total    { font-size: 0.8rem; color: #9ca3af; font-weight: 600; }
+.rv-summary-right { flex: 1; display: flex; flex-direction: column; gap: 0.45rem; }
+.rv-dist-row  { display: flex; align-items: center; gap: 0.6rem; }
+.rv-dist-num  { font-size: 0.78rem; font-weight: 700; color: #374151; width: 10px; text-align: right; flex-shrink: 0; }
+.rv-dist-track { flex: 1; height: 8px; background: #f3f4f6; border-radius: 999px; overflow: hidden; }
+.rv-dist-fill  { height: 100%; background: #f59e0b; border-radius: 999px; min-width: 4px; }
+.rv-write-card {
+    background: #fff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 1.35rem 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.rv-write-title {
+    font-size: 0.82rem; font-weight: 800; letter-spacing: 0.07em;
+    text-transform: uppercase; color: #374151; margin-bottom: 0.9rem;
+    padding-bottom: 0.65rem; border-bottom: 1px solid #f3f4f6;
+    display: flex; align-items: center; gap: 0.45rem;
+}
+.rv-star-picker { display: flex; gap: 0.35rem; margin-bottom: 0.85rem; }
+.rv-star-pick {
+    font-size: 1.6rem; color: #d1d5db; cursor: pointer;
+    transition: color 0.12s, transform 0.12s;
+}
+.rv-star-pick:hover,
+.rv-star-pick.active { color: #f59e0b; transform: scale(1.15); }
+.rv-textarea {
+    width: 100%; padding: 0.7rem 0.9rem;
+    border: 1.5px solid #e5e7eb; border-radius: 10px;
+    font-size: 0.9rem; color: #374151; font-family: inherit;
+    resize: vertical; outline: none; transition: border-color 0.15s;
+    min-height: 90px;
+}
+.rv-textarea:focus { border-color: #0f3d33; }
+.rv-char-count { font-size: 0.72rem; color: #9ca3af; text-align: right; margin-top: 0.3rem; }
+.rv-submit-btn {
+    margin-top: 0.85rem;
+    padding: 0.65rem 1.5rem;
+    background: #0f3d33; color: #fff;
+    border: none; border-radius: 10px;
+    font-size: 0.875rem; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; gap: 0.4rem;
+    transition: background 0.15s;
+}
+.rv-submit-btn:hover:not(:disabled) { background: #0a2e26; }
+.rv-submit-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.rv-locked-note {
+    display: flex; align-items: flex-start; gap: 0.5rem;
+    background: #fefce8; border: 1px solid #fde68a;
+    border-radius: 10px; padding: 0.75rem 1rem;
+    font-size: 0.82rem; color: #854d0e; line-height: 1.5;
+}
+.rv-list-header {
+    font-size: 0.82rem; font-weight: 800; letter-spacing: 0.07em;
+    text-transform: uppercase; color: #374151; margin-bottom: 0.85rem;
+    display: flex; align-items: center; gap: 0.4rem;
+}
+.rv-list { display: flex; flex-direction: column; gap: 0.85rem; }
+.rv-card {
+    background: #fff; border: 1px solid #e5e7eb;
+    border-radius: 14px; padding: 1.1rem 1.25rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.rv-card-top { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+.rv-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, #0f3d33, #2d7a60);
+    color: #fff; font-size: 1rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.rv-card-name { font-size: 0.9rem; font-weight: 700; color: #111827; display: flex; align-items: center; gap: 0.4rem; }
+.rv-photog-badge { font-size: 0.65rem; color: #92400e; background: #fef3c7; border-radius: 20px; padding: 2px 7px; }
+.rv-you-badge    { font-size: 0.65rem; color: #065f46; background: #d1fae5; border-radius: 20px; padding: 2px 7px; }
+.rv-rating-badge {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    padding: 0.25rem 0.7rem; border: 1.5px solid #fde68a;
+    border-radius: 999px; font-size: 0.8rem; font-weight: 800;
+    color: #92400e; background: #fef9c3; margin-left: auto; flex-shrink: 0;
+}
+.rv-card-text { font-size: 0.9rem; color: #374151; line-height: 1.65; margin: 0 0 0.65rem; }
+.rv-card-date { font-size: 0.75rem; color: #9ca3af; display: flex; align-items: center; gap: 0.3rem; }
+.rv-empty { text-align: center; padding: 3.5rem 1rem; color: #9ca3af; }
+.rv-empty i { font-size: 2.5rem; display: block; margin-bottom: 0.6rem; color: #d1d5db; }
+
+@media (max-width: 600px) {
+    .rv-page { padding: 5.5rem 1rem 2.5rem; }
+    .rv-summary { gap: 1rem; padding: 1.1rem; }
+    .rv-big-score { font-size: 2.8rem; }
+}
+
+/* File Upload Styling for Reviews */
+.rv-upload-container {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+.rv-upload-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #374151;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+.rv-file-input {
+    font-size: 0.85rem;
+}
+.rv-review-img-preview {
+    max-width: 150px;
+    border-radius: 8px;
+    margin-top: 0.5rem;
+    display: block;
+    border: 1px solid #e5e7eb;
+}
