@@ -1,4 +1,7 @@
 <?php
+if (!defined('DEBUGPNG')) {
+    define('DEBUGPNG', false);
+}
 require '../config/db_connect.php';
 require_once '../vendor/autoload.php';
 
