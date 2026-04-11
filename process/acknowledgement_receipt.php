@@ -30,14 +30,38 @@ $stmtFrames->bind_param("i", $orderId);
 $stmtFrames->execute();
 $framesResult = $stmtFrames->get_result();
 
+$allItems = [];
+$hasCustomFrameAndPrint = false;
+
+while ($row = $framesResult->fetch_assoc()) { 
+    $allItems[] = $row; 
+    // Check if this specific custom combo exists
+    if ($row['frame_category'] === 'CUSTOM' && $row['service_type'] === 'FRAME&PRINT') {
+        $hasCustomFrameAndPrint = true;
+    }
+}
+
 $stmtPrint = $conn->prepare("SELECT 'Printing Service' as frame_category, CONCAT(width_inch, 'x', height_inch, ' inch') as service_type, quantity, sub_total FROM tbl_printing_order_items WHERE order_id = ?");
 $stmtPrint->bind_param("i", $orderId);
 $stmtPrint->execute();
 $printResult = $stmtPrint->get_result();
 
-$allItems = [];
-while ($row = $framesResult->fetch_assoc()) { $allItems[] = $row; }
-while ($row = $printResult->fetch_assoc()) { $allItems[] = $row; }
+while ($row = $printResult->fetch_assoc()) { 
+    if (!$hasCustomFrameAndPrint || $row['sub_total'] > 0) {
+        $allItems[] = $row; 
+    }
+}
+
+// --- ADDED CALCULATION FOR SUBTOTAL & DISCOUNT ---
+$subtotal = 0;
+foreach ($allItems as $item) {
+    $subtotal += $item['sub_total'];
+}
+
+// Calculate discount (Subtotal - Grand Total)
+$discount = $subtotal - $order['total_price'];
+$actualBalance = $order['total_price'] - $actualAmountPaid;
+// ------------------------------------------------
 ?>
 
 <!DOCTYPE html>
@@ -111,21 +135,39 @@ while ($row = $printResult->fetch_assoc()) { $allItems[] = $row; }
         </table>
 
         <div class="totals-section">
-            <table class="totals-table">
-                <tr>
-                    <td>Grand Total</td>
-                    <td class="amount">&#8369;<?= number_format($order['total_price'], 2) ?></td>
-                </tr>
-                <tr>
-                    <td style="color: #2ECC71;">Amount Paid</td>
-                    <td class="amount" style="color: #2ECC71;">-&#8369;<?= number_format($actualAmountPaid, 2) ?></td>
-                </tr>
-                <tr class="balance-row">
-                    <td>Balance</td>
-                    <td class="amount">&#8369;<?= number_format($order['total_price'] - $actualAmountPaid, 2) ?></td>
-                </tr>
-            </table>
+                    <table class="totals-table">
+                        <tr>
+                            <td>Subtotal</td>
+                            <td class="amount">&#8369;<?= number_format($subtotal, 2) ?></td>
+                        </tr>
+
+                        <?php if ($discount > 0): ?>
+                        <tr>
+                            <td style="color: #e74c3c;">Discount</td>
+                            <td class="amount" style="color: #e74c3c;">-&#8369;<?= number_format($discount, 2) ?></td>
+                        </tr>
+                        <?php endif; ?>
+
+                        <tr style="border-top: 1px solid #eee;">
+                            <td style="font-weight: bold; color: #000; padding-top: 8px;">Grand Total</td>
+                            <td class="amount" style="font-weight: bold; color: #000; padding-top: 8px;">
+                                &#8369;<?= number_format($order['total_price'], 2) ?>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="color: #2ECC71;">Amount Paid</td>
+                            <td class="amount" style="color: #2ECC71;">-&#8369;<?= number_format($actualAmountPaid, 2) ?></td>
+                        </tr>
+
+                        <tr class="balance-row">
+                            <td>Balance</td>
+                            <td class="amount">&#8369;<?= number_format($actualBalance, 2) ?></td>
+                        </tr>
+        </table>
         </div>
+
+        
 
         <div class="status-stamp">
             ✓ <?= htmlspecialchars($order['order_status']) ?>
