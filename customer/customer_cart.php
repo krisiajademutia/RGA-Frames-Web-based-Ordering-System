@@ -115,9 +115,9 @@
                                     <?php endif; ?>
                                 </p>
                                 <div class="cart-qty-controls" onclick="event.stopPropagation()">
-                                    <button type="button" class="cart-qty-btn" onclick="updateQty('<?= $item['service_type'] === 'PRINT_ONLY' ? 'print' : 'frame'; ?>', <?= $item['service_type'] === 'PRINT_ONLY' ? $item['raw_print_id'] : $item['id']; ?>, -1)">-</button>
+                                    <button type="button" class="cart-qty-btn" onclick="updateQty('<?= $item['service_type'] === 'PRINT_ONLY' ? 'print' : 'frame'; ?>', <?= $item['service_type'] === 'PRINT_ONLY' ? $item['raw_print_id'] : $item['id']; ?>, -1, this)">-</button>
                                     <input type="text" class="cart-qty-input" value="<?= $item['quantity']; ?>" readonly>
-                                    <button type="button" class="cart-qty-btn" onclick="updateQty('<?= $item['service_type'] === 'PRINT_ONLY' ? 'print' : 'frame'; ?>', <?= $item['service_type'] === 'PRINT_ONLY' ? $item['raw_print_id'] : $item['id']; ?>, 1)">+</button>
+                                    <button type="button" class="cart-qty-btn" onclick="updateQty('<?= $item['service_type'] === 'PRINT_ONLY' ? 'print' : 'frame'; ?>', <?= $item['service_type'] === 'PRINT_ONLY' ? $item['raw_print_id'] : $item['id']; ?>, 1, this)">+</button>
                                 </div>
 
                                 <!-- Inline expand toggle -->
