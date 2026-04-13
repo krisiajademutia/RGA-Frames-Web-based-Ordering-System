@@ -90,8 +90,8 @@ function toggleSelectAll(checkbox) {
 }
 
 /* ─── Quantity update ─── */
-function updateQty(type, itemId, delta) {
-    const qtyInput = event.target.parentElement.querySelector('.cart-qty-input');
+function updateQty(type, itemId, delta, btn) {
+    const qtyInput = btn.parentElement.querySelector('.cart-qty-input');
     if (delta === -1 && parseInt(qtyInput.value) <= 1) return;
     window.location.href = `../process/shopping_cart_process.php?action=update_qty&type=${type}&id=${itemId}&delta=${delta}`;
 }

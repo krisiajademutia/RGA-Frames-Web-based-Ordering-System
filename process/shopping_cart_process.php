@@ -132,16 +132,16 @@ if ($action === 'update_qty' && isset($_GET['id'], $_GET['delta'])) {
     if ($type === 'print') {
         $stmt = $conn->prepare(
             "UPDATE tbl_printing_order_items
-             SET quantity  = GREATEST(1, quantity + ?),
-                 sub_total = (sub_total / quantity) * GREATEST(1, quantity + ?)
+             SET sub_total = unit_price * GREATEST(1, quantity + ?),
+                 quantity  = GREATEST(1, quantity + ?)
              WHERE printing_order_item_id = ? AND order_id IS NULL"
         );
         $stmt->bind_param("iii", $delta, $delta, $itemId);
     } else {
         $stmt = $conn->prepare(
             "UPDATE tbl_frame_order_items 
-             SET quantity  = GREATEST(1, quantity + ?),
-                 sub_total = (base_price + extra_price) * GREATEST(1, quantity + ?)
+             SET sub_total = (base_price + extra_price) * GREATEST(1, quantity + ?),
+                 quantity  = GREATEST(1, quantity + ?)
              WHERE item_id = ?"
         );
         $stmt->bind_param("iii", $delta, $delta, $itemId);
