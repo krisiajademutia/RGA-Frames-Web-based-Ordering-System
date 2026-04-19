@@ -1,6 +1,10 @@
 <?php
 session_start();
 include __DIR__ . '/../config/db_connect.php';
+require_once __DIR__ . '/../classes/Notification/NotificationRepository.php';
+require_once __DIR__ . '/../classes/Notification/NotificationService.php';
+require_once __DIR__ . '/../classes/Review/ReviewRepository.php';
+require_once __DIR__ . '/../classes/Review/ReviewService.php';
 
 header('Content-Type: application/json');
 
@@ -21,63 +25,14 @@ if ($action === 'add') {
     $rating      = (int)($_POST['rating']      ?? 0);
     $review_text = trim($_POST['review_text'] ?? '');
 
-    if ($rating < 1 || $rating > 5) {
-        echo json_encode(['success' => false, 'message' => 'Please select a rating from 1 to 5.']);
-        exit();
-    }
-    if (mb_strlen($review_text) < 5) {
-        echo json_encode(['success' => false, 'message' => 'Review must be at least 5 characters.']);
-        exit();
-    }
-    if (mb_strlen($review_text) > 1000) {
-        echo json_encode(['success' => false, 'message' => 'Review must not exceed 1000 characters.']);
-        exit();
-    }
+    $notifRepo = new NotificationRepository($conn);
+    $notifService = new NotificationService($notifRepo);
+    
+    $reviewRepo = new ReviewRepository($conn);
+    $reviewService = new ReviewService($reviewRepo, $notifService);
 
-    // Count completed orders
-    $chk = $conn->prepare("SELECT COUNT(*) AS cnt FROM tbl_orders WHERE customer_id = ? AND order_status = 'COMPLETED'");
-    $chk->bind_param('i', $customer_id);
-    $chk->execute();
-    $completedOrders = (int)$chk->get_result()->fetch_assoc()['cnt'];
-
-    if ($completedOrders === 0) {
-        echo json_encode(['success' => false, 'message' => 'You need at least one completed order to leave a review.']);
-        exit();
-    }
-
-    // Count existing reviews by this customer
-    $rvChk = $conn->prepare("SELECT COUNT(*) AS cnt FROM tbl_reviews WHERE customer_id = ?");
-    $rvChk->bind_param('i', $customer_id);
-    $rvChk->execute();
-    $existingReviews = (int)$rvChk->get_result()->fetch_assoc()['cnt'];
-
-    // One review allowed per completed order
-    if ($existingReviews >= $completedOrders) {
-        echo json_encode(['success' => false, 'message' => 'You have already used all your review slots. Complete another order to leave a new review.']);
-        exit();
-    }
-
-    $stmt = $conn->prepare("INSERT INTO tbl_reviews (customer_id, rating, review_text) VALUES (?, ?, ?)");
-    $stmt->bind_param('iis', $customer_id, $rating, $review_text);
-
-    if ($stmt->execute()) {
-        require_once __DIR__ . '/../classes/Notification/NotificationService.php';
-        require_once __DIR__ . '/../classes/Notification/NotificationRepository.php';
-        $notificationRepo = new NotificationRepository($conn);
-        $notifService = new NotificationService($notificationRepo);
-        $stars   = str_repeat('⭐', $rating);
-        $preview = mb_substr($review_text, 0, 40) . (mb_strlen($review_text) > 40 ? '...' : '');
-
-        $notifService->notifyAdmin(
-            0,
-            "New Review! {$stars}",
-            "A customer just left a {$rating}-star review: \"{$preview}\""
-        );
-
-        echo json_encode(['success' => true, 'message' => 'Thank you for your review!']);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Failed to submit review. Please try again.']);
-    }
+    $response = $reviewService->submitReview($customer_id, $rating, $review_text);
+    echo json_encode($response);
     exit();
 }
 

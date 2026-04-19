@@ -141,4 +141,15 @@ class OrderItemRepository {
 
         return array_merge($frames, $prints);
     }
+
+    public function getDesignPrimaryImage(int $frameDesignId): ?string {
+        $stmt = $this->conn->prepare("SELECT image_name FROM tbl_frame_design_images WHERE frame_design_id=? AND is_primary=1 LIMIT 1");
+        $stmt->bind_param("i", $frameDesignId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            return $row['image_name'];
+        }
+        return null;
+    }
 }

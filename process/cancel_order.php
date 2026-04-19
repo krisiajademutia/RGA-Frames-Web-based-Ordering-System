@@ -4,6 +4,9 @@ session_start();
 include __DIR__ . '/../config/db_connect.php';
 require_once __DIR__ . '/../classes/Notification/NotificationRepository.php';
 require_once __DIR__ . '/../classes/Notification/NotificationService.php';
+require_once __DIR__ . '/../classes/Order/Repository/OrderRepository.php';
+require_once __DIR__ . '/../classes/Order/Repository/OrderItemRepository.php';
+require_once __DIR__ . '/../classes/Order/OrderService.php';
 
 
 header('Content-Type: application/json');
@@ -27,17 +30,12 @@ if (!$order_id) {
     exit();
 }
 
-// Verify the order belongs to this customer AND is still PENDING
-$stmt = $conn->prepare("
-    SELECT order_id, order_status, order_reference_no
-    FROM tbl_orders
-    WHERE order_id = ? AND customer_id = ?
-");
-$stmt->bind_param("ii", $order_id, $customer_id);
-$stmt->execute();
-$order = $stmt->get_result()->fetch_assoc();
+$orderRepo = new OrderRepository($conn);
+$orderService = new OrderService($conn);
 
-if (!$order) {
+$order = $orderRepo->getOrderById($order_id);
+
+if (!$order || (int)$order['customer_id'] !== $customer_id) {
     echo json_encode(['success' => false, 'message' => 'Order not found.']);
     exit();
 }
@@ -48,13 +46,10 @@ if ($order['order_status'] !== 'PENDING') {
 }
 
 $ref_no = $order['order_reference_no'] ?? "#" . $order_id;
-// Update status to CANCELLED
-$update = $conn->prepare("
-    UPDATE tbl_orders SET order_status = 'CANCELLED' WHERE order_id = ?
-");
-$update->bind_param("i", $order_id);
 
-if ($update->execute()) {
+$success = $orderService->changeOrderStatus($order_id, 'CANCELLED');
+
+if ($success) {
     // --- NOTIFICATION TRIGGER: CUSTOMER CANCELLED ---
     $notifRepo = new NotificationRepository($conn);
     $notifService = new NotificationService($notifRepo);

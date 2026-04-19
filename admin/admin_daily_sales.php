@@ -23,7 +23,7 @@ require_once '../process/fetch_daily_sales.php';
     <main class="admn-sales-wrapper">
         <div class="admn-sales-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <div>
-                <h1 class="admn-sales-title" style="margin-bottom: 5px;">Daily Sales Report</h1>
+                <h1 class="admn-sales-title" style="margin-bottom: 5px;">Daily Sales</h1>
                 <p class="admn-sales-subtitle" style="margin: 0;">Sales breakdown by category per day</p>
             </div>
             <div>

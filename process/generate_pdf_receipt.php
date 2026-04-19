@@ -27,37 +27,30 @@ if ($stmtPay) {
     $actualAmountPaid = $paymentData['total_amount'] ?? 0;
 }
 
-// Fetch Frame Items
-$stmtFrames = $conn->prepare("SELECT frame_category, service_type, quantity, sub_total FROM tbl_frame_order_items WHERE order_id = ?");
-$stmtFrames->bind_param("i", $orderId);
-$stmtFrames->execute();
-$framesResult = $stmtFrames->get_result();
+// Fetch Items using the Repository
+require_once __DIR__ . '/../classes/Order/Repository/OrderItemRepository.php';
+$itemRepo = new OrderItemRepository($conn);
+$rawItems = $itemRepo->getItemsForOrder((int)$orderId);
 
 $allItems = [];
-$hasCustomFrameAndPrint = false;
 $subtotal = 0;
 
-while ($row = $framesResult->fetch_assoc()) { 
-    $allItems[] = $row; 
-    $subtotal += $row['sub_total'];
-    // Flag for Custom Print Bundles
-    if ($row['frame_category'] === 'CUSTOM' && $row['service_type'] === 'FRAME&PRINT') {
-        $hasCustomFrameAndPrint = true;
+foreach ($rawItems as $item) {
+    if ($item['frame_category'] === 'PRINTING') {
+        $frameCategory = 'Printing Service';
+        $serviceType   = $item['print_width'] . 'x' . $item['print_height'] . ' inch';
+    } else {
+        $frameCategory = str_replace('_', ' ', $item['frame_category']); // CUSTOM or READY MADE
+        $serviceType   = $item['service_type'];
     }
-}
 
-// Fetch Printing Items (With Bundle Logic)
-$stmtPrint = $conn->prepare("SELECT 'Printing Service' as frame_category, CONCAT(width_inch, 'x', height_inch, ' inch') as service_type, quantity, sub_total FROM tbl_printing_order_items WHERE order_id = ?");
-$stmtPrint->bind_param("i", $orderId);
-$stmtPrint->execute();
-$printResult = $stmtPrint->get_result();
-
-while ($row = $printResult->fetch_assoc()) { 
-    // Only add if it's not part of the bundle OR it's an extra paid print
-    if (!$hasCustomFrameAndPrint || $row['sub_total'] > 0) {
-        $allItems[] = $row; 
-        $subtotal += $row['sub_total'];
-    }
+    $allItems[] = [
+        'frame_category' => $frameCategory,
+        'service_type'   => $serviceType,
+        'quantity'       => $item['quantity'],
+        'sub_total'      => $item['sub_total']
+    ];
+    $subtotal += $item['sub_total'];
 }
 
 // Final Calculations

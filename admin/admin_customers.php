@@ -2,7 +2,7 @@
 // admin/admin_customers.php
 session_start();
 include __DIR__ . '/../config/db_connect.php';
-
+require_once __DIR__ . '/../classes/UserRepository.php';
 if (!isset($_SESSION['user_id']) || strtoupper($_SESSION['role'] ?? '') !== 'ADMIN') {
     header("Location: ../login.php");
     exit();
@@ -12,42 +12,16 @@ if (!isset($_SESSION['user_id']) || strtoupper($_SESSION['role'] ?? '') !== 'ADM
 $search = trim($_GET['search'] ?? '');
 $filter = $_GET['type'] ?? 'ALL';
 
-$sql = "
-    SELECT
-        c.customer_id, c.first_name, c.last_name, c.username,
-        c.email, c.phone_number, c.customer_type, c.created_at,
-        COUNT(DISTINCT o.order_id) AS total_orders
-    FROM tbl_customer c
-    LEFT JOIN tbl_orders o ON c.customer_id = o.customer_id
-    WHERE 1=1
-";
-$params = [];
-$types  = '';
+$userRepo = new UserRepository($conn);
 
-if (!empty($search)) {
-    $sql    .= " AND (c.first_name LIKE ? OR c.last_name LIKE ? OR c.email LIKE ? OR c.phone_number LIKE ?)";
-    $like    = "%$search%";
-    $params  = array_merge($params, [$like, $like, $like, $like]);
-    $types  .= 'ssss';
-}
-if ($filter !== 'ALL') {
-    $sql    .= " AND c.customer_type = ?";
-    $params[] = $filter;
-    $types   .= 's';
-}
+$customers = $userRepo->getAllCustomers($search, $filter);
+$countsStr = $userRepo->getCustomerTypeCounts();
 
-$sql .= " GROUP BY c.customer_id ORDER BY c.created_at DESC";
-
-$stmt = $conn->prepare($sql);
-if (!empty($params)) $stmt->bind_param($types, ...$params);
-$stmt->execute();
-$customers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-// Counts
-$totalStmt = $conn->query("SELECT customer_type, COUNT(*) as cnt FROM tbl_customer GROUP BY customer_type");
-$counts    = ['REGULAR' => 0, 'PHOTOGRAPHER' => 0];
-while ($row = $totalStmt->fetch_assoc()) {
-    $counts[$row['customer_type']] = (int)$row['cnt'];
+$counts = ['REGULAR' => 0, 'PHOTOGRAPHER' => 0];
+foreach ($countsStr as $k => $v) {
+    if (isset($counts[$k])) {
+        $counts[$k] = $v;
+    }
 }
 $counts['ALL'] = array_sum($counts);
 ?>

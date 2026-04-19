@@ -1,6 +1,9 @@
 <?php
 session_start();
 include __DIR__ . '/../config/db_connect.php';
+require_once __DIR__ . '/../classes/UserRepository.php';
+require_once __DIR__ . '/../classes/Review/ReviewRepository.php';
+require_once __DIR__ . '/../classes/Review/ReviewService.php';
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
@@ -8,28 +11,20 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
-$sql = "SELECT first_name FROM tbl_customer WHERE customer_id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$first_name = ($result->num_rows > 0) ? $result->fetch_assoc()['first_name'] : "Customer";
-$stmt->close();
+$userRepo = new UserRepository($conn);
+$userProfile = $userRepo->getCustomerProfile($user_id);
+$first_name = $userProfile ? $userProfile['first_name'] : "Customer";
+
+$reviewRepo = new ReviewRepository($conn);
+$reviewService = new ReviewService($reviewRepo);
 
 // ── Reviews preview (3 most recent) ─────────────────────────
-$previewReviews = $conn->query("
-    SELECT r.rating, r.review_text,
-           DATE_FORMAT(r.review_date_posted, '%M %d, %Y') AS review_date,
-           c.first_name, c.last_name, c.customer_type
-    FROM tbl_reviews r
-    JOIN tbl_customer c ON r.customer_id = c.customer_id
-    ORDER BY r.review_date_posted DESC
-    LIMIT 3
-")->fetch_all(MYSQLI_ASSOC);
+$allReviews = $reviewService->getAllReviews();
+$previewReviews = array_slice($allReviews, 0, 3);
 
-$statsRow    = $conn->query("SELECT COUNT(*) AS total, AVG(rating) AS avg FROM tbl_reviews")->fetch_assoc();
-$totalReviews = (int)$statsRow['total'];
-$avgRating    = $totalReviews > 0 ? round((float)$statsRow['avg'], 1) : 0;
+$stats = $reviewService->getReviewStatistics();
+$totalReviews = $stats['total'];
+$avgRating    = $totalReviews > 0 ? round($stats['avg_rating'], 1) : 0;
 ?>
 
 <!DOCTYPE html>

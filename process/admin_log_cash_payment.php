@@ -2,6 +2,9 @@
 // process/admin_log_cash_payment.php
 session_start();
 require_once __DIR__ . '/../config/db_connect.php';
+require_once __DIR__ . '/../classes/Order/Repository/OrderRepository.php';
+require_once __DIR__ . '/../classes/Order/Repository/OrderItemRepository.php';
+require_once __DIR__ . '/../classes/Order/OrderService.php';
 
 header('Content-Type: application/json');
 
@@ -23,35 +26,8 @@ if ($payment_id <= 0 || $amount <= 0) {
 try {
     $conn->begin_transaction();
 
-    // 1. Insert the cash payment as 'Verified' immediately (since admin received it in person)
-    $stmt = $conn->prepare("INSERT INTO tbl_payment_proof_uploads (payment_id, payment_proof, uploaded_amount, verification_status) VALUES (?, 'Admin: Walk-in Cash Payment', ?, 'Verified')");
-    $stmt->bind_param("id", $payment_id, $amount);
-    $stmt->execute();
-    $stmt->close();
-
-    // 2. Recalculate the total verified payments for this order
-    $stmt = $conn->prepare("SELECT SUM(uploaded_amount) as total_paid FROM tbl_payment_proof_uploads WHERE payment_id = ? AND verification_status = 'Verified'");
-    $stmt->bind_param("i", $payment_id);
-    $stmt->execute();
-    $paid_result = $stmt->get_result()->fetch_assoc();
-    $total_paid = (float)($paid_result['total_paid'] ?? 0);
-    $stmt->close();
-
-    // 3. Get the required total amount AND the order_id (Modified to get order_id)
-    $stmt = $conn->prepare("SELECT total_amount, order_id FROM tbl_payment WHERE payment_id = ?");
-    $stmt->bind_param("i", $payment_id);
-    $stmt->execute();
-    $payment_row = $stmt->get_result()->fetch_assoc();
-    $total_required = (float)($payment_row['total_amount'] ?? 0);
-    $order_id = (int)($payment_row['order_id'] ?? 0);
-    $stmt->close();
-
-    // 4. Update the payment status (PARTIAL or FULL)
-    $new_status = ($total_paid >= $total_required) ? 'FULL' : 'PARTIAL';
-    $stmt = $conn->prepare("UPDATE tbl_payment SET payment_status = ? WHERE payment_id = ?");
-    $stmt->bind_param("si", $new_status, $payment_id);
-    $stmt->execute();
-    $stmt->close();
+    $orderService = new OrderService($conn);
+    $order_id = $orderService->logCashPayment($payment_id, $amount);
 
     $conn->commit();
 
@@ -64,21 +40,18 @@ try {
     $notifService = new NotificationService($notifRepo);
 
     if ($order_id > 0) {
-        $stmtC = $conn->prepare("SELECT customer_id FROM tbl_orders WHERE order_id = ?");
-        $stmtC->bind_param("i", $order_id);
-        $stmtC->execute();
-        $resC = $stmtC->get_result()->fetch_assoc();
+        $orderRepo = new OrderRepository($conn);
+        $resC = $orderRepo->getCustomerReference($order_id);
         
         if ($resC && isset($resC['customer_id'])) {
             $formatted_amount = number_format($amount, 2);
             $notifService->notifyCustomer(
                 $resC['customer_id'], 
                 $order_id, 
-                "Payment Received ", 
+                "Payment Received", 
                 "We have successfully recorded your cash payment of ₱{$formatted_amount} for Order #{$order_id}."
             );
         }
-        $stmtC->close();
     }
     // ========================================================================
 

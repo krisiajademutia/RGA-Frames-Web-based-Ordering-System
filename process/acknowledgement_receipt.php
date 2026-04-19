@@ -24,44 +24,35 @@ $stmtPay->execute();
 $paymentData = $stmtPay->get_result()->fetch_assoc();
 $actualAmountPaid = isset($paymentData['total_amount']) ? $paymentData['total_amount'] : 0;
 
-// 3. Fetch Items (Frames & Printing)
-$stmtFrames = $conn->prepare("SELECT frame_category, service_type, quantity, sub_total FROM tbl_frame_order_items WHERE order_id = ?");
-$stmtFrames->bind_param("i", $orderId);
-$stmtFrames->execute();
-$framesResult = $stmtFrames->get_result();
+// 3. Fetch Items using the Repository
+require_once __DIR__ . '/../classes/Order/Repository/OrderItemRepository.php';
+$itemRepo = new OrderItemRepository($conn);
+$rawItems = $itemRepo->getItemsForOrder((int)$orderId);
 
 $allItems = [];
-$hasCustomFrameAndPrint = false;
-
-while ($row = $framesResult->fetch_assoc()) { 
-    $allItems[] = $row; 
-    // Check if this specific custom combo exists
-    if ($row['frame_category'] === 'CUSTOM' && $row['service_type'] === 'FRAME&PRINT') {
-        $hasCustomFrameAndPrint = true;
-    }
-}
-
-$stmtPrint = $conn->prepare("SELECT 'Printing Service' as frame_category, CONCAT(width_inch, 'x', height_inch, ' inch') as service_type, quantity, sub_total FROM tbl_printing_order_items WHERE order_id = ?");
-$stmtPrint->bind_param("i", $orderId);
-$stmtPrint->execute();
-$printResult = $stmtPrint->get_result();
-
-while ($row = $printResult->fetch_assoc()) { 
-    if (!$hasCustomFrameAndPrint || $row['sub_total'] > 0) {
-        $allItems[] = $row; 
-    }
-}
-
-// --- ADDED CALCULATION FOR SUBTOTAL & DISCOUNT ---
 $subtotal = 0;
-foreach ($allItems as $item) {
+
+foreach ($rawItems as $item) {
+    if ($item['frame_category'] === 'PRINTING') {
+        $frameCategory = 'Printing Service';
+        $serviceType   = $item['print_width'] . 'x' . $item['print_height'] . ' inch';
+    } else {
+        $frameCategory = str_replace('_', ' ', $item['frame_category']); // CUSTOM or READY MADE
+        $serviceType   = $item['service_type'];
+    }
+
+    $allItems[] = [
+        'frame_category' => $frameCategory,
+        'service_type'   => $serviceType,
+        'quantity'       => $item['quantity'],
+        'sub_total'      => $item['sub_total']
+    ];
     $subtotal += $item['sub_total'];
 }
 
 // Calculate discount (Subtotal - Grand Total)
 $discount = $subtotal - $order['total_price'];
 $actualBalance = $order['total_price'] - $actualAmountPaid;
-// ------------------------------------------------
 ?>
 
 <!DOCTYPE html>

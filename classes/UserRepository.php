@@ -77,6 +77,38 @@ class UserRepository {
     /**
      * Internal helper: find user in a specific table
      */
+    public function getAllCustomers(string $search = '', string $filter = 'ALL'): array {
+        $sql = "SELECT c.customer_id, c.first_name, c.last_name, c.username, c.email, c.phone_number, 
+                       c.customer_type, c.created_at,
+                       (SELECT COUNT(*) FROM tbl_orders o WHERE o.customer_id = c.customer_id AND o.order_status != 'CANCELLED') as total_orders
+                FROM tbl_customer c 
+                WHERE 1=1";
+                
+        $params = [];
+        $types  = '';
+
+        if (!empty($search)) {
+            $sql    .= " AND (c.first_name LIKE ? OR c.last_name LIKE ? OR c.email LIKE ? OR c.phone_number LIKE ?)";
+            $like    = "%$search%";
+            array_push($params, $like, $like, $like, $like);
+            $types  .= 'ssss';
+        }
+        if ($filter !== 'ALL') {
+            $sql    .= " AND c.customer_type = ?";
+            $params[] = $filter;
+            $types   .= 's';
+        }
+
+        $sql .= " ORDER BY c.created_at DESC";
+
+        $stmt = $this->conn->prepare($sql);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
     private function findInTable(string $table, string $idColumn, string $email, bool $includePassword = false): ?array {
         $fields = "$idColumn AS id, first_name";
         if ($includePassword) {
@@ -138,6 +170,28 @@ class UserRepository {
         return null;
     }
 
+    public function getCustomerOrderStats(int $customer_id): array {
+        $stmt = $this->conn->prepare("
+            SELECT 
+                COUNT(order_id) as total_orders,
+                SUM(CASE WHEN order_status = 'COMPLETED' THEN 1 ELSE 0 END) as completed_orders,
+                SUM(CASE WHEN order_status != 'CANCELLED' THEN 1 ELSE 0 END) as non_cancelled_orders,
+                SUM(CASE WHEN order_status = 'PENDING' THEN 1 ELSE 0 END) as pending_orders
+            FROM tbl_orders 
+            WHERE customer_id = ?
+        ");
+        $stmt->bind_param("i", $customer_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        return [
+            'total_orders' => (int)($row['total_orders'] ?? 0),
+            'completed_orders' => (int)($row['completed_orders'] ?? 0),
+            'non_cancelled_orders' => (int)($row['non_cancelled_orders'] ?? 0),
+            'pending_orders' => (int)($row['pending_orders'] ?? 0)
+        ];
+    }
+
     public function findByEmail(string $email): ?array {
         // 1. Search Admin Table
         $user = $this->findInTable('tbl_admin', 'admin_id', $email);
@@ -184,5 +238,28 @@ class UserRepository {
         $stmt->close();
 
         return $success;
+    }
+
+    public function getCustomerProfile(int $customer_id): ?array {
+        $stmt = $this->conn->prepare("
+            SELECT customer_id, first_name, last_name, username, email, phone_number, customer_type, created_at
+            FROM tbl_customer WHERE customer_id = ?
+        ");
+        $stmt->bind_param("i", $customer_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_assoc() ?: null;
+    }
+
+    public function getCustomerTypeCounts(): array {
+        $sql = "SELECT customer_type, COUNT(*) as cnt FROM tbl_customer GROUP BY customer_type";
+        $result = $this->conn->query($sql);
+        $counts = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $counts[$row['customer_type']] = (int)$row['cnt'];
+            }
+        }
+        return $counts;
     }
 }

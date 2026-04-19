@@ -9,38 +9,21 @@
 
     $customer_id = (int)$_SESSION['user_id'];
 
-    // Count completed orders
-    $eligCheck = $conn->prepare("SELECT COUNT(*) AS cnt FROM tbl_orders WHERE customer_id = ? AND order_status = 'COMPLETED'");
-    $eligCheck->bind_param('i', $customer_id);
-    $eligCheck->execute();
-    $completedOrders = (int)$eligCheck->get_result()->fetch_assoc()['cnt'];
+    require_once __DIR__ . '/../classes/Review/ReviewRepository.php';
+    require_once __DIR__ . '/../classes/Review/ReviewService.php';
 
-    // Count existing reviews by this customer
-    $rvCheck = $conn->prepare("SELECT COUNT(*) AS cnt FROM tbl_reviews WHERE customer_id = ?");
-    $rvCheck->bind_param('i', $customer_id);
-    $rvCheck->execute();
-    $existingReviews = (int)$rvCheck->get_result()->fetch_assoc()['cnt'];
+    $reviewRepo = new ReviewRepository($conn);
+    $reviewService = new ReviewService($reviewRepo);
 
-    // Can review if they have more completed orders than reviews submitted
+    $completedOrders = $reviewRepo->getCompletedOrderCount($customer_id);
+    $existingReviews = $reviewRepo->getReviewCount($customer_id);
     $canReview = $completedOrders > $existingReviews;
 
-    // Fetch all reviews
-    $allReviews = $conn->query("
-        SELECT r.review_id, r.rating, r.review_text,
-            DATE_FORMAT(r.review_date_posted, '%M %d, %Y') AS review_date,
-            c.first_name, c.last_name, c.customer_type, c.customer_id AS reviewer_id
-        FROM tbl_reviews r
-        JOIN tbl_customer c ON r.customer_id = c.customer_id
-        ORDER BY r.review_date_posted DESC
-    ")->fetch_all(MYSQLI_ASSOC);
-
-    $statsRow = $conn->query("SELECT COUNT(*) AS total, AVG(rating) AS avg FROM tbl_reviews")->fetch_assoc();
-    $totalReviews = (int)$statsRow['total'];
-    $avgRating    = $totalReviews > 0 ? round((float)$statsRow['avg'], 1) : 0;
-
-    $distResult = $conn->query("SELECT rating, COUNT(*) AS cnt FROM tbl_reviews GROUP BY rating ORDER BY rating DESC");
-    $dist = [];
-    while ($row = $distResult->fetch_assoc()) $dist[(int)$row['rating']] = (int)$row['cnt'];
+    $allReviews = $reviewService->getAllReviews();
+    $stats = $reviewService->getReviewStatistics();
+    $totalReviews = $stats['total'];
+    $avgRating    = $totalReviews > 0 ? round($stats['avg_rating'], 1) : 0;
+    $dist = $stats['distribution'];
 ?>
 <!DOCTYPE html>
 <html lang="en">

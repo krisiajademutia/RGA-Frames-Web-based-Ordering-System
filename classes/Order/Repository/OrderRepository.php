@@ -122,6 +122,53 @@ class OrderRepository {
         return $stmt->execute();
     }
 
+    public function getPaymentTotals(int $payment_id) {
+        $stmt = $this->conn->prepare("
+            SELECT p.total_amount,
+                   COALESCE(SUM(pu.uploaded_amount), 0) AS verified_total,
+                   p.order_id
+            FROM tbl_payment p
+            LEFT JOIN tbl_payment_proof_uploads pu 
+                   ON p.payment_id = pu.payment_id 
+                  AND pu.verification_status = 'Verified'
+            WHERE p.payment_id = ?
+            GROUP BY p.payment_id
+        ");
+        $stmt->bind_param("i", $payment_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
+    }
+
+    public function logCashPayment(int $payment_id, float $amount) {
+        $stmt = $this->conn->prepare("
+            INSERT INTO tbl_payment_proof_uploads 
+                (payment_id, payment_proof, uploaded_amount, verification_status) 
+            VALUES (?, 'Admin: Walk-in Cash Payment', ?, 'Verified')
+        ");
+        $stmt->bind_param("id", $payment_id, $amount);
+        return $stmt->execute();
+    }
+
+    public function decrementStockForProcessing(int $order_id) {
+        $stmt = $this->conn->prepare("
+            UPDATE tbl_ready_made_product_stocks s
+            JOIN tbl_frame_order_items i ON s.r_product_id = i.r_product_id
+            SET s.quantity = GREATEST(0, s.quantity - i.quantity)
+            WHERE i.order_id = ? AND i.frame_category = 'READY_MADE'
+        ");
+        $stmt->bind_param("i", $order_id);
+        return $stmt->execute();
+    }
+
+    public function getCustomerReference(int $order_id) {
+        $stmt = $this->conn->prepare("SELECT customer_id, order_reference_no FROM tbl_orders WHERE order_id = ?");
+        $stmt->bind_param("i", $order_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
+    }
+
     public function updatePaymentStatus(int $payment_id, string $status) {
         $stmt = $this->conn->prepare("
             UPDATE tbl_payment SET payment_status = ? WHERE payment_id = ?

@@ -236,7 +236,7 @@ $discountedTotal  = round($cartTotal - $discount['discount_amount'], 2);
                         <div id="gcash_wrapper" style="display:none;" class="chk-gcash-body">
                             <div class="chk-gcash-number">
                                 <i class="fas fa-mobile-alt"></i>
-                                Send payment to GCash: <strong>0912-345-6789</strong> (RGA Frames)
+                                Send payment to GCash: <strong>0912-786-1218</strong> (RGA Frames)
                             </div>
 
                             <label class="chk-field-label">Amount Paid (₱)</label>

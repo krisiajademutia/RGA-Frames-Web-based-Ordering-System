@@ -372,11 +372,7 @@ $canUpload = !$isErr && $isGcash && $payment_status !== 'FULL';
                 }
                 $imgName = null;
                 if ($frameDesignId) {
-                    $imgStmt = $conn->prepare("SELECT image_name FROM tbl_frame_design_images WHERE frame_design_id=? AND is_primary=1 LIMIT 1");
-                    $imgStmt->bind_param("i", $frameDesignId);
-                    $imgStmt->execute();
-                    $imgRow  = $imgStmt->get_result()->fetch_assoc();
-                    $imgName = $imgRow['image_name'] ?? null;
+                    $imgName = $itemRepo->getDesignPrimaryImage((int)$frameDesignId);
                 }
 
                 // Item name

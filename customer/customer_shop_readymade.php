@@ -14,14 +14,11 @@ $matOptions   = $service->getMatboardColors();
 $paperOptions = $service->getPaperTypes();
 $mountTypes   = $service->getMountTypes();
 
-$multiplierRow    = $conn->query("SELECT LOWER(paper_name) AS paper_name FROM tbl_paper_type");
 $paperMultipliers = [];
-if ($multiplierRow) {
-    while ($r = $multiplierRow->fetch_assoc()) {
-        $pName = $r['paper_name'];
-        if (str_contains($pName, 'photo'))  $paperMultipliers[$pName] = 1.5;
-        if (str_contains($pName, 'canvas')) $paperMultipliers[$pName] = 2.5;
-    }
+foreach ($paperOptions as $paper) {
+    $pName = strtolower($paper['paper_name']);
+    if (str_contains($pName, 'photo'))  $paperMultipliers[$pName] = 1.5;
+    if (str_contains($pName, 'canvas')) $paperMultipliers[$pName] = 2.5;
 }
 ?>
 

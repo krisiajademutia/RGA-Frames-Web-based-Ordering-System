@@ -2,6 +2,7 @@
 // customer/customer_profile.php
 session_start();
 include __DIR__ . '/../config/db_connect.php';
+require_once __DIR__ . '/../classes/UserRepository.php';
 
 if (!isset($_SESSION['user_id']) || strtoupper($_SESSION['role'] ?? '') !== 'CUSTOMER') {
     header("Location: ../login.php");
@@ -10,14 +11,10 @@ if (!isset($_SESSION['user_id']) || strtoupper($_SESSION['role'] ?? '') !== 'CUS
 
 $customer_id = (int)$_SESSION['user_id'];
 
+$userRepo = new UserRepository($conn);
+
 // Fetch customer
-$stmt = $conn->prepare("
-    SELECT customer_id, first_name, last_name, username, email, phone_number, customer_type, created_at
-    FROM tbl_customer WHERE customer_id = ?
-");
-$stmt->bind_param("i", $customer_id);
-$stmt->execute();
-$customer = $stmt->get_result()->fetch_assoc();
+$customer = $userRepo->getCustomerProfile($customer_id);
 
 if (!$customer) {
     header("Location: ../login.php");
@@ -25,16 +22,12 @@ if (!$customer) {
 }
 
 // Order stats
-$statsStmt = $conn->prepare("
-    SELECT
-        COUNT(*) AS total,
-        SUM(CASE WHEN order_status = 'COMPLETED' THEN 1 ELSE 0 END) AS completed,
-        SUM(CASE WHEN order_status = 'PENDING'   THEN 1 ELSE 0 END) AS pending
-    FROM tbl_orders WHERE customer_id = ?
-");
-$statsStmt->bind_param("i", $customer_id);
-$statsStmt->execute();
-$stats = $statsStmt->get_result()->fetch_assoc();
+$orderStats = $userRepo->getCustomerOrderStats($customer_id);
+$stats = [
+    'total' => $orderStats['total_orders'],
+    'completed' => $orderStats['completed_orders'],
+    'pending' => $orderStats['pending_orders'],
+];
 
 $isPhotographer = strtoupper($customer['customer_type']) === 'PHOTOGRAPHER';
 $initial        = strtoupper(substr($customer['first_name'], 0, 1));

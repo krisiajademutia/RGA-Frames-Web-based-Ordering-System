@@ -2,6 +2,8 @@
 // admin/admin_customer_reviews.php
 session_start();
 include __DIR__ . '/../config/db_connect.php';
+require_once __DIR__ . '/../classes/Review/ReviewRepository.php';
+require_once __DIR__ . '/../classes/Review/ReviewService.php';
 
 if (!isset($_SESSION['user_id']) || strtoupper($_SESSION['role'] ?? '') !== 'ADMIN') {
     header("Location: ../login.php");
@@ -11,33 +13,15 @@ if (!isset($_SESSION['user_id']) || strtoupper($_SESSION['role'] ?? '') !== 'ADM
 $filter_rating = (int)($_GET['rating'] ?? 0);
 $search        = trim($_GET['search'] ?? '');
 
-$sql = "
-    SELECT r.review_id, r.rating, r.review_text,
-           DATE_FORMAT(r.review_date_posted, '%M %d, %Y') AS review_date,
-           c.first_name, c.last_name, c.customer_type
-    FROM tbl_reviews r
-    JOIN tbl_customer c ON r.customer_id = c.customer_id
-    WHERE 1=1
-";
-$params = []; $types = '';
-if ($filter_rating > 0) { $sql .= " AND r.rating = ?"; $params[] = $filter_rating; $types .= 'i'; }
-if (!empty($search)) {
-    $sql .= " AND (c.first_name LIKE ? OR c.last_name LIKE ? OR r.review_text LIKE ?)";
-    $like = "%$search%"; $params = array_merge($params, [$like, $like, $like]); $types .= 'sss';
-}
-$sql .= " ORDER BY r.review_date_posted DESC";
-$stmt = $conn->prepare($sql);
-if (!empty($params)) $stmt->bind_param($types, ...$params);
-$stmt->execute();
-$reviews = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$repo = new ReviewRepository($conn);
+$reviewService = new ReviewService($repo);
 
-$statsRow = $conn->query("SELECT COUNT(*) AS total, AVG(rating) AS avg_rating FROM tbl_reviews")->fetch_assoc();
-$totalAll = (int)$statsRow['total'];
-$avgAll   = $totalAll > 0 ? round((float)$statsRow['avg_rating'], 1) : 0;
+$reviews = $reviewService->getAllReviews($filter_rating, $search);
 
-$distResult = $conn->query("SELECT rating, COUNT(*) AS cnt FROM tbl_reviews GROUP BY rating ORDER BY rating DESC");
-$dist = [];
-while ($row = $distResult->fetch_assoc()) $dist[(int)$row['rating']] = (int)$row['cnt'];
+$stats = $reviewService->getReviewStatistics();
+$totalAll = $stats['total'];
+$avgAll   = $totalAll > 0 ? round($stats['avg_rating'], 1) : 0;
+$dist = $stats['distribution'];
 ?>
 <!DOCTYPE html>
 <html lang="en">

@@ -2,6 +2,7 @@
 // customer/customer_shop_custom.php
 require_once __DIR__ . '/../includes/customer_header.php';
 require_once __DIR__ . '/../classes/CustomFrame/CustomFrameService.php';
+require_once __DIR__ . '/../classes/UserRepository.php';
 
 $service     = new CustomFrameService($conn);
 $builderData = $service->getFrameBuilderData();
@@ -22,20 +23,15 @@ $customerId = (int)($_SESSION['user_id'] ?? 0);
 $hasDiscount = false;
 
 if ($customerId > 0) {
+    $userRepo = new UserRepository($conn);
+    
     // 1. Check if Photographer
-    $stmt1 = $conn->prepare("SELECT customer_type FROM tbl_customer WHERE customer_id = ?");
-    $stmt1->bind_param("i", $customerId);
-    $stmt1->execute();
-    $custRow = $stmt1->get_result()->fetch_assoc();
-    $isPhotographer = ($custRow && strtolower($custRow['customer_type']) === 'photographer');
+    $custProfile = $userRepo->getCustomerProfile($customerId);
+    $isPhotographer = ($custProfile && strtolower($custProfile['customer_type']) === 'photographer');
 
     // 2. Count Previous Orders (e.g., 3 or more successful orders = Repetitive)
-    // Adjust the number "3" below if Kuya wants a different threshold for "repetitive"
-    $stmt2 = $conn->prepare("SELECT COUNT(order_id) as order_count FROM tbl_orders WHERE customer_id = ? AND order_status != 'CANCELLED'");
-    $stmt2->bind_param("i", $customerId);
-    $stmt2->execute();
-    $orderRow = $stmt2->get_result()->fetch_assoc();
-    $isRepetitive = ($orderRow && (int)$orderRow['order_count'] >= 3);
+    $orderStats = $userRepo->getCustomerOrderStats($customerId);
+    $isRepetitive = ($orderStats && $orderStats['non_cancelled_orders'] >= 3);
 
     if ($isPhotographer || $isRepetitive) {
         $hasDiscount = true;

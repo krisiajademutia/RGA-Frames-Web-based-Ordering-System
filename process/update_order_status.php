@@ -5,6 +5,9 @@ session_start();
 include __DIR__ . '/../config/db_connect.php';
 require_once __DIR__ . '/../classes/Notification/NotificationRepository.php';
 require_once __DIR__ . '/../classes/Notification/NotificationService.php';
+require_once __DIR__ . '/../classes/Order/Repository/OrderRepository.php';
+require_once __DIR__ . '/../classes/Order/Repository/OrderItemRepository.php';
+require_once __DIR__ . '/../classes/Order/OrderService.php';
 
 header('Content-Type: application/json');
 
@@ -26,72 +29,46 @@ if (!$order_id || !in_array($new_status, $allowed)) {
 }
 
 try {
-    // Update order status
-    $stmt = $conn->prepare("UPDATE tbl_orders SET order_status = ? WHERE order_id = ?");
-    $stmt->bind_param("si", $new_status, $order_id);
+    $orderService = new OrderService($conn);
+    $orderRepo = new OrderRepository($conn);
 
-    if (!$stmt->execute()) {
-        throw new Exception('DB error updating status: ' . $conn->error);
-    }
+    // Check balance before allowing COMPLETED status
+    if ($new_status === 'COMPLETED') {
+        $orderDetails = $orderRepo->getOrderById($order_id);
+        
+        if ($orderDetails) {
+            $total = (float)$orderDetails['total_price'];
+            $paid  = (float)$orderDetails['amount_paid'];
+            $balance = $total - $paid;
 
-// Check balance before allowing COMPLETED status
-if ($new_status === 'COMPLETED') {
-    $check_stmt = $conn->prepare("
-        SELECT 
-            o.total_price,
-            COALESCE(SUM(pu.uploaded_amount), 0) AS paid_amount
-        FROM tbl_orders o
-        LEFT JOIN tbl_payment p ON o.order_id = p.order_id
-        LEFT JOIN tbl_payment_proof_uploads pu 
-               ON p.payment_id = pu.payment_id 
-              AND pu.verification_status = 'Verified'
-        WHERE o.order_id = ?
-        GROUP BY o.order_id, o.total_price
-    ");
-    $check_stmt->bind_param("i", $order_id);
-    $check_stmt->execute();
-    $res = $check_stmt->get_result()->fetch_assoc();
-    $check_stmt->close();
-    
-    if ($res) {
-        $total = (float)$res['total_price'];
-        $paid  = (float)$res['paid_amount'];
-        $balance = $total - $paid;
-
-        if (round($balance, 2) > 0) {
-            ob_clean();
-            echo json_encode([
-                'success' => false, 
-                'message' => 'Cannot complete order. There is an unpaid balance of ₱' . number_format($balance, 2)
-            ]);
-            exit();
+            if (round($balance, 2) > 0) {
+                ob_clean();
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Cannot complete order. There is an unpaid balance of ₱' . number_format($balance, 2)
+                ]);
+                exit();
+            }
         }
     }
-}
+
+    // Update order status
+    $success = $orderService->changeOrderStatus($order_id, $new_status);
+    
+    if (!$success) {
+        throw new Exception('DB error updating status.');
+    }
 
     // Stock decrement for PROCESSING (READY_MADE only)
     if ($new_status === 'PROCESSING') {
-        $stmtStock = $conn->prepare("
-            UPDATE tbl_ready_made_product_stocks s
-            JOIN tbl_frame_order_items i ON s.r_product_id = i.r_product_id
-            SET s.quantity = GREATEST(0, s.quantity - i.quantity)
-            WHERE i.order_id = ? AND i.frame_category = 'READY_MADE'
-        ");
-        if ($stmtStock) {
-            $stmtStock->bind_param("i", $order_id);
-            $stmtStock->execute();
-        }
+        $orderRepo->decrementStockForProcessing($order_id);
     }
 
     // --- NOTIFICATION ---
     $notifRepo = new NotificationRepository($conn);
     $notifService = new NotificationService($notifRepo);
 
-    $stmtC = $conn->prepare("SELECT customer_id, order_reference_no FROM tbl_orders WHERE order_id = ?");
-    $stmtC->bind_param("i", $order_id);
-    $stmtC->execute();
-    $resC = $stmtC->get_result()->fetch_assoc();
-    $stmtC->close();
+    $resC = $orderRepo->getCustomerReference($order_id);
 
     if ($resC) {
         $customer_id = $resC['customer_id'];
