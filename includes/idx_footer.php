@@ -30,22 +30,22 @@
                         <i class="fa-solid fa-location-dot"></i>
                         <div class="idx-ftr-contact-text">
                             <strong>Physical Address</strong>
-                            Mabini Street, Tagum City,<br>
-                            Davao del Norte, Philippines 8100
+                            Joves Building, Rizal Street, Corner Bonifacio,<br> 
+                            Tagum City, Davao del Norte 8100
                         </div>
                     </div>
                     <div class="idx-ftr-contact-item">
                         <i class="fa-solid fa-phone"></i>
                         <div class="idx-ftr-contact-text">
                             <strong>Call Us</strong>
-                            +63 9XX XXX XXXX
+                            +63 912 861 1218
                         </div>
                     </div>
                     <div class="idx-ftr-contact-item">
                         <i class="fa-solid fa-envelope"></i>
                         <div class="idx-ftr-contact-text">
                             <strong>Email Inquiries</strong>
-                            support@rgaframes.com
+                            rgaframes@gmail.com
                         </div>
                     </div>
                 </div>
