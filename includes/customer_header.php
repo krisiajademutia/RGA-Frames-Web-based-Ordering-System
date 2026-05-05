@@ -20,6 +20,43 @@ if ($current_user_id > 0) {
         $notif_count = $row['total'];
     }
     $stmt->close();
+
+    $stmt_cart1 = $conn->prepare("
+        SELECT COUNT(f.item_id) as total 
+        FROM tbl_frame_order_items f 
+        JOIN tbl_cart c ON f.cart_id = c.cart_id 
+        WHERE c.customer_id = ? AND (f.source_type = 'CART' OR f.source_type = '')
+    ");
+    if ($stmt_cart1) {
+        $stmt_cart1->bind_param("i", $current_user_id);
+        $stmt_cart1->execute();
+        $res_cart1 = $stmt_cart1->get_result();
+        if ($res_cart1 && $row_cart1 = $res_cart1->fetch_assoc()) {
+            $cart_count += $row_cart1['total'];
+        }
+        $stmt_cart1->close();
+    }
+    
+    $stmt_cart2 = $conn->prepare("
+        SELECT COUNT(p.printing_order_item_id) as total 
+        FROM tbl_printing_order_items p 
+        JOIN tbl_cart c ON p.cart_id = c.cart_id 
+        WHERE c.customer_id = ? AND p.order_id IS NULL 
+        AND NOT EXISTS (
+            SELECT 1 FROM tbl_frame_order_items f 
+            WHERE f.printing_order_item_id = p.printing_order_item_id 
+            AND f.source_type = 'CART'
+        )
+    ");
+    if ($stmt_cart2) {
+        $stmt_cart2->bind_param("i", $current_user_id);
+        $stmt_cart2->execute();
+        $res_cart2 = $stmt_cart2->get_result();
+        if ($res_cart2 && $row_cart2 = $res_cart2->fetch_assoc()) {
+            $cart_count += $row_cart2['total'];
+        }
+        $stmt_cart2->close();
+    }
 }
 
 $current_page = basename($_SERVER['PHP_SELF']);
@@ -76,6 +113,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
         <a href="customer_cart.php" class="cust-hdr-icon-btn">
             <i class="fas fa-shopping-cart"></i>
+            <?php if ($cart_count > 0): ?>
+                <span class="cust-hdr-badge"><?php echo $cart_count; ?></span>
+            <?php endif; ?>
         </a>
 
         <a href="customer_notifications.php" class="cust-hdr-icon-btn">
@@ -150,6 +190,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
         <a href="customer_cart.php" class="cust-hdr-nav-link">
             <i class="fas fa-shopping-cart"></i> Cart
+            <?php if ($cart_count > 0): ?>
+                <span class="badge bg-danger ms-2"><?php echo $cart_count; ?></span>
+            <?php endif; ?>
         </a>
 
         <a href="customer_notifications.php" class="cust-hdr-nav-link">
