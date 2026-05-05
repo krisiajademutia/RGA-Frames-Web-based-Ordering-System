@@ -21,23 +21,6 @@ if ($current_user_id > 0) {
         $notif_count = $row['total'];
     }
     $stmt->close();
-
-    // Fetch Cart Item Count
-    $cart_sql = "
-        SELECT 
-            (SELECT COUNT(*) FROM tbl_frame_order_items f JOIN tbl_cart c ON f.cart_id = c.cart_id WHERE c.customer_id = ? AND (f.source_type = 'CART' OR f.source_type = ''))
-            +
-            (SELECT COUNT(*) FROM tbl_printing_order_items p JOIN tbl_cart c ON p.cart_id = c.cart_id WHERE c.customer_id = ? AND p.order_id IS NULL AND NOT EXISTS (SELECT 1 FROM tbl_frame_order_items f WHERE f.printing_order_item_id = p.printing_order_item_id AND (f.source_type = 'CART' OR f.source_type = '')))
-        AS total_cart_items
-    ";
-    $stmt = $conn->prepare($cart_sql);
-    $stmt->bind_param("ii", $current_user_id, $current_user_id);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    if ($res && $row = $res->fetch_assoc()) {
-        $cart_count = $row['total_cart_items'];
-    }
-    $stmt->close();
 }
 
 $current_page = basename($_SERVER['PHP_SELF']);
@@ -94,9 +77,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
         <a href="customer_cart.php" class="cust-hdr-icon-btn">
             <i class="fas fa-shopping-cart"></i>
-            <span id="cart-badge-desktop" class="cust-hdr-badge" style="<?php echo $cart_count > 0 ? '' : 'display:none;'; ?>">
-                <?php echo $cart_count; ?>
-            </span>
         </a>
 
         <a href="customer_notifications.php" class="cust-hdr-icon-btn">
@@ -171,9 +151,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
         <a href="customer_cart.php" class="cust-hdr-nav-link">
             <i class="fas fa-shopping-cart"></i> Cart
-            <span id="cart-badge-mobile" class="cust-hdr-badge ms-auto" style="<?php echo $cart_count > 0 ? '' : 'display:none;'; ?>">
-                <?php echo $cart_count; ?>
-            </span>
         </a>
 
         <a href="customer_notifications.php" class="cust-hdr-nav-link">
