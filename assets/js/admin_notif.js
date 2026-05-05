@@ -12,6 +12,8 @@ function getIconForTitle(title) {
             return { cls: 'notif-icon-promo', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' };
         if (t.includes('order') || t.includes('new'))
             return { cls: 'notif-icon-order', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>' };
+        if (t.includes('review'))
+            return { cls: 'notif-icon-promo', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' };
         return { cls: 'notif-icon-default', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' };
     }
 
@@ -56,12 +58,16 @@ function getIconForTitle(title) {
                     const notifId = item.dataset.notifId;
                     const orderId = parseInt(item.dataset.orderId) || 0;
 
+                    const titleText = item.querySelector('.notif-title').innerText.toLowerCase();
+
                     if (notifId > 0) {
                         fetch(`../process/mark_single_notification_read.php?notif_id=${notifId}`)
                             .catch(err => console.warn("Could not mark as read", err));
                     }
 
-                    if (orderId > 0) {
+                    if (titleText.includes('review')) {
+                        window.location.href = 'admin_customer_reviews.php';
+                    } else if (orderId > 0) {
                         // For admin page → always go to admin order details
                         window.location.href = `admin_order_details.php?id=${orderId}`;
                     }

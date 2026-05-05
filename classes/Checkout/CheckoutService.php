@@ -110,8 +110,27 @@ class CheckoutService {
 
         if ($isBuyNow && $buyNowItemData) {
             $normalizedItems = [[
-                'quantity' => (int)($buyNowItemData['quantity'] ?? 1)
+                'quantity' => (int)($buyNowItemData['quantity'] ?? 1),
+                'frame_category' => $buyNowItemData['item_type'] ?? 'CUSTOM_FRAME',
+                'current_stock' => $buyNowItemData['current_stock'] ?? 9999, // Should really fetch if READY_MADE
+                'ready_name' => $buyNowItemData['product_name'] ?? 'Ready Made Item'
             ]];
+        }
+
+        // 🔥 STEP 2.5: JIT STOCK VALIDATION
+        foreach ($normalizedItems as $item) {
+            if (($item['frame_category'] ?? '') === 'READY_MADE') {
+                $stock = (int)($item['current_stock'] ?? 0);
+                $qty = (int)($item['quantity'] ?? 1);
+                $name = $item['ready_name'] ?? 'A ready made item';
+                
+                if ($qty > $stock) {
+                    if ($stock === 0) {
+                        return ['success' => false, 'message' => "Sorry, '{$name}' is currently out of stock."];
+                    }
+                    return ['success' => false, 'message' => "Sorry, '{$name}' only has {$stock} left in stock. Please reduce your quantity."];
+                }
+            }
         }
 
         $delivery_option = strtoupper(trim($post['delivery_option'] ?? 'PICKUP'));

@@ -539,6 +539,9 @@ function updateTotal() {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     });
+
+    // Save state to sessionStorage
+    sessionStorage.setItem('customFrameState', JSON.stringify(state));
 }
 
 // ── Form Submission ──────────────────────────────────────
@@ -599,8 +602,23 @@ async function submitAddToCart() {
     try {
         const res    = await fetch('../process/custom_frame_process.php', { method: 'POST', body: fd });
         const result = await res.json();
-        if (result.success) showToast('Frame added to your cart!', 'success');
-        else showToast(result.message || 'Something went wrong.', 'error');
+        if (result.success) {
+            sessionStorage.removeItem('customFrameState'); // Clear state on successful add to cart
+            showToast('Frame added to your cart!', 'success');
+            // Update cart badge dynamically
+            const desktopBadge = document.getElementById('cart-badge-desktop');
+            const mobileBadge = document.getElementById('cart-badge-mobile');
+            if (desktopBadge) {
+                desktopBadge.textContent = parseInt(desktopBadge.textContent || 0) + state.quantity;
+                desktopBadge.style.display = 'inline-block';
+            }
+            if (mobileBadge) {
+                mobileBadge.textContent = parseInt(mobileBadge.textContent || 0) + state.quantity;
+                mobileBadge.style.display = 'inline-block';
+            }
+        } else {
+            showToast(result.message || 'Something went wrong.', 'error');
+        }
     } catch (e) {
         showToast('Network error. Please try again.', 'error');
     } finally {
@@ -743,3 +761,93 @@ document.addEventListener('keydown', function(e) {
 
 // ── Page load: sync state with pre-selected HTML defaults ─
 showRow('sum-service-row', 'sum-service', 'Frame only');
+
+// ── Restore state from sessionStorage ─────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+    const saved = sessionStorage.getItem('customFrameState');
+    if (saved) {
+        try {
+            const s = JSON.parse(saved);
+            
+            // Service Type
+            if (s.serviceType) {
+                const opt = qs(`.csc-service-option[data-value="${s.serviceType}"]`);
+                if (opt) opt.click();
+            }
+            
+            // Frame Type
+            if (s.frameTypeId) {
+                const opt = qs(`.csc-type-option[data-value="${s.frameTypeId}"]`);
+                if (opt) opt.click();
+            }
+            
+            // Frame Design
+            if (s.frameDesignId) {
+                const opt = qs(`.csc-design-card[data-value="${s.frameDesignId}"]`);
+                if (opt) opt.click();
+            }
+            
+            // Frame Color
+            if (s.frameColorId) {
+                const opt = qs(`.csc-color-card[data-value="${s.frameColorId}"]`);
+                if (opt) opt.click();
+            }
+            
+            // Frame Size
+            if (s.frameSizeId) {
+                const opt = qs(`.csc-size-pill[data-value="${s.frameSizeId}"]`);
+                if (opt) opt.click();
+                
+                if (s.frameSizeId === 'OTHER') {
+                    const wInput = qs('#csc-width');
+                    const hInput = qs('#csc-height');
+                    if (wInput && hInput) {
+                        wInput.value = s.frameWidth || '';
+                        hInput.value = s.frameHeight || '';
+                        wInput.dispatchEvent(new Event('input'));
+                    }
+                }
+            }
+            
+            // Primary Matboard
+            if (s.primaryMatboard !== undefined) {
+                const opt = qs(`#csc-primary-matboard .csc-matboard-card[data-value="${s.primaryMatboard}"]`);
+                if (opt) opt.click();
+            }
+            
+            // Secondary Matboard
+            if (s.secondaryMatboard !== undefined) {
+                const opt = qs(`#csc-secondary-matboard .csc-matboard-card[data-value="${s.secondaryMatboard}"]`);
+                if (opt) opt.click();
+            }
+            
+            // Mount Type
+            if (s.mountTypeId) {
+                const opt = qs(`.csc-section:last-of-type .csc-service-option[data-value="${s.mountTypeId}"]`);
+                if (opt) opt.click();
+            }
+            
+            // Paper Type
+            if (s.paperTypeId) {
+                const select = qs('#csc-paper-type');
+                if (select) {
+                    select.value = s.paperTypeId;
+                    select.dispatchEvent(new Event('change'));
+                }
+            }
+            
+            // Quantity
+            if (s.quantity) {
+                const qtyInput = qs('#csc-qty');
+                if (qtyInput) {
+                    qtyInput.value = s.quantity;
+                    qtyInput.dispatchEvent(new Event('input'));
+                }
+            }
+            
+        } catch (e) {
+            console.error('Failed to restore custom frame state:', e);
+            sessionStorage.removeItem('customFrameState');
+        }
+    }
+});

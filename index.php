@@ -1,4 +1,15 @@
 <?php
+    session_start();
+
+    if (isset($_SESSION['user_id'])) {
+        if (isset($_SESSION['role']) && $_SESSION['role'] === 'ADMIN') {
+            header("Location: admin/admin_dashboard.php");
+        } else {
+            header("Location: customer/customer_dashboard.php");
+        }
+        exit();
+    }
+
     // Configuration / SEO variables (Optional)
     $pageTitle = "RGA Frames - Custom Framing & Printing";
     

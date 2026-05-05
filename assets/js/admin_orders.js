@@ -1,16 +1,4 @@
-// ── Live Search ──
-const searchInput = document.getElementById('admn-ordr-search-input');
-const orderCards  = document.querySelectorAll('.admn-ordr-card');
-
-if (searchInput) {
-    searchInput.addEventListener('input', function () {
-        const q = this.value.toLowerCase().trim();
-        orderCards.forEach(card => {
-            const data = card.getAttribute('data-search') || '';
-            card.style.display = data.includes(q) ? '' : 'none';
-        });
-    });
-}
+// Client-side search replaced with server-side form submission
 
 // ── Today Button ──
 document.getElementById('admn-ordr-today-btn')?.addEventListener('click', function () {

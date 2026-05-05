@@ -169,6 +169,21 @@ function updateTotalPriceDisplay() {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     });
+
+    saveReadyMadeState(false);
+}
+
+function saveReadyMadeState(autoOpen = false) {
+    sessionStorage.setItem('readyMadeState', JSON.stringify({
+        productId: document.getElementById('modalProductId').value,
+        service: document.getElementById('selectedService').value,
+        paperId: document.getElementById('selectedPaperId').value,
+        matId: document.getElementById('selectedMatId').value,
+        secondaryMatId: document.getElementById('selectedSecondaryMatId').value,
+        mountId: document.getElementById('selectedMountId').value,
+        qty: document.getElementById('modalQtyInput').value,
+        autoOpen: autoOpen
+    }));
 }
 
 function adjustQty(val) {
@@ -232,6 +247,10 @@ function handleReadyMadeSubmit(actionType) {
     formData.append('mount_type_id',         document.getElementById('selectedMountId').value);
     formData.append('paper_type_id',         document.getElementById('selectedPaperId').value);
 
+    if (actionType === 'buy_now') {
+        saveReadyMadeState(true); // Save state and mark for auto-open before redirect
+    }
+
     fetch('../process/ready_made_process.php', { method: 'POST', body: formData })
     .then(res => res.json())
     .then(data => {
@@ -239,7 +258,22 @@ function handleReadyMadeSubmit(actionType) {
             if (actionType === 'buy_now') {
                 window.location.href = data.redirect;
             } else {
+                sessionStorage.removeItem('readyMadeState'); // Clear state on successful add to cart
                 showToast('✓ ' + (data.message || 'Added to cart!'), 'success');
+                
+                // Update cart badge dynamically
+                const addedQty = parseInt(document.getElementById('modalQtyInput').value) || 1;
+                const desktopBadge = document.getElementById('cart-badge-desktop');
+                const mobileBadge = document.getElementById('cart-badge-mobile');
+                if (desktopBadge) {
+                    desktopBadge.textContent = parseInt(desktopBadge.textContent || 0) + addedQty;
+                    desktopBadge.style.display = 'inline-block';
+                }
+                if (mobileBadge) {
+                    mobileBadge.textContent = parseInt(mobileBadge.textContent || 0) + addedQty;
+                    mobileBadge.style.display = 'inline-block';
+                }
+
                 bootstrap.Modal.getInstance(productModal).hide();
             }
         } else {
@@ -257,4 +291,68 @@ productModal.addEventListener('hidden.bs.modal', function () {
     document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
     document.body.classList.remove('modal-open');
     document.body.style.overflow = 'auto';
+});
+
+// ── Restore state from sessionStorage ─────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+    const saved = sessionStorage.getItem('readyMadeState');
+    if (saved) {
+        try {
+            const s = JSON.parse(saved);
+            if (s.autoOpen && s.productId) {
+                // Find the card for this product and click it to open modal
+                const cards = document.querySelectorAll('.posted-card-item');
+                for (let c of cards) {
+                    const btn = c.querySelector('button[data-bs-target="#productDetailsModal"]');
+                    if (btn) {
+                        const product = JSON.parse(btn.getAttribute('data-product'));
+                        if (parseInt(product.r_product_id) === parseInt(s.productId)) {
+                            // Clear autoOpen so it doesn't pop up again if they close it and refresh
+                            s.autoOpen = false;
+                            sessionStorage.setItem('readyMadeState', JSON.stringify(s));
+                            
+                            // Wait for modal to fully open before restoring selections
+                            productModal.addEventListener('shown.bs.modal', function restoreSelections() {
+                                productModal.removeEventListener('shown.bs.modal', restoreSelections);
+                                
+                                if (s.service === 'FRAME&PRINT') {
+                                    const el = document.querySelector(`.cust-rdymd-option-tile[onclick*="'FRAME&PRINT'"]`);
+                                    if (el) selectService(el, 'FRAME&PRINT');
+                                }
+                                if (s.paperId) {
+                                    const el = document.querySelector(`[data-paper-id="${s.paperId}"]`);
+                                    if (el) selectPaper(el);
+                                }
+                                if (s.matId) {
+                                    const el = document.querySelector(`[data-mat-id="${s.matId}"]`);
+                                    if (el) selectMat(el, s.matId, false);
+                                } else if (s.matId === '') {
+                                     const el = document.querySelector(`[onclick*="selectMat(this, null, true)"]`);
+                                     if (el) selectMat(el, null, true);
+                                }
+                                if (s.secondaryMatId) {
+                                    const el = document.querySelector(`[data-mat-id="${s.secondaryMatId}"]`);
+                                    if (el) selectSecondaryMat(el, s.secondaryMatId);
+                                }
+                                if (s.mountId) {
+                                    const el = document.querySelector(`[data-mount-id="${s.mountId}"]`);
+                                    if (el) selectMount(el);
+                                }
+                                if (s.qty) {
+                                    document.getElementById('modalQtyInput').value = s.qty;
+                                    updateTotalPriceDisplay();
+                                }
+                            });
+                            
+                            btn.click();
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch(e) {
+            console.error('Failed to restore ready-made state:', e);
+            sessionStorage.removeItem('readyMadeState');
+        }
+    }
 });

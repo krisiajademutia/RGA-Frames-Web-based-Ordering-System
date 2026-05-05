@@ -7,8 +7,13 @@ if (!$orderId) {
     die("Error: No Order ID provided.");
 }
 
-// 1. Fetch Order Details
-$stmt = $conn->prepare("SELECT * FROM tbl_orders WHERE order_id = ?");
+// 1. Fetch Order Details & Customer Info
+$stmt = $conn->prepare("
+    SELECT o.*, c.first_name, c.last_name 
+    FROM tbl_orders o
+    JOIN tbl_customer c ON o.customer_id = c.customer_id
+    WHERE o.order_id = ?
+");
 $stmt->bind_param("i", $orderId);
 $stmt->execute();
 $order = $stmt->get_result()->fetch_assoc();
@@ -69,9 +74,15 @@ $actualBalance = $order['total_price'] - $actualAmountPaid;
 <body class="receipt-page">
 
     <div class="action-bar">
-        <a href="../customer/customer_order_details.php?id=<?= $orderId ?>" class="cst-ord-dtls-back">
-            <i class="fas fa-arrow-left"></i> Back to Order Details
-        </a>
+        <?php if (isset($_GET['source']) && $_GET['source'] === 'admin'): ?>
+            <a href="../admin/admin_order_details.php?id=<?= $orderId ?>" class="cst-ord-dtls-back">
+                <i class="fas fa-arrow-left"></i> Back to Admin Details
+            </a>
+        <?php else: ?>
+            <a href="../customer/customer_order_details.php?id=<?= $orderId ?>" class="cst-ord-dtls-back">
+                <i class="fas fa-arrow-left"></i> Back to Order Details
+            </a>
+        <?php endif; ?>
 
         <a href="generate_pdf_receipt.php?order_id=<?= $orderId ?>" class="btn-download">
             <i class="fas fa-file-pdf"></i> Download PDF Receipt
@@ -88,6 +99,7 @@ $actualBalance = $order['total_price'] - $actualAmountPaid;
         <div class="info-section">
             <div class="order-title">Acknowledgement Receipt</div>
             <strong>Order ID:</strong> <?= htmlspecialchars($order['order_reference_no']) ?><br>
+            <strong>Customer:</strong> <?= htmlspecialchars($order['first_name'] . ' ' . $order['last_name']) ?><br>
             <strong>Date:</strong> <?= date("M d, Y", strtotime($order['created_at'])) ?><br>
             <strong>Delivery:</strong> <?= htmlspecialchars($order['delivery_option']) ?><br>
             <strong>Payment Method:</strong> <?= htmlspecialchars($order['payment_method']) ?>

@@ -162,6 +162,18 @@ function updatePrice() {
         const total = parseFloat(price) * qty;
         document.getElementById('display-total').innerText = '₱' + (isNaN(total) ? "0.00" : total.toFixed(2));
     });
+
+    savePrintingState();
+}
+
+function savePrintingState() {
+    sessionStorage.setItem('printingState', JSON.stringify({
+        paper: paperSelect.value,
+        size: sizeSelect.value,
+        w: customW.value,
+        h: customH.value,
+        qty: qtyInput.value
+    }));
 }
 
 // --- ADD TO CART LOGIC ---
@@ -188,8 +200,23 @@ btnCart.addEventListener('click', function() {
     fetch('../process/printing_process.php', { method: 'POST', body: formData })
     .then(res => res.json())
     .then(data => {
-        if(data.success) {
+            if(data.success) {
+            sessionStorage.removeItem('printingState'); // Clear state on successful add to cart
             showToast('Item successfully added to cart.');
+            
+            // Update cart badge dynamically
+            const addedQty = parseInt(qtyInput.value) || 1;
+            const desktopBadge = document.getElementById('cart-badge-desktop');
+            const mobileBadge = document.getElementById('cart-badge-mobile');
+            if (desktopBadge) {
+                desktopBadge.textContent = parseInt(desktopBadge.textContent || 0) + addedQty;
+                desktopBadge.style.display = 'inline-block';
+            }
+            if (mobileBadge) {
+                mobileBadge.textContent = parseInt(mobileBadge.textContent || 0) + addedQty;
+                mobileBadge.style.display = 'inline-block';
+            }
+
             fileInput.value = ''; 
             paperSelect.selectedIndex = 0; 
             sizeSelect.innerHTML = '<option selected disabled>Select size</option>'; 
@@ -295,6 +322,7 @@ paperSelect.addEventListener('change', function() {
         customW.value = '';
         customH.value = '';
         totalInchInput.value = '';
+        validateForm();
     });
 });
 
@@ -315,6 +343,7 @@ sizeSelect.addEventListener('change', function() {
         calculateArea();
     }
     updatePrice();
+    validateForm();
 });
 
 fileInput.addEventListener('change', function() {
@@ -336,4 +365,56 @@ uploadArea.addEventListener('click', function(e) {
 
 fileInput.addEventListener('click', function(e) {
     e.stopPropagation();
+});
+
+// ── Restore state from sessionStorage ─────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+    const saved = sessionStorage.getItem('printingState');
+    if (saved) {
+        try {
+            const s = JSON.parse(saved);
+            if (s.paper) {
+                paperSelect.value = s.paper;
+                
+                // Fetch sizes for this paper
+                fetch('../process/fetch_print_sizes.php', {
+                    method: 'POST',
+                    body: 'paper_id=' + encodeURIComponent(s.paper), 
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+                })
+                .then(res => res.text())
+                .then(html => { 
+                    sizeSelect.innerHTML = html; 
+                    sizeSelect.disabled = false; 
+                    
+                    if (s.size) {
+                        sizeSelect.value = s.size;
+                    }
+                    
+                    if (s.size === 'Other') {
+                        customW.readOnly = false;
+                        customH.readOnly = false;
+                        customW.value = s.w || '';
+                        customH.value = s.h || '';
+                    } else {
+                        customW.readOnly = true;
+                        customH.readOnly = true;
+                        if(sizeSelect.selectedIndex > 0) {
+                            const opt = sizeSelect.options[sizeSelect.selectedIndex];
+                            customW.value = opt.getAttribute('data-width') || 0;
+                            customH.value = opt.getAttribute('data-height') || 0;
+                        }
+                    }
+                    
+                    if (s.qty) qtyInput.value = s.qty;
+                    calculateArea();
+                    updatePrice();
+                    validateForm();
+                });
+            }
+        } catch (e) {
+            console.error('Failed to restore printing state:', e);
+            sessionStorage.removeItem('printingState');
+        }
+    }
 });

@@ -51,6 +51,20 @@ class OrderRepository {
             $types .= "s";
         }
 
+        if (!empty($filters['search'])) {
+            $sql .= " AND (
+                o.order_id LIKE ? OR 
+                o.order_reference_no LIKE ? OR 
+                c.first_name LIKE ? OR 
+                c.last_name LIKE ? OR 
+                CONCAT(c.first_name, ' ', c.last_name) LIKE ? OR
+                c.phone_number LIKE ?
+            )";
+            $searchTerm = '%' . $filters['search'] . '%';
+            array_push($params, $searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm);
+            $types .= "ssssss";
+        }
+
         $sql .= " ORDER BY o.created_at DESC";
         $stmt = $this->conn->prepare($sql);
         $stmt->bind_param($types, ...$params);

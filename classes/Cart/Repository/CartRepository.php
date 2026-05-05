@@ -16,6 +16,7 @@ class CartRepository implements CartRepositoryInterface
                    fd.design_name,
                    fd.price            AS design_base_price,
                    fdi.image_name      AS design_image,
+                   rmi.image_name      AS ready_made_image,
                    fc.color_name,
                    fs.dimension        AS frame_size,
                    COALESCE(p.width_inch,  c.custom_width,  r.width)  AS width_inch,
@@ -27,6 +28,7 @@ class CartRepository implements CartRepositoryInterface
                    pt.paper_name,
                    pt.multiplier       AS paper_multiplier,
                    mat.matboard_color_name,
+                   mat2.matboard_color_name AS secondary_matboard_color_name,
                    mt.mount_name,
                    IFNULL(mt.additional_fee, 0) AS mount_fee
             FROM tbl_frame_order_items f
@@ -35,12 +37,14 @@ class CartRepository implements CartRepositoryInterface
             LEFT JOIN tbl_ready_made_product   r   ON f.r_product_id           = r.r_product_id
             LEFT JOIN tbl_frame_designs        fd  ON (c.frame_design_id       = fd.frame_design_id OR r.frame_design_id = fd.frame_design_id)
             LEFT JOIN tbl_frame_design_images  fdi ON (fd.frame_design_id      = fdi.frame_design_id AND fdi.is_primary = 1)
+            LEFT JOIN tbl_ready_made_product_images rmi ON (r.r_product_id     = rmi.r_product_id AND rmi.is_primary = 1)
             LEFT JOIN tbl_frame_colors         fc  ON (c.frame_color_id        = fc.frame_color_id  OR r.frame_color_id = fc.frame_color_id)
             LEFT JOIN tbl_frame_sizes          fs  ON (r.width = fs.width_inch AND r.height = fs.height_inch)
             LEFT JOIN tbl_frame_types          ft  ON (c.frame_type_id         = ft.frame_type_id   OR r.frame_type_id  = ft.frame_type_id)
             LEFT JOIN tbl_printing_order_items p   ON f.printing_order_item_id = p.printing_order_item_id
             LEFT JOIN tbl_paper_type           pt  ON p.paper_type_id          = pt.paper_type_id
             LEFT JOIN tbl_matboard_colors      mat ON f.primary_matboard_id    = mat.matboard_color_id
+            LEFT JOIN tbl_matboard_colors      mat2 ON f.secondary_matboard_id = mat2.matboard_color_id
             LEFT JOIN tbl_mount_type           mt  ON f.mount_type_id          = mt.mount_type_id
             WHERE cart.customer_id = ? AND (f.source_type = 'CART' OR f.source_type = '')
         ";
@@ -62,6 +66,8 @@ class CartRepository implements CartRepositoryInterface
         // Display image
         if (!empty($row['print_image'])) {
             $row['display_image'] = "../" . $row['print_image'];
+        } elseif (!empty($row['ready_made_image'])) {
+            $row['display_image'] = "../uploads/" . $row['ready_made_image'];
         } elseif (!empty($row['design_image'])) {
             $row['display_image'] = "../uploads/" . $row['design_image'];
         } else {
@@ -90,7 +96,16 @@ class CartRepository implements CartRepositoryInterface
             : '—';
         $row['detail_service']  = $row['service_type'] === 'FRAME&PRINT' ? 'Frame & Print' : 'Frame Only';
         $row['detail_paper']    = $row['paper_name']          ?? null;
-        $row['detail_matboard'] = $row['matboard_color_name'] ?? null;
+        
+        $matText = null;
+        if (!empty($row['matboard_color_name'])) {
+            $matText = "Primary: " . $row['matboard_color_name'];
+            if (!empty($row['secondary_matboard_color_name'])) {
+                $matText .= " | Secondary: " . $row['secondary_matboard_color_name'];
+            }
+        }
+        $row['detail_matboard'] = $matText;
+        
         $row['detail_mount']    = $row['mount_name']          ?? null;
 
         // ── Price breakdown fields ───────────────────────────────────────────

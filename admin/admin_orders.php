@@ -18,6 +18,7 @@ if (!in_array($active_tab, $valid_tabs)) $active_tab = 'PENDING';
 $filters = [
     'date'       => $_GET['date']       ?? null,
     'filterDate' => $_GET['filterDate'] ?? null,
+    'search'     => trim($_GET['search'] ?? '')
 ];
 
 $summary = $service->getDashboardSummary();
@@ -123,17 +124,32 @@ $tab_labels = [
 
         <!-- Search & Filter Bar -->
         <div class="admn-ordr-search-bar">
-            <div class="input-group admn-ordr-search">
+            <form class="input-group admn-ordr-search" method="GET" action="admin_orders.php">
+                <input type="hidden" name="status" value="<?= htmlspecialchars($active_tab) ?>">
+                <?php if (!empty($filters['filterDate'])): ?>
+                    <input type="hidden" name="filterDate" value="<?= htmlspecialchars($filters['filterDate']) ?>">
+                <?php endif; ?>
+                
                 <span class="input-group-text"><i class="fas fa-search"></i></span>
-                <input type="text" id="admn-ordr-search-input" class="form-control"
+                <input type="text" name="search" id="admn-ordr-search-input" class="form-control"
+                       value="<?= htmlspecialchars($filters['search']) ?>"
                        placeholder="Search by Order ID, Ref No., Customer Name or Phone...">
-            </div>
+                <button type="submit" class="btn btn-dark" style="border-radius: 0 10px 10px 0;">Search</button>
+            </form>
 
             <?php if (!empty($filters['filterDate'])): ?>
                 <span class="admn-ordr-filter-badge">
                     <i class="fas fa-calendar-day"></i>
                     <?= date('M d, Y', strtotime($filters['filterDate'])) ?>
                     <a href="?status=<?= $active_tab ?>">×</a>
+                </span>
+            <?php endif; ?>
+
+            <?php if (!empty($filters['search'])): ?>
+                <span class="admn-ordr-filter-badge">
+                    <i class="fas fa-search"></i>
+                    "<?= htmlspecialchars($filters['search']) ?>"
+                    <a href="?status=<?= $active_tab ?><?= !empty($filters['filterDate']) ? '&filterDate='.urlencode($filters['filterDate']) : '' ?>">×</a>
                 </span>
             <?php endif; ?>
 

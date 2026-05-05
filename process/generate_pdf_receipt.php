@@ -12,7 +12,12 @@ $orderId = isset($_GET['order_id']) ? $_GET['order_id'] : null;
 if (!$orderId) { die("Error: No Order ID provided."); }
 
 // --- 1. DATA FETCHING ---
-$stmt = $conn->prepare("SELECT * FROM tbl_orders WHERE order_id = ?");
+$stmt = $conn->prepare("
+    SELECT o.*, c.first_name, c.last_name 
+    FROM tbl_orders o
+    JOIN tbl_customer c ON o.customer_id = c.customer_id
+    WHERE o.order_id = ?
+");
 $stmt->bind_param("i", $orderId);
 $stmt->execute();
 $order = $stmt->get_result()->fetch_assoc();
@@ -95,6 +100,7 @@ ob_start();
     <div class="info-section">
         <div class="order-title" style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Acknowledgement Receipt</div>
         <strong>Order ID:</strong> <?= htmlspecialchars($order['order_reference_no']) ?><br>
+        <strong>Customer:</strong> <?= htmlspecialchars($order['first_name'] . ' ' . $order['last_name']) ?><br>
         <strong>Date:</strong> <?= date("M d, Y", strtotime($order['created_at'])) ?><br>
         <strong>Delivery:</strong> <?= htmlspecialchars($order['delivery_option']) ?><br>
         <strong>Payment Method:</strong> <?= htmlspecialchars($order['payment_method']) ?>

@@ -36,6 +36,7 @@ class CheckoutRepository {
                 ci.*,
                 'FRAME' as category_type,
                 rm.product_name    AS ready_name,
+                (SELECT quantity FROM tbl_ready_made_product_stocks s WHERE s.r_product_id = rm.r_product_id LIMIT 1) AS current_stock,
                 fd.design_name     AS custom_design_name,
                 cfp.custom_width   AS width,
                 cfp.custom_height  AS height

@@ -142,7 +142,7 @@ $initial        = strtoupper(substr($customer['first_name'], 0, 1));
                                 <label class="cust-prof-label">Email Address</label>
                                 <input type="email" class="cust-prof-input cust-prof-input-readonly"
                                        value="<?= htmlspecialchars($customer['email']) ?>" readonly>
-                                <span class="cust-prof-hint">Contact support to change your email</span>
+                               
                             </div>
                         </div>
                         <div class="cust-prof-form-footer">

@@ -62,10 +62,17 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
 
 <div class="container-fluid px-4 admn-ordr-dtls-page">
 
-    <!-- Back -->
-    <a href="admin_orders.php?status=<?= $order['order_status'] ?>" class="admn-ordr-dtls-back">
-        ← Back to Order List
-    </a>
+    <!-- Top Action Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="admin_orders.php?status=<?= $order['order_status'] ?>" class="admn-ordr-dtls-back mb-0">
+            ← Back to Order List
+        </a>
+        <?php if ($order['order_status'] === 'COMPLETED'): ?>
+        <a href="../process/acknowledgement_receipt.php?order_id=<?= $order_id ?>&source=admin" class="btn btn-outline-dark btn-sm rounded-pill px-3 shadow-sm" style="border: 2px solid #0f3d33; color: #0f3d33; font-weight: 600;">
+            <i class="fas fa-file-invoice"></i> View Receipt
+        </a>
+        <?php endif; ?>
+    </div>
 
     <!-- Status Stepper -->
     <div class="admn-ordr-dtls-stepper-wrap">
@@ -491,6 +498,16 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
                             <span>Mount</span>
                             <span><?= htmlspecialchars($item['mount_name'] ?? '—') ?></span>
                         </div>
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Matboard (Primary)</span>
+                            <span><?= htmlspecialchars($item['matboard_color_name'] ?? 'None') ?></span>
+                        </div>
+                        <?php if (isset($item['secondary_matboard_color_name']) && $item['secondary_matboard_color_name'] !== ''): ?>
+                        <div class="admn-ordr-dtls-spec-row">
+                            <span>Matboard (Secondary)</span>
+                            <span><?= htmlspecialchars($item['secondary_matboard_color_name']) ?></span>
+                        </div>
+                        <?php endif; ?>
                         <?php if ($hasPrint): ?>
                         <div class="admn-ordr-dtls-spec-row">
                             <span>Paper Size</span>
@@ -505,6 +522,14 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
                             <span>Pricing</span>
                             <span>
                                 Frame | ₱<?= number_format($item['product_price'] ?? $item['base_price'] ?? 0, 2) ?><br>
+                                <?php
+                                $hasPrimaryMat   = !empty($item['matboard_color_name']);
+                                $hasSecondaryMat = !empty($item['secondary_matboard_color_name']);
+                                $matCharge       = ($hasPrimaryMat && $hasSecondaryMat)
+                                    ? (float)($item['matboard_base_price'] ?? 0)
+                                    : 0;
+                                ?>
+                                Matboard | ₱<?= number_format($matCharge, 2) ?><?= ($hasPrimaryMat && $hasSecondaryMat) ? ' (double-matting)' : '' ?><br>
                                 Mount | ₱<?= number_format($item['mount_extra'] ?? 0, 2) ?>
                                 <?php if ($hasPrint): ?>
                                     <br>Print | ₱<?= number_format($item['print_sub_total'] ?? 0, 2) ?>

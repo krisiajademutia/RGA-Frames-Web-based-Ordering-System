@@ -137,16 +137,40 @@ if ($action === 'update_qty' && isset($_GET['id'], $_GET['delta'])) {
              WHERE printing_order_item_id = ? AND order_id IS NULL"
         );
         $stmt->bind_param("iii", $delta, $delta, $itemId);
+        $stmt->execute();
     } else {
-        $stmt = $conn->prepare(
-            "UPDATE tbl_frame_order_items 
-             SET sub_total = (base_price + extra_price) * GREATEST(1, quantity + ?),
-                 quantity  = GREATEST(1, quantity + ?)
-             WHERE item_id = ?"
-        );
-        $stmt->bind_param("iii", $delta, $delta, $itemId);
+        // Fetch current item details and stock
+        $stmt_check = $conn->prepare("
+            SELECT f.frame_category, f.r_product_id, f.quantity, 
+                   IFNULL((SELECT quantity FROM tbl_ready_made_product_stocks s WHERE s.r_product_id = f.r_product_id LIMIT 1), 9999) AS current_stock
+            FROM tbl_frame_order_items f
+            WHERE f.item_id = ?
+        ");
+        $stmt_check->bind_param("i", $itemId);
+        $stmt_check->execute();
+        $row = $stmt_check->get_result()->fetch_assoc();
+        
+        if ($row) {
+            $currentQty = (int)$row['quantity'];
+            $newQty = max(1, $currentQty + $delta);
+            $stock = (int)$row['current_stock'];
+            
+            // Validate Stock for Ready Made Frames
+            if ($row['frame_category'] === 'READY_MADE' && $newQty > $stock) {
+                // If the user tries to increase beyond stock, just ignore the update.
+                // We could set a session error message here, but silently ignoring is also an option for simple cart UIs.
+            } else {
+                $stmt = $conn->prepare(
+                    "UPDATE tbl_frame_order_items 
+                     SET sub_total = (base_price + extra_price) * ?,
+                         quantity  = ?
+                     WHERE item_id = ?"
+                );
+                $stmt->bind_param("iii", $newQty, $newQty, $itemId);
+                $stmt->execute();
+            }
+        }
     }
-    $stmt->execute();
     header("Location: ../customer/customer_cart.php");
     exit;
 }

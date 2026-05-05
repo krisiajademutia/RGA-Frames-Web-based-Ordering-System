@@ -1,6 +1,15 @@
 <?php
 session_start();
 
+if (isset($_SESSION['user_id'])) {
+    if (isset($_SESSION['role']) && $_SESSION['role'] === 'ADMIN') {
+        header("Location: admin/admin_dashboard.php");
+    } else {
+        header("Location: customer/customer_dashboard.php");
+    }
+    exit();
+}
+
 $errors = $_SESSION['errors'] ?? [];
 $old    = $_SESSION['old_input'] ?? [];
 ?>
