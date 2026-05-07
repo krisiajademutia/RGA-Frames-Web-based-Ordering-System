@@ -4,6 +4,12 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'ADMIN') {
+    header("Location: ../login.php?error=unauthorized");
+    exit();
+}
+
 $current_page = basename($_SERVER['PHP_SELF']);
 include_once __DIR__ . '/../config/db_connect.php';
 $display_name = htmlspecialchars($_SESSION['first_name'] ?? 'Admin');

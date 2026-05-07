@@ -3,6 +3,12 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../login.php?error=login_required");
+    exit();
+}
+
 include_once __DIR__ . '/../config/db_connect.php';
 
 $current_user_id = $_SESSION['user_id'] ?? 0;
