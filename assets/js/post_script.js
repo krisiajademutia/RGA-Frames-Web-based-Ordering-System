@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let widthValue = parseFloat(widthInput?.value) || 0;
         let heightValue = parseFloat(heightInput?.value) || 0;
-        
+
         let frameDesignPrice = 0;
         let frameTypePrice = 0;
 
@@ -23,11 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
         selects.forEach(s => {
             const selectedOption = s.options[s.selectedIndex];
             const price = parseFloat(selectedOption?.getAttribute('data-price')) || 0;
-            
+
             if (s.name === 'frame_design_id') {
                 frameDesignPrice = price;
             }
-            
+
             // ADDED: Capture Frame Type Price
             if (s.name === 'frame_type_id') {
                 frameTypePrice = price;
@@ -53,6 +53,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
     runCalculation(true);
 
+    // On new post form, disable submit and show error until photos are added
+    const isNewPostForm = document.getElementById('post_img_input') !== null;
+    if (isNewPostForm) {
+        updatePhotoError(false);
+    }
+
+    const postSubmitBtn = document.querySelector('button[name="add_product"], button[name="update_product"]');
+
+    function updateSubmitState() {
+        if (!postSubmitBtn) return;
+        const hasNegative = Array.from(document.querySelectorAll('input[type="number"]'))
+            .some(input => parseFloat(input.value) < 0);
+        const missingPhotos = (document.getElementById('post_img_input') || document.getElementById('edit_design_imgs'))
+            && selectedFiles.length === 0;
+
+        if (hasNegative || missingPhotos) {
+            postSubmitBtn.disabled = true;
+            postSubmitBtn.style.opacity = '0.55';
+            postSubmitBtn.style.cursor = 'not-allowed';
+        } else {
+            postSubmitBtn.disabled = false;
+            postSubmitBtn.style.opacity = '';
+            postSubmitBtn.style.cursor = '';
+        }
+    }
+
+    function setupNegativeNumberValidation() {
+        const numberInputs = document.querySelectorAll('input[type="number"]');
+        numberInputs.forEach(input => {
+            input.addEventListener('input', function () {
+                let errorId = 'err-' + (input.name || input.id || Math.random().toString(36).substr(2, 9)).replace(/[^a-zA-Z0-9-]/g, '');
+                if (!input.dataset.errId) {
+                    input.dataset.errId = errorId;
+                    const errDiv = document.createElement('div');
+                    errDiv.id = errorId;
+                    errDiv.className = 'text-danger negative-warning';
+                    errDiv.style.fontSize = '12px';
+                    errDiv.style.fontWeight = '600';
+                    errDiv.style.marginTop = '4px';
+                    errDiv.style.width = '100%';
+                    errDiv.style.display = 'none';
+                    errDiv.innerText = 'Must be a positive number.';
+                    input.insertAdjacentElement('afterend', errDiv);
+                }
+                const errDiv = document.getElementById(input.dataset.errId);
+                if (parseFloat(input.value) < 0) {
+                    errDiv.style.display = 'block';
+                    input.style.borderColor = '#dc3545';
+                } else {
+                    errDiv.style.display = 'none';
+                    input.style.borderColor = '';
+                }
+                updateSubmitState();
+            });
+        });
+    }
+    setupNegativeNumberValidation();
 
 });
 
@@ -72,9 +129,37 @@ function handleMultipleFilePreview(input, containerId, textId) {
     if (input.files && input.files.length > 0) {
         const newFiles = Array.from(input.files);
         selectedFiles = selectedFiles.concat(newFiles);
-        input.value = ""; 
+        input.value = "";
     }
     renderPreviews(containerId, textId, input.id);
+}
+
+function updatePhotoError(hasPhotos) {
+    const uploadZone = document.querySelector('.post-upload-zone');
+    if (!uploadZone) return;
+
+    let errEl = document.getElementById('photo-upload-error');
+    if (!errEl) {
+        errEl = document.createElement('div');
+        errEl.id = 'photo-upload-error';
+        errEl.className = 'text-danger';
+        errEl.style.fontSize = '12px';
+        errEl.style.fontWeight = '600';
+        errEl.style.marginTop = '6px';
+        errEl.innerText = 'At least one photo is required.';
+        uploadZone.insertAdjacentElement('afterend', errEl);
+    }
+
+    if (!hasPhotos) {
+        errEl.style.display = 'block';
+        uploadZone.style.borderColor = '#dc3545';
+    } else {
+        errEl.style.display = 'none';
+        uploadZone.style.borderColor = '';
+    }
+
+    // Let updateSubmitState handle the button (it checks both photos + negative numbers)
+    if (typeof updateSubmitState === 'function') updateSubmitState();
 }
 
 function renderPreviews(containerId, textId, inputId) {
@@ -87,7 +172,8 @@ function renderPreviews(containerId, textId, inputId) {
 
     if (selectedFiles.length > 0) {
         textElement.innerText = `${selectedFiles.length} images total`;
-        
+        updatePhotoError(true);
+
         const hasExistingPrimary = selectedFiles.some(f => f.isExisting && f.is_primary);
 
         selectedFiles.forEach((file, index) => {
@@ -96,8 +182,8 @@ function renderPreviews(containerId, textId, inputId) {
             wrapper.style.cssText = "width: 80px; height: 80px; position: relative; display: inline-block; margin: 8px; border: 1px solid #ccc; border-radius: 6px; background: white; pointer-events: auto;";
 
             const isPrimary = file.is_primary || (!hasExistingPrimary && index === 0);
-            
-            const primaryBadge = isPrimary ? 
+
+            const primaryBadge = isPrimary ?
                 `<span style="position:absolute; bottom:0; left:0; right:0; background:rgba(0,64,48,0.9); color:white; font-size:10px; text-align:center; padding:2px 0; z-index:5; border-radius: 0 0 6px 6px;">Primary</span>` : '';
 
             wrapper.innerHTML = `
@@ -109,7 +195,7 @@ function renderPreviews(containerId, textId, inputId) {
                 </button>
                 <img src="${file.isExisting ? file.url : ''}" id="img-preview-${index}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">
             `;
-            
+
             previewContainer.appendChild(wrapper);
 
             if (!file.isExisting) {
@@ -123,6 +209,7 @@ function renderPreviews(containerId, textId, inputId) {
         });
     } else {
         textElement.innerText = "Click to upload photos";
+        updatePhotoError(false);
     }
 
     const dataTransfer = new DataTransfer();
@@ -132,7 +219,7 @@ function renderPreviews(containerId, textId, inputId) {
     fileInput.files = dataTransfer.files;
 
     const removedInput = document.getElementById('removed_images');
-    if(removedInput) {
+    if (removedInput) {
         removedInput.value = JSON.stringify(removedExistingFiles);
     }
 }
