@@ -12811,3 +12811,186 @@ body.modal-open { overflow: auto !important; padding-right: 0 !important; }
     padding-top: 20px; 
     border-top: 0.5pt solid #f9f9f9; 
 }
+
+/* =========================================
+   CUSTOMER DASHBOARD STYLES
+   ========================================= */
+:root {
+    --dash-forest-green: #004236;
+    --dash-soft-white: #F9F9F9;
+    --dash-text-dark: #1F2937;
+    --dash-accent-gold: #C19A5F;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: white;
+    color: var(--dash-text-dark);
+    margin: 0;
+    padding-top: 80px;
+}
+
+/* ── Hero ── */
+.hero-banner {
+    position: relative;
+    height: 450px;
+    background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('../img/frame_index2.jpg');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+    margin-bottom: 4rem;
+}
+.hero-content h1 { font-size: clamp(2.5rem, 5vw, 3.5rem); font-weight: 700; margin-bottom: 10px; letter-spacing: -1px; }
+.hero-content p  { font-size: 1.2rem; opacity: 0.9; }
+
+/* ── Section header ── */
+.section-header { text-align: center; margin-bottom: 3.5rem; }
+.section-header h2 {
+    font-weight: 700; color: var(--dash-forest-green); font-size: 2.2rem;
+    position: relative; display: inline-block;
+}
+.section-header h2::after {
+    content: ''; position: absolute; bottom: -10px; left: 50%;
+    transform: translateX(-50%); width: 50px; height: 3px;
+    background: var(--dash-accent-gold);
+}
+
+/* ── Service cards ── */
+.services-container {
+    max-width: 1200px; margin: 0 auto; padding: 0 20px;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2.5rem;
+}
+.figma-card { text-decoration: none; color: inherit; }
+.card-img-wrapper {
+    width: 100%; height: 280px; border-radius: 24px; overflow: hidden;
+    margin-bottom: 1.5rem; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.figma-card:hover .card-img-wrapper { transform: scale(1.03); }
+.card-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+.card-info h3 { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; color: var(--dash-forest-green); }
+.card-info p  { color: #6B7280; line-height: 1.6; margin-bottom: 1.5rem; }
+.pill-btn {
+    display: inline-flex; align-items: center; padding: 12px 28px;
+    background-color: var(--dash-forest-green); color: white; border-radius: 100px;
+    font-weight: 600; font-size: 0.95rem; transition: all 0.3s ease;
+}
+.figma-card:hover .pill-btn { background-color: var(--dash-accent-gold); padding-right: 35px; }
+
+/* ── Payment banner ── */
+.payment-banner { background-color: #F3F4F6; padding: 4rem 0; margin-top: 6rem; }
+.payment-flex   { display: flex; justify-content: center; gap: 4rem; flex-wrap: wrap; }
+.payment-item   { display: flex; align-items: center; gap: 1rem; }
+.payment-icon {
+    width: 50px; height: 50px; background: white; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--dash-forest-green); font-size: 1.2rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+.payment-text strong { display: block; font-size: 1.1rem; }
+.payment-text span   { font-size: 0.9rem; color: #6B7280; }
+
+/* ── Reviews preview section ── */
+.rv-preview-section {
+    max-width: 1200px;
+    margin: 0 auto 5rem;
+    padding: 0 20px;
+}
+.rv-preview-topbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+.rv-preview-heading {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--dash-forest-green);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+.rv-preview-avg {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-weight: 600;
+}
+.rv-preview-avg .rv-star-on { color: #f59e0b; }
+.rv-see-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1.2rem;
+    border: 1.5px solid var(--dash-forest-green);
+    border-radius: 999px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--dash-forest-green);
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+}
+.rv-see-more:hover { background: var(--dash-forest-green); color: #fff; }
+.rv-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.1rem;
+}
+.rv-preview-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 1.1rem 1.25rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    transition: box-shadow 0.15s, transform 0.15s;
+}
+.rv-preview-card:hover {
+    box-shadow: 0 6px 20px rgba(0,66,54,0.1);
+    transform: translateY(-2px);
+}
+.rv-preview-card-top {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 0.65rem;
+}
+.rv-preview-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, #0f3d33, #2d7a60);
+    color: #fff; font-size: 0.88rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.rv-preview-name { font-size: 0.85rem; font-weight: 700; color: #111827; }
+.rv-preview-stars { display: flex; gap: 0.15rem; margin-top: 1px; }
+.rv-star-on  { color: #f59e0b; }
+.rv-star-off { color: #d1d5db; }
+.rv-preview-rating-badge {
+    margin-left: auto;
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    padding: 0.2rem 0.6rem;
+    border: 1.5px solid #fde68a; border-radius: 999px;
+    font-size: 0.75rem; font-weight: 800;
+    color: #92400e; background: #fef9c3; flex-shrink: 0;
+}
+.rv-preview-text {
+    font-size: 0.875rem; color: #374151; line-height: 1.6;
+    margin: 0 0 0.6rem;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+    line-clamp: 3;
+    overflow: hidden;
+}
+.rv-preview-date { font-size: 0.73rem; color: #9ca3af; display: flex; align-items: center; gap: 0.3rem; }
+.rv-preview-empty {
+    text-align: center; padding: 3rem 1rem; color: #9ca3af;
+    background: #fff; border: 1px dashed #e5e7eb; border-radius: 14px;
+}
+.rv-preview-empty i { font-size: 2rem; display: block; margin-bottom: 0.5rem; color: #d1d5db; }
