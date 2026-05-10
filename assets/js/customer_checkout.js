@@ -77,9 +77,21 @@ document.getElementById('checkout-form').addEventListener('submit', async e => {
         Swal.fire('Missing Address', 'Please enter your delivery address.', 'warning');
         return;
     }
-    if (payment === 'GCASH' && !document.getElementById('receipt_file').files.length) {
-        Swal.fire('Missing Receipt', 'Please upload your GCash receipt.', 'warning');
-        return;
+    if (payment === 'GCASH') {
+        if (!document.getElementById('receipt_file').files.length) {
+            Swal.fire('Missing Receipt', 'Please upload your GCash receipt.', 'warning');
+            return;
+        }
+
+        const gcashAmount = parseFloat(document.getElementById('gcash_amount').value) || 0;
+        const totalAmountText = document.getElementById('summary-total').textContent.replace(/[^\d.]/g, '');
+        const totalAmount = parseFloat(totalAmountText) || 0;
+        const minimumRequired = totalAmount * 0.50;
+
+        if (gcashAmount < minimumRequired) {
+            Swal.fire('Invalid Amount', `A minimum downpayment of 50% (₱${minimumRequired.toLocaleString('en-PH', { minimumFractionDigits: 2 })}) is required.`, 'warning');
+            return;
+        }
     }
 
     const btn     = document.getElementById('btn-place-order');

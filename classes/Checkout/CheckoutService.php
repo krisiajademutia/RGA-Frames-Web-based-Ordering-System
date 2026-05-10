@@ -176,6 +176,13 @@ class CheckoutService {
                 return ['success' => false, 'message' => 'GCash receipt is required.'];
             }
 
+            $gcashAmount = (float)($post['gcash_amount'] ?? 0);
+            $requiredMinimum = $total_price * 0.50;
+            
+            if ($gcashAmount < $requiredMinimum) {
+                return ['success' => false, 'message' => 'GCash downpayment must be at least 50% (₱' . number_format($requiredMinimum, 2) . ') of the total amount.'];
+            }
+
             $uploadDir = __DIR__ . '/../../uploads/uploaded_receipts/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
 

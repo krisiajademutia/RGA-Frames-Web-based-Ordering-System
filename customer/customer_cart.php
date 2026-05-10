@@ -102,6 +102,8 @@
                             <div class="cart-item-img">
                                 <?php if (!empty($item['display_image'])): ?>
                                     <img src="<?= htmlspecialchars(str_replace(' ', '%20', $item['display_image'])); ?>" alt="Frame Image">
+                                <?php elseif (!empty($item['drive_link'])): ?>
+                                    <i class="fab fa-google-drive" style="font-size: 2rem; color: #0F473A;"></i>
                                 <?php else: ?>
                                     <i class="fa-regular fa-image"></i>
                                 <?php endif; ?>
@@ -188,14 +190,26 @@
                                         <span class="cart-detail-label">Subtotal</span>
                                         <span class="cart-detail-value cart-detail-price">₱<?= number_format($item['sub_total'], 2); ?></span>
                                     </div>
-                                    <?php if (($item['service_type'] === 'FRAME&PRINT' || $item['service_type'] === 'PRINT_ONLY') && !empty($item['display_image'])): ?>
+                                    <?php 
+                                        $hasPrintImage = !empty($item['print_image']) || ($item['service_type'] === 'PRINT_ONLY' && !empty($item['display_image']));
+                                    ?>
+                                    <?php if (($item['service_type'] === 'FRAME&PRINT' || $item['service_type'] === 'PRINT_ONLY') && $hasPrintImage): ?>
                                     <div class="cart-detail-row" style="grid-column: span 2;">
                                         <span class="cart-detail-label">Uploaded Photo</span>
                                         <img 
-                                            src="<?= htmlspecialchars(str_replace(' ', '%20', $item['display_image'])); ?>" 
+                                            src="<?= htmlspecialchars(str_replace(' ', '%20', $item['service_type'] === 'PRINT_ONLY' ? $item['display_image'] : '../' . $item['print_image'])); ?>" 
                                             alt="Uploaded photo"
                                             style="width:100%; max-width:260px; height:140px; object-fit:cover; border-radius:8px; border:1px solid #e5e7eb; margin-top:4px;"
                                         >
+                                    </div>
+                                    <?php elseif (!empty($item['drive_link'])): ?>
+                                    <div class="cart-detail-row" style="grid-column: span 2;">
+                                        <span class="cart-detail-label">Google Drive Link</span>
+                                        <div class="cart-detail-value mt-2">
+                                            <a href="<?= htmlspecialchars($item['drive_link']) ?>" target="_blank" class="btn btn-sm btn-outline-primary fw-bold" style="border-radius: 6px;">
+                                                <i class="fab fa-google-drive me-1"></i> Open Folder
+                                            </a>
+                                        </div>
                                     </div>
                                     <?php endif; ?>
                                 </div>

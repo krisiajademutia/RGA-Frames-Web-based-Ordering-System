@@ -39,13 +39,14 @@ class CustomFrameSaver implements OrderItemSaverInterface {
         if ($service_type === 'FRAME&PRINT') {
             $paper_id = !empty($itemData['paper_type_id']) ? $itemData['paper_type_id'] : null;
             $img_path = $itemData['image_path'] ?? null;
+            $drive_link = $itemData['drive_link'] ?? null;
 
             $stmtPrint = $conn->prepare("
                 INSERT INTO tbl_printing_order_items 
-                (order_id, paper_type_id, image_path, width_inch, height_inch, quantity, sub_total) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (order_id, paper_type_id, image_path, width_inch, height_inch, quantity, sub_total, drive_link) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ");
-            $stmtPrint->bind_param("iisddid", $orderId, $paper_id, $img_path, $custom_w, $custom_h, $qty, $print_price);
+            $stmtPrint->bind_param("iisddids", $orderId, $paper_id, $img_path, $custom_w, $custom_h, $qty, $print_price, $drive_link);
             $stmtPrint->execute();
             $printing_id = $conn->insert_id;
         }
@@ -68,13 +69,14 @@ class PrintingSaver implements OrderItemSaverInterface {
         $p_width    = (float)($itemData['width'] ?? 0);
         $p_height   = (float)($itemData['height'] ?? 0);
         $p_image    = (string)($itemData['image_path'] ?? '');
+        $p_drive    = $itemData['drive_link'] ?? null;
 
         $stmtPrint = $conn->prepare("
             INSERT INTO tbl_printing_order_items 
-            (order_id, paper_type_id, image_path, width_inch, height_inch, quantity, sub_total) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            (order_id, paper_type_id, image_path, width_inch, height_inch, quantity, sub_total, drive_link) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $stmtPrint->bind_param("iisddid", $orderId, $p_paper_id, $p_image, $p_width, $p_height, $qty, $subTotal);
+        $stmtPrint->bind_param("iisddids", $orderId, $p_paper_id, $p_image, $p_width, $p_height, $qty, $subTotal, $p_drive);
         $stmtPrint->execute();
     }
 }

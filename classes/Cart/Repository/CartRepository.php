@@ -22,6 +22,8 @@ class CartRepository implements CartRepositoryInterface
                    COALESCE(p.width_inch,  c.custom_width,  r.width)  AS width_inch,
                    COALESCE(p.height_inch, c.custom_height, r.height) AS height_inch,
                    p.image_path        AS print_image,
+                   p.drive_link,
+                   p.sub_total         AS print_sub_total,
                    r.product_name,
                    ft.type_name,
                    ft.type_price       AS frame_type_price,
@@ -64,12 +66,12 @@ class CartRepository implements CartRepositoryInterface
     private function buildDisplayFields(array $row): array
     {
         // Display image
-        if (!empty($row['print_image'])) {
-            $row['display_image'] = "../" . $row['print_image'];
-        } elseif (!empty($row['ready_made_image'])) {
+        if (!empty($row['ready_made_image'])) {
             $row['display_image'] = "../uploads/" . $row['ready_made_image'];
         } elseif (!empty($row['design_image'])) {
             $row['display_image'] = "../uploads/" . $row['design_image'];
+        } elseif (!empty($row['print_image'])) {
+            $row['display_image'] = "../" . $row['print_image'];
         } else {
             $row['display_image'] = null;
         }
@@ -126,6 +128,11 @@ class CartRepository implements CartRepositoryInterface
         // Design base price label (shown as sub-label like "D111 (Base: ₱200.00)")
         $row['design_base_price_display'] = $designBasePrice > 0 ? $designBasePrice : null;
         $row['frame_type_price_display']  = $frameTypePrice  > 0 ? $frameTypePrice  : null;
+
+        // Add print sub_total to the item's main sub_total so the Cart displays the full price
+        if (isset($row['print_sub_total'])) {
+            $row['sub_total'] = (float)($row['sub_total'] ?? 0) + (float)$row['print_sub_total'];
+        }
 
         return $row;
     }

@@ -32,10 +32,10 @@ class PrintingRepository {
         return $stmt_ins->insert_id;
     }
 
-    public function insertPrintingItem(int $cartId, int $paperTypeId, string $filename, float $w, float $h, int $qty, float $subTotal): bool {
-        $sql = "INSERT INTO tbl_printing_order_items (cart_id, paper_type_id, image_path, width_inch, height_inch, quantity, sub_total) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    public function insertPrintingItem(int $cartId, int $paperTypeId, ?string $filename, float $w, float $h, int $qty, float $subTotal, string $driveLink = ''): bool {
+        $sql = "INSERT INTO tbl_printing_order_items (cart_id, paper_type_id, image_path, width_inch, height_inch, quantity, sub_total, drive_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("iisddid", $cartId, $paperTypeId, $filename, $w, $h, $qty, $subTotal);
+        $stmt->bind_param("iisddids", $cartId, $paperTypeId, $filename, $w, $h, $qty, $subTotal, $driveLink);
         return $stmt->execute();
     }
 }

@@ -13,6 +13,25 @@ const previewWrapper = document.getElementById('preview-wrapper');
 const btnCart = document.querySelector('.ps-btn-cart');
 const btnBuyNow = document.querySelector('.ps-btn-buy-now');
 const uploadArea = document.getElementById('upload-area');
+const driveArea = document.getElementById('drive-area');
+const driveLinkInput = document.getElementById('ps-drive-link');
+const optUpload = document.getElementById('opt-upload');
+const optDrive = document.getElementById('opt-drive');
+
+// Toggle UI
+if(optUpload && optDrive) {
+    [optUpload, optDrive].forEach(radio => {
+        radio.addEventListener('change', function() {
+            if(optUpload.checked) {
+                uploadArea.classList.remove('d-none');
+                driveArea.classList.add('d-none');
+            } else {
+                uploadArea.classList.add('d-none');
+                driveArea.classList.remove('d-none');
+            }
+        });
+    });
+}
 
 function showToast(message, type = 'success') {
     const existing = document.querySelector('#csc-toast');
@@ -55,9 +74,10 @@ function validateForm(showToastMsg = false) {
     const wErr = document.getElementById('width-error');
     const hErr = document.getElementById('height-error');
     const fileErr = document.getElementById('file-error');
+    const driveErr = document.getElementById('drive-error');
     const paperErr = document.getElementById('paper-error');
 
-    [wErr, hErr, fileErr, paperErr].forEach(el => {
+    [wErr, hErr, fileErr, driveErr, paperErr].forEach(el => {
         if(el) {
             el.innerText = "";
             el.classList.add('d-none');
@@ -66,10 +86,19 @@ function validateForm(showToastMsg = false) {
     customW.style.borderColor = '';
     customH.style.borderColor = '';
 
-    if (!fileInput.files[0]) {
-        fileErr.innerText = "Please select an image.";
-        fileErr.classList.remove('d-none');
-        isValid = false;
+    if (optUpload && optUpload.checked) {
+        if (!fileInput.files[0]) {
+            fileErr.innerText = "Please select an image.";
+            fileErr.classList.remove('d-none');
+            isValid = false;
+        }
+    } else if (optDrive && optDrive.checked) {
+        const linkVal = driveLinkInput.value.trim();
+        if (!linkVal || !linkVal.startsWith('http')) {
+            driveErr.innerText = "Please enter a valid Google Drive URL.";
+            driveErr.classList.remove('d-none');
+            isValid = false;
+        }
     }
 
     if (paperSelect.selectedIndex === 0) {
@@ -181,7 +210,12 @@ btnCart.addEventListener('click', function() {
     if (!validateForm(true)) return;
 
     const formData = new FormData();
-    formData.append('image', fileInput.files[0]);
+    
+    if (optUpload.checked) {
+        formData.append('image', fileInput.files[0]);
+    } else {
+        formData.append('drive_link', driveLinkInput.value.trim());
+    }
     formData.append('type', paperSelect.value);
     formData.append('size', sizeSelect.value);
     formData.append('qty', qtyInput.value);
@@ -247,7 +281,12 @@ btnBuyNow.addEventListener('click', function() {
     if (!validateForm(true)) return;
 
     const formData = new FormData();
-    formData.append('image', fileInput.files[0]);
+    
+    if (optUpload.checked) {
+        formData.append('image', fileInput.files[0]);
+    } else {
+        formData.append('drive_link', driveLinkInput.value.trim());
+    }
     formData.append('type', paperSelect.value);
     
     const paperNameText = paperSelect.selectedIndex > 0 ? paperSelect.options[paperSelect.selectedIndex].text : 'Standard';

@@ -166,18 +166,18 @@ class CustomFrameRepository {
 
     public function insertPrintingOrderItem(
         ?int $cartId, ?int $orderId, int $paperTypeId,
-        string $imagePath, float $width, float $height,
-        int $quantity, float $subTotal
+        ?string $imagePath, float $width, float $height,
+        int $quantity, float $subTotal, string $driveLink = ''
     ): int {
         $stmt = $this->conn->prepare("
             INSERT INTO tbl_printing_order_items
                 (cart_id, order_id, paper_type_id, image_path,
-                 width_inch, height_inch, quantity, sub_total)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                 width_inch, height_inch, quantity, sub_total, drive_link)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $stmt->bind_param("iiisddid",
+        $stmt->bind_param("iiisddids",
             $cartId, $orderId, $paperTypeId, $imagePath,
-            $width, $height, $quantity, $subTotal
+            $width, $height, $quantity, $subTotal, $driveLink
         );
         $stmt->execute();
         return (int)$this->conn->insert_id;

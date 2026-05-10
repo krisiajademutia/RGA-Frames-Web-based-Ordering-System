@@ -91,19 +91,36 @@ if ($customerId > 0) {
                     <div class="csc-section-header">PAPER TYPE & IMAGE UPLOAD</div>
                     <div class="csc-section-body">
                         <div class="row g-4 align-items-start">
-                            <!-- Image Upload -->
+                            <!-- Image Source -->
                             <div class="col-md-5">
-                                <label class="csc-field-label">IMAGE UPLOAD</label>
-                                <label class="csc-upload-area" id="csc-upload-label" for="csc-image-input">
-                                    <div class="csc-upload-placeholder" id="csc-upload-placeholder">
-                                        <i class="fas fa-image"></i>
+                                <label class="csc-field-label d-flex justify-content-between align-items-center mb-2">
+                                    IMAGE SOURCE
+                                    <div class="btn-group" role="group" style="transform: scale(0.85); transform-origin: right center;">
+                                        <input type="radio" class="btn-check" name="cust_img_opt" id="cust-opt-upload" value="upload" checked>
+                                        <label class="btn btn-outline-dark btn-sm px-2 py-1" for="cust-opt-upload"><i class="fas fa-upload"></i></label>
+                                        <input type="radio" class="btn-check" name="cust_img_opt" id="cust-opt-drive" value="drive">
+                                        <label class="btn btn-outline-dark btn-sm px-2 py-1" for="cust-opt-drive"><i class="fab fa-google-drive"></i></label>
                                     </div>
-                                    <img id="csc-image-preview" class="csc-upload-preview" style="display:none;" alt="Preview">
-                                    <div class="csc-upload-btn">
-                                        <i class="fas fa-arrow-up-from-bracket"></i>
-                                    </div>
-                                    <input type="file" id="csc-image-input" accept="image/*" hidden>
                                 </label>
+
+                                <div id="cust-upload-area">
+                                    <label class="csc-upload-area" id="csc-upload-label" for="csc-image-input">
+                                        <div class="csc-upload-placeholder" id="csc-upload-placeholder">
+                                            <i class="fas fa-image"></i>
+                                        </div>
+                                        <img id="csc-image-preview" class="csc-upload-preview" style="display:none;" alt="Preview">
+                                        <div class="csc-upload-btn">
+                                            <i class="fas fa-arrow-up-from-bracket"></i>
+                                        </div>
+                                        <input type="file" id="csc-image-input" accept="image/*" hidden>
+                                    </label>
+                                </div>
+
+                                <div id="cust-drive-area" class="d-none mt-2 p-3 bg-light border rounded">
+                                    <label class="small fw-bold text-muted mb-1"><i class="fab fa-google-drive text-success"></i> Google Drive Folder Link</label>
+                                    <input type="url" id="csc-drive-link" class="form-control form-control-sm" placeholder="https://drive.google.com/...">
+                                    <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">Make sure access is "Anyone with the link".</small>
+                                </div>
                             </div>
                             <!-- Paper Type -->
                             <div class="col-md-7">

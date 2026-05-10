@@ -38,8 +38,8 @@ class DashboardStats {
     }
 
     public function getPostedReadyMadeFrames() {
-        // Counting the total number of ready-made products in the inventory
-        $query = "SELECT COUNT(*) as total FROM tbl_ready_made_product";
+        // Counting the total physical stock of ready-made products in the inventory
+        $query = "SELECT SUM(quantity) as total FROM tbl_ready_made_product_stocks";
         $result = $this->conn->query($query);
         $row = $result->fetch_assoc();
         return $row['total'] ? (int)$row['total'] : 0;

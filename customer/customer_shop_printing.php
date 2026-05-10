@@ -25,8 +25,18 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
             </div>
 
             <div class="ps-card mb-4">
-                <div class="ps-card-header">UPLOAD YOUR IMAGE</div>
+                <div class="ps-card-header d-flex justify-content-between align-items-center" style="flex-wrap: wrap; gap: 10px;">
+                    <span>PROVIDE YOUR IMAGE(S)</span>
+                    <div class="btn-group" role="group" aria-label="Upload Options">
+                        <input type="radio" class="btn-check" name="image_option" id="opt-upload" value="upload" autocomplete="off" checked>
+                        <label class="btn btn-outline-dark btn-sm" for="opt-upload"><i class="fas fa-upload"></i> Upload Image</label>
+                        
+                        <input type="radio" class="btn-check" name="image_option" id="opt-drive" value="drive" autocomplete="off">
+                        <label class="btn btn-outline-dark btn-sm" for="opt-drive"><i class="fab fa-google-drive"></i> GDrive Link</label>
+                    </div>
+                </div>
                 <div class="ps-card-body">
+                    <!-- Upload Area -->
                     <div class="ps-upload-area" id="upload-area">
                         <div class="ps-upload-content" id="upload-content">
                             <i class="fas fa-image ps-upload-icon"></i>
@@ -41,6 +51,14 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
                         </div>
                        <input type="file" class="ps-file-input" id="ps-file-input" accept="image/*">
                        <span id="file-error" class="text-danger small d-none">Please select an image file to proceed.</span>
+                    </div>
+
+                    <!-- Drive Link Area -->
+                    <div class="ps-drive-area d-none" id="drive-area" style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px dashed #ccc;">
+                        <label class="form-label fw-bold"><i class="fab fa-google-drive text-success"></i> Paste Google Drive Folder Link</label>
+                        <p class="small text-muted mb-3">If you want to print multiple photos, compile them into a Google Drive folder and paste the link here. Make sure the folder access is set to <strong>"Anyone with the link"</strong>.</p>
+                        <input type="url" class="form-control" id="ps-drive-link" placeholder="https://drive.google.com/drive/folders/... " style="border-radius: 5px; border: 1px solid #ced4da;">
+                        <span id="drive-error" class="text-danger small d-none mt-1">Please enter a valid Google Drive link.</span>
                     </div>
                 </div>
             </div>
@@ -106,6 +124,6 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
         </div>
     </div>
 
-<script src="../assets/js/customer_shop_printing.js"></script>
+<script src="../assets/js/customer_shop_printing.js?v=<?= time() ?>"></script>
 </body>
 </html>

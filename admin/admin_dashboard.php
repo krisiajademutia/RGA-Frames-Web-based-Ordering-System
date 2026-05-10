@@ -73,7 +73,7 @@ require_once '../process/fetch_dashboard.php';
             
             <div class="admn-dshbrd-stat-card">
                 <div class="admn-dshbrd-stat-content">
-                    <span class="admn-dshbrd-stat-label">POSTED READY-MADE<br>FRAMES</span>
+                    <span class="admn-dshbrd-stat-label" style="font-size: 0.70rem;">AVAILABLE READY-MADE<br>FRAMES</span>
                     <h2 class="admn-dshbrd-stat-value"><?php echo $postedReadyMade; ?></h2>
                 </div>
                 <div class="admn-dshbrd-stat-icon admn-dshbrd-icon-posted">

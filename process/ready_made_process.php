@@ -54,13 +54,18 @@ $print_subtotal = 0;
 if ($service_type === 'FRAME&PRINT') {
     if (!$paper_type_id) { ob_clean(); echo json_encode(['success' => false, 'message' => 'Please select a paper type.']); exit(); }
     
-    $targetDir = __DIR__ . '/../uploads/customer_print/';
-    
-    try {
-        // 🔥 The SOLID Upload Logic!
-        $newFile = $service->uploadImage($_FILES['print_image'] ?? null, $targetDir);
-    } catch (\Exception $e) {
-        ob_clean(); echo json_encode(['success' => false, 'message' => $e->getMessage()]); exit();
+    $driveLink = trim($_POST['drive_link'] ?? '');
+    $imagePathForDB = null;
+
+    if (empty($driveLink)) {
+        $targetDir = __DIR__ . '/../uploads/customer_print/';
+        try {
+            // 🔥 The SOLID Upload Logic!
+            $newFile = $service->uploadImage($_FILES['print_image'] ?? null, $targetDir);
+            $imagePathForDB = "uploads/customer_print/" . $newFile;
+        } catch (\Exception $e) {
+            ob_clean(); echo json_encode(['success' => false, 'message' => $e->getMessage()]); exit();
+        }
     }
     
     $multiplier = $service->getPaperTypeMultiplier($paper_type_id);
@@ -82,14 +87,11 @@ if ($service_type === 'FRAME&PRINT') {
 
         $insPrint = $conn->prepare("
             INSERT INTO tbl_printing_order_items 
-            (cart_id, paper_type_id, image_path, width_inch, height_inch, quantity, sub_total)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            (cart_id, paper_type_id, image_path, width_inch, height_inch, quantity, sub_total, drive_link)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
-        // FIXED: Added "uploads/" so it maps perfectly to your database expectations
-        $imagePathForDB = "uploads/customer_print/" . $newFile;
-        
-        $insPrint->bind_param('iisssid', $cartId, $paper_type_id, $imagePathForDB, $product['width'], $product['height'], $quantity, $print_subtotal);
+        $insPrint->bind_param('iisssids', $cartId, $paper_type_id, $imagePathForDB, $product['width'], $product['height'], $quantity, $print_subtotal, $driveLink);
         if (!$insPrint->execute()) { throw new Exception("DB error: " . $conn->error); }
         $printing_order_item_id = $conn->insert_id; 
         $conn->commit();

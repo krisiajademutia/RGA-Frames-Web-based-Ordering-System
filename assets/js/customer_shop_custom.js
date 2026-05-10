@@ -414,6 +414,28 @@ function hideFixedPricePills() {
     state.fixedPriceSelected = false;
 }
 
+// ── Drive Link Toggle ──────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    const optUpload = document.getElementById('cust-opt-upload');
+    const optDrive = document.getElementById('cust-opt-drive');
+    const uploadArea = document.getElementById('cust-upload-area');
+    const driveArea = document.getElementById('cust-drive-area');
+
+    if (optUpload && optDrive) {
+        [optUpload, optDrive].forEach(radio => {
+            radio.addEventListener('change', () => {
+                if(optUpload.checked) {
+                    uploadArea.classList.remove('d-none');
+                    driveArea.classList.add('d-none');
+                } else {
+                    uploadArea.classList.add('d-none');
+                    driveArea.classList.remove('d-none');
+                }
+            });
+        });
+    }
+});
+
 // ── Image Upload ─────────────────────────────────────────
 qs('#csc-image-input')?.addEventListener('change', function() {
     if (this.files && this.files[0]) {
@@ -566,7 +588,15 @@ function buildFormData(actionType) {
     fd.append('sub_total',          state.unitSubTotal);
     
     const img = qs('#csc-image-input');
-    if (img && img.files[0]) fd.append('customer_image', img.files[0]);
+    const optUpload = document.getElementById('cust-opt-upload');
+    if (state.serviceType === 'FRAME_PRINT') {
+        if (optUpload && optUpload.checked) {
+            if (img && img.files[0]) fd.append('customer_image', img.files[0]);
+        } else {
+            const driveInput = document.getElementById('csc-drive-link');
+            if (driveInput) fd.append('drive_link', driveInput.value.trim());
+        }
+    }
 
     return fd;
 }
@@ -587,8 +617,23 @@ async function submitAddToCart() {
     if (!state.mountTypeId) {
         showToast('Please select a mount type.', 'error'); return;
     }
-    if (state.serviceType === 'FRAME_PRINT' && !state.imageUploaded) {
-        showToast('Please upload an image for Frame & Print!', 'error'); return;
+    if (state.serviceType === 'FRAME_PRINT') {
+        const optUpload = document.getElementById('cust-opt-upload');
+        const fileInput = document.getElementById('csc-image-input');
+        const driveInput = document.getElementById('csc-drive-link');
+
+        if (optUpload && optUpload.checked) {
+            if (!state.imageUploaded || !fileInput.files || fileInput.files.length === 0) {
+                showToast('Please upload an image for Frame & Print!', 'error');
+                return;
+            }
+        } else {
+            const linkVal = driveInput ? driveInput.value.trim() : '';
+            if (!linkVal || !linkVal.startsWith('http')) {
+                showToast('Please enter a valid Google Drive URL.', 'error');
+                return;
+            }
+        }
     }
     
 
@@ -643,8 +688,23 @@ async function submitBuyNow() {
     if (!state.mountTypeId) {
         showToast('Please select a mount type.', 'error'); return;
     }
-    if (state.serviceType === 'FRAME_PRINT' && !state.imageUploaded) {
-        showToast('Please upload an image for Frame & Print!', 'error'); return;
+    if (state.serviceType === 'FRAME_PRINT') {
+        const optUpload = document.getElementById('cust-opt-upload');
+        const fileInput = document.getElementById('csc-image-input');
+        const driveInput = document.getElementById('csc-drive-link');
+
+        if (optUpload && optUpload.checked) {
+            if (!state.imageUploaded || !fileInput.files || fileInput.files.length === 0) {
+                showToast('Please upload an image for Frame & Print!', 'error');
+                return;
+            }
+        } else {
+            const linkVal = driveInput ? driveInput.value.trim() : '';
+            if (!linkVal || !linkVal.startsWith('http')) {
+                showToast('Please enter a valid Google Drive URL.', 'error');
+                return;
+            }
+        }
     }
   
 

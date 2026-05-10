@@ -452,6 +452,12 @@ $canUpload = !$isErr && $isGcash && $payment_status !== 'FULL';
                                 <span class="item-spec-val"><?= htmlspecialchars($item['paper_name']) ?></span>
                             </span>
                             <?php endif; ?>
+                            <?php if (!empty($item['drive_link'])): ?>
+                            <span class="item-spec mt-2" style="display: flex; gap: 5px; align-items: center;">
+                                <span class="item-spec-key"><i class="fab fa-google-drive text-success"></i> Image Link</span>
+                                <span class="item-spec-val"><a href="<?= htmlspecialchars($item['drive_link']) ?>" target="_blank" class="text-decoration-none text-primary fw-bold">Open Folder <i class="fas fa-external-link-alt" style="font-size: 0.75rem;"></i></a></span>
+                            </span>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </td>
@@ -489,7 +495,11 @@ $canUpload = !$isErr && $isGcash && $payment_status !== 'FULL';
         }
         foreach ($items as $idx => $item) {
             if (!empty($item['image_path'])) {
-                $docs[] = ['src' => '../'.$item['image_path'], 'label' => 'Customer Image (Item '.($idx+1).')'];
+                $imgPath = $item['image_path'];
+                if (strpos($imgPath, 'uploads/') !== 0) {
+                    $imgPath = 'uploads/customer_print/' . $imgPath;
+                }
+                $docs[] = ['src' => '../' . $imgPath, 'label' => 'Customer Image (Item '.($idx+1).')'];
             }
         }
         ?>

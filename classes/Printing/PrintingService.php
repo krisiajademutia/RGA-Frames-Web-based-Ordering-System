@@ -44,17 +44,23 @@ class PrintingService {
         $h = (float)($data['height'] ?? 0);
         $qty = (int)($data['qty'] ?? 1);
         $subTotal = (float)($data['total_price'] ?? 0);
+        $driveLink = trim($data['drive_link'] ?? '');
 
         if (!$this->validateDimensions($typeId, $w, $h)) {
-            return ['success' => false, 'message' => ''];
+            return ['success' => false, 'message' => 'Invalid dimensions.'];
         }
 
-        $filename = $this->handleImageUpload($file, $target_dir);
-        if (!$filename) return ['success' => false, 'message' => 'File upload failed.'];
+        $filename = null;
+        $full_image_path = null;
+        if (empty($driveLink)) {
+            $filename = $this->handleImageUpload($file, $target_dir);
+            if (!$filename) return ['success' => false, 'message' => 'File upload failed.'];
+            $full_image_path = "uploads/customer_print/" . $filename;
+        }
 
         $cartId = $this->repo->getOrCreateCart($customerId);
         $success = $this->repo->insertPrintingItem(
-            $cartId, $typeId, $filename, $w, $h, $qty, $subTotal
+            $cartId, $typeId, $full_image_path, $w, $h, $qty, $subTotal, $driveLink
         );
 
         return $success 
@@ -70,16 +76,21 @@ class PrintingService {
         $totalPrice = (float)($data['total_price'] ?? 0);
         $paperName = $data['paper_name'] ?? 'Standard';
         $size = $data['size'] ?? null;
+        $driveLink = trim($data['drive_link'] ?? '');
 
         if (!$this->validateDimensions($typeId, $w, $h)) {
-            return ['success' => false, 'message' => ''];
+            return ['success' => false, 'message' => 'Invalid dimensions.'];
         }
 
-        $filename = $this->handleImageUpload($file, $target_dir);
-        if (!$filename) return ['success' => false, 'message' => 'Image upload failed.'];
+        $filename = null;
+        $full_image_path = null;
 
-        // Keep this exact path string for the Buy Now Checkout screen!
-        $full_image_path = "uploads/customer_print/" . $filename;
+        if (empty($driveLink)) {
+            $filename = $this->handleImageUpload($file, $target_dir);
+            if (!$filename) return ['success' => false, 'message' => 'Image upload failed.'];
+            // Keep this exact path string for the Buy Now Checkout screen!
+            $full_image_path = "uploads/customer_print/" . $filename;
+        }
 
         $_SESSION['buy_now_item'] = [
             'item_type'     => 'PRINTING',      
@@ -90,7 +101,8 @@ class PrintingService {
             'height'        => $h,
             'quantity'      => $qty,
             'total_price'   => $totalPrice,
-            'image_path'    => $full_image_path 
+            'image_path'    => $full_image_path,
+            'drive_link'    => $driveLink
         ];
 
         return ['success' => true];

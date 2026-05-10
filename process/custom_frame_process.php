@@ -47,7 +47,7 @@ if ($customWidth <= 0 || $customHeight <= 0) $errors[] = 'Please enter a valid f
 if (empty($mountTypeId))   $errors[] = 'Please select a mount type.';
 if ($serviceType === 'FRAME&PRINT') {
     if (empty($paperTypeId)) $errors[] = 'Please select a paper type.';
-    if (empty($_FILES['customer_image']['name'])) $errors[] = 'Please upload your image.';
+    if (empty($_FILES['customer_image']['name']) && empty(trim($_POST['drive_link'] ?? ''))) $errors[] = 'Please provide an image or Google Drive link.';
 }
 
 if (!empty($errors)) {
@@ -60,7 +60,9 @@ $service = new CustomFrameService($conn);
 try {
     // The clean, SOLID Image Upload logic!
     $imagePath = '';
-    if ($serviceType === 'FRAME&PRINT' && !empty($_FILES['customer_image']['name'])) {
+    $driveLink = trim($_POST['drive_link'] ?? '');
+    
+    if ($serviceType === 'FRAME&PRINT' && empty($driveLink) && !empty($_FILES['customer_image']['name'])) {
         $target_dir = __DIR__ . '/../uploads/customer_print/';
         
         $filename = $service->uploadImage($_FILES['customer_image'], $target_dir);
@@ -81,6 +83,7 @@ try {
             'mount_type_id'         => $mountTypeId,
             'paper_type_id'         => $paperTypeId,
             'image_path'            => $imagePath,
+            'drive_link'            => $driveLink,
             'quantity'              => $quantity,
             'base_price'            => isset($_POST['base_price']) ? (float)$_POST['base_price'] : 0,
             'extra_price'           => isset($_POST['extra_price']) ? (float)$_POST['extra_price'] : 0,

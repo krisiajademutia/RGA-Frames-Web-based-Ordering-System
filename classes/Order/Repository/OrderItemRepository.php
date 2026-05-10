@@ -51,6 +51,7 @@ class OrderItemRepository {
                 (poi.width_inch + poi.height_inch) AS print_total_inch,
                 poi.sub_total   AS print_sub_total,
                 poi.image_path,
+                poi.drive_link,
                 pt.paper_name
 
             FROM tbl_frame_order_items i
@@ -123,6 +124,7 @@ class OrderItemRepository {
                 (poi.width_inch + poi.height_inch) AS print_total_inch,
                 poi.sub_total   AS print_sub_total,
                 poi.image_path,
+                poi.drive_link,
                 pt.paper_name
 
             FROM tbl_printing_order_items poi

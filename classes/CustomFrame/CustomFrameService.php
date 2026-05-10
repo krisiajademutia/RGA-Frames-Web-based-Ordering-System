@@ -189,7 +189,8 @@ class CustomFrameService {
                     $prices['width'],
                     $prices['height'],
                     max(1, (int)($data['quantity'] ?? 1)),
-                    $prices['print_price']
+                    $prices['print_price'],
+                    $data['drive_link'] ?? ''
                 );
             }
 

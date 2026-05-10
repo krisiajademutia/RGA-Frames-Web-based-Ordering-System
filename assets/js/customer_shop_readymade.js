@@ -207,6 +207,28 @@ function previewUserImage(input) {
     }
 }
 
+// Drive Link Toggle Logic
+document.addEventListener('DOMContentLoaded', () => {
+    const optUpload = document.getElementById('rm-opt-upload');
+    const optDrive = document.getElementById('rm-opt-drive');
+    const uploadArea = document.getElementById('rm-upload-area');
+    const driveArea = document.getElementById('rm-drive-area');
+
+    if (optUpload && optDrive) {
+        [optUpload, optDrive].forEach(radio => {
+            radio.addEventListener('change', () => {
+                if(optUpload.checked) {
+                    uploadArea.classList.remove('d-none');
+                    driveArea.classList.add('d-none');
+                } else {
+                    uploadArea.classList.add('d-none');
+                    driveArea.classList.remove('d-none');
+                }
+            });
+        });
+    }
+});
+
 function showToast(message, type = 'success') {
     const wrap  = document.getElementById('cust-rdymd-toast-wrap');
     const toast = document.createElement('div');
@@ -223,10 +245,21 @@ function showToast(message, type = 'success') {
 function handleReadyMadeSubmit(actionType) {
     const service = document.getElementById('selectedService').value;
     if (service === 'FRAME&PRINT') {
+        const optUpload = document.getElementById('rm-opt-upload');
         const imgInput = document.getElementById('cust-rdymd-image-input');
-        if (!imgInput.files || imgInput.files.length === 0) {
-            showToast('⚠️ Please upload an image.', 'error');
-            return;
+        const driveInput = document.getElementById('rm-drive-link');
+
+        if (optUpload && optUpload.checked) {
+            if (!imgInput.files || imgInput.files.length === 0) {
+                showToast('⚠️ Please upload an image.', 'error');
+                return;
+            }
+        } else {
+            const linkVal = driveInput ? driveInput.value.trim() : '';
+            if (!linkVal || !linkVal.startsWith('http')) {
+                showToast('⚠️ Please enter a valid Google Drive URL.', 'error');
+                return;
+            }
         }
     }
 

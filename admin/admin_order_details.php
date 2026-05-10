@@ -598,29 +598,42 @@ $isRejected  = in_array($order['order_status'], ['REJECTED','CANCELLED']);
                         </div>
                     <?php endif; ?>
 
-                    <?php if (($hasPrint || $isPrintOnly) && !empty($item['image_path'])): ?>
-                    <?php 
-                        $cleanName = str_replace(' ', '', $order['first_name'] . $order['last_name']); 
-                        $dynamicFileName = $order['order_reference_no'] . '_' . $cleanName . '_Print';
-                    ?>
-                    <div class="admn-ordr-dtls-img-preview-wrap mt-3">
-                        <img src="../<?= htmlspecialchars($item['image_path']) ?>"
-                            alt="Customer Image"
-                            class="admn-ordr-dtls-img-thumb"
-                            data-fullsrc="../<?= htmlspecialchars($item['image_path']) ?>"
-                            data-label="<?= $dynamicFileName ?>"
-                            onclick="openImageViewer(this)">
-                        <div class="admn-ordr-dtls-img-actions">
-                            <button class="admn-ordr-dtls-proof-btn"
-                                    onclick="openImageViewer(this.closest('.admn-ordr-dtls-img-preview-wrap').querySelector('img'))">
-                                <i class="fas fa-expand"></i> View Full
-                            </button>
-                            <a href="download_image.php?path=<?= urlencode($item['image_path']) ?>&name=<?= $dynamicFileName ?>"
-                            class="admn-ordr-dtls-img-download-btn">
-                                <i class="fas fa-download"></i> Download Original
-                            </a>
-                        </div>
-                    </div>
+                    <?php if (($hasPrint || $isPrintOnly)): ?>
+                        <?php if (!empty($item['drive_link'])): ?>
+                            <div class="mt-3 p-3 bg-light border rounded">
+                                <span class="d-block mb-2 text-muted fw-bold" style="font-size: 0.85rem;"><i class="fab fa-google-drive text-success"></i> Customer Provided Google Drive Link</span>
+                                <a href="<?= htmlspecialchars($item['drive_link']) ?>" target="_blank" class="btn btn-sm btn-outline-dark fw-bold">
+                                    <i class="fas fa-external-link-alt"></i> Open Google Drive Folder
+                                </a>
+                            </div>
+                        <?php elseif (!empty($item['image_path'])): ?>
+                            <?php 
+                                $imgPath = $item['image_path'];
+                                if (strpos($imgPath, 'uploads/') !== 0) {
+                                    $imgPath = 'uploads/customer_print/' . $imgPath;
+                                }
+                                $cleanName = str_replace(' ', '', $order['first_name'] . $order['last_name']); 
+                                $dynamicFileName = $order['order_reference_no'] . '_' . $cleanName . '_Print';
+                            ?>
+                            <div class="admn-ordr-dtls-img-preview-wrap mt-3">
+                                <img src="../<?= htmlspecialchars($imgPath) ?>"
+                                    alt="Customer Image"
+                                    class="admn-ordr-dtls-img-thumb"
+                                    data-fullsrc="../<?= htmlspecialchars($imgPath) ?>"
+                                    data-label="<?= $dynamicFileName ?>"
+                                    onclick="openImageViewer(this)">
+                                <div class="admn-ordr-dtls-img-actions">
+                                    <button class="admn-ordr-dtls-proof-btn"
+                                            onclick="openImageViewer(this.closest('.admn-ordr-dtls-img-preview-wrap').querySelector('img'))">
+                                        <i class="fas fa-expand"></i> View Full
+                                    </button>
+                                    <a href="download_image.php?path=<?= urlencode($imgPath) ?>&name=<?= $dynamicFileName ?>"
+                                    class="admn-ordr-dtls-img-download-btn">
+                                        <i class="fas fa-download"></i> Download Original
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                     <?php endif; ?>
 
                 </div>

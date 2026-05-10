@@ -121,13 +121,30 @@ foreach ($paperOptions as $paper) {
                                         </div>
                                     </div>
                                     <div id="cust-rdymd-upload-section" class="mt-3 p-3 border rounded bg-light">
-                                        <div id="cust-rdymd-image-preview-container">
-                                            <img id="cust-rdymd-image-preview" src="">
+                                        <div class="btn-group w-100 mb-3" role="group">
+                                            <input type="radio" class="btn-check" name="rm_image_option" id="rm-opt-upload" value="upload" autocomplete="off" checked>
+                                            <label class="btn btn-outline-dark btn-sm" for="rm-opt-upload"><i class="fas fa-upload"></i> Upload Photo</label>
+                                            
+                                            <input type="radio" class="btn-check" name="rm_image_option" id="rm-opt-drive" value="drive" autocomplete="off">
+                                            <label class="btn btn-outline-dark btn-sm" for="rm-opt-drive"><i class="fab fa-google-drive"></i> GDrive Link</label>
                                         </div>
-                                        <label class="small fw-bold text-muted mb-2">Upload Photo</label>
-                                        <input type="file" id="cust-rdymd-image-input" name="print_image"
-                                               class="form-control form-control-sm"
-                                               onchange="previewUserImage(this)">
+
+                                        <!-- Upload Area -->
+                                        <div id="rm-upload-area">
+                                            <div id="cust-rdymd-image-preview-container">
+                                                <img id="cust-rdymd-image-preview" src="">
+                                            </div>
+                                            <input type="file" id="cust-rdymd-image-input" name="print_image"
+                                                   class="form-control form-control-sm"
+                                                   onchange="previewUserImage(this)" accept="image/*">
+                                        </div>
+
+                                        <!-- Drive Area -->
+                                        <div id="rm-drive-area" class="d-none">
+                                            <label class="small fw-bold text-muted mb-1"><i class="fab fa-google-drive text-success"></i> Google Drive Folder Link</label>
+                                            <input type="url" id="rm-drive-link" name="drive_link" class="form-control form-control-sm" placeholder="https://drive.google.com/...">
+                                            <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">For multiple photos. Make sure access is "Anyone with the link".</small>
+                                        </div>
                                     </div>
                                 </section>
 
@@ -239,6 +256,6 @@ foreach ($paperOptions as $paper) {
 
 <div id="cust-rdymd-toast-wrap"></div>
 
-<script src="../assets/js/customer_shop_readymade.js"></script>
+<script src="../assets/js/customer_shop_readymade.js?v=<?= time() ?>"></script>
 
 <?php require_once __DIR__ . '/../includes/idx_footer.php'; ?>
