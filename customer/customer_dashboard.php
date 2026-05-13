@@ -44,10 +44,29 @@ $avgRating    = $totalReviews > 0 ? round($stats['avg_rating'], 1) : 0;
     <?php include '../includes/customer_header.php'; ?>
 
     <!-- ── Hero ── -->
-    <section class="hero-banner">
-        <div class="hero-content">
-            <h1>Hello, <?php echo htmlspecialchars($first_name); ?>!</h1>
-            <p>Time to transform your memories into art.</p>
+    <section class="idx-hero">
+        <div class="idx-hero-bg-overlay"></div>
+        <div class="container">
+            <div class="idx-hero-content">
+                <span class="idx-hero-eyebrow animate-fade-in-up">Welcome to your Dashboard</span>
+                <h1 class="idx-hero-title animate-fade-in-up">
+                    Hello, <?php echo htmlspecialchars($first_name); ?>!
+                </h1>
+                <p class="idx-hero-text animate-fade-in-up animation-delay-1">
+                    Time to transform your memories into art. <br>Frame it right. Frame it yours.
+                </p>
+                <div class="idx-hero-buttons animate-fade-in-up animation-delay-2">
+                    <a href="customer_shop_readymade.php" class="btn idx-btn-cta">
+                        <i class="fas fa-shopping-cart me-2"></i> Shop Ready-Made
+                    </a>
+                    <a href="customer_shop_custom.php" class="btn idx-btn-secondary">
+                        <i class="fas fa-palette me-2"></i> Custom Framing
+                    </a>
+                </div>
+                <p class="idx-hero-tagline animate-fade-in-up animation-delay-3">
+                    "Preserve the moments that matter most."
+                </p>
+            </div>
         </div>
     </section>
 
