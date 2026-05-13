@@ -97,17 +97,23 @@ class FrameDesignRepository implements OptionRepositoryInterface {
     }
 
     public function delete(int $id): bool {
-        // Cleanup files
         $images = $this->db->query("SELECT image_name FROM tbl_frame_design_images WHERE frame_design_id = $id");
+        $imageNames = [];
         while ($img = $images->fetch_assoc()) {
-            $filePath = $this->uploadDir . $img['image_name'];
-            if (file_exists($filePath)) unlink($filePath);
+            $imageNames[] = $img['image_name'];
         }
 
-        $this->db->query("DELETE FROM tbl_frame_design_images WHERE frame_design_id = $id");
         $stmt = $this->db->prepare("DELETE FROM tbl_frame_designs WHERE frame_design_id = ?");
         $stmt->bind_param("i", $id);
-        return $stmt->execute();
+        if (!$stmt->execute()) return false;
+
+        // Only remove physical files and image records after the DB row is confirmed deleted
+        $this->db->query("DELETE FROM tbl_frame_design_images WHERE frame_design_id = $id");
+        foreach ($imageNames as $imageName) {
+            $filePath = $this->uploadDir . $imageName;
+            if (file_exists($filePath)) unlink($filePath);
+        }
+        return true;
     }
 
     private function uploadImages(int $designId, array $imageFiles, bool $setFirstAsPrimary) {

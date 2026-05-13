@@ -81,17 +81,19 @@ class MatboardColorRepository implements OptionRepositoryInterface {
     }
 
     public function delete(int $id): bool {
-        // Physical file cleanup
         $current = $this->getById($id);
+
+        $stmt = $this->db->prepare("DELETE FROM tbl_matboard_colors WHERE matboard_color_id = ?");
+        $stmt->bind_param("i", $id);
+        if (!$stmt->execute()) return false;
+
+        // Only remove the physical file after the DB row is confirmed deleted
         if ($current && !empty($current['image_name'])) {
             $file = $this->uploadDir . $current['image_name'];
             if (file_exists($file)) {
                 unlink($file);
             }
         }
-
-        $stmt = $this->db->prepare("DELETE FROM tbl_matboard_colors WHERE matboard_color_id = ?");
-        $stmt->bind_param("i", $id);
-        return $stmt->execute();
+        return true;
     }
 }

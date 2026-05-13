@@ -66,11 +66,14 @@ class FrameTypeRepository implements OptionRepositoryInterface {
 
     public function delete(int $id): bool {
         $current = $this->getById($id);
+        $stmt = $this->db->prepare("DELETE FROM tbl_frame_types WHERE frame_type_id = ?");
+        $stmt->bind_param("i", $id);
+        if (!$stmt->execute()) return false;
+
+        // Only remove the physical file after the DB row is confirmed deleted
         if ($current && $current['image_name'] && file_exists($this->uploadDir . $current['image_name'])) {
             unlink($this->uploadDir . $current['image_name']);
         }
-        $stmt = $this->db->prepare("DELETE FROM tbl_frame_types WHERE frame_type_id = ?");
-        $stmt->bind_param("i", $id);
-        return $stmt->execute();
+        return true;
     }
 }
