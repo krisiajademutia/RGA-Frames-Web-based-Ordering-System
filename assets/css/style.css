@@ -12815,19 +12815,14 @@ body.modal-open { overflow: auto !important; padding-right: 0 !important; }
 /* =========================================
    CUSTOMER DASHBOARD STYLES
    ========================================= */
-:root {
-    --dash-forest-green: #004236;
-    --dash-soft-white: #F9F9F9;
-    --dash-text-dark: #1F2937;
-    --dash-accent-gold: #C19A5F;
-}
+
 
 body {
     font-family: 'Plus Jakarta Sans', sans-serif;
     background-color: white;
     color: var(--dash-text-dark);
     margin: 0;
-    padding-top: 80px;
+    /* padding-top: 80px; */
 }
 
 /* ── Hero ── */

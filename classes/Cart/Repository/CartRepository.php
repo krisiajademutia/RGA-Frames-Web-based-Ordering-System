@@ -25,6 +25,7 @@ class CartRepository implements CartRepositoryInterface
                    p.drive_link,
                    p.sub_total         AS print_sub_total,
                    r.product_name,
+                   (SELECT quantity FROM tbl_ready_made_product_stocks s WHERE s.r_product_id = r.r_product_id LIMIT 1) AS current_stock,
                    ft.type_name,
                    ft.type_price       AS frame_type_price,
                    pt.paper_name,

@@ -119,7 +119,8 @@ class CheckoutService {
 
         // 🔥 STEP 2.5: JIT STOCK VALIDATION
         foreach ($normalizedItems as $item) {
-            if (($item['frame_category'] ?? '') === 'READY_MADE') {
+            // Check if it's a Ready-Made frame by looking for r_product_id
+            if (!empty($item['r_product_id'])) {
                 $stock = (int)($item['current_stock'] ?? 0);
                 $qty = (int)($item['quantity'] ?? 1);
                 $name = $item['ready_name'] ?? 'A ready made item';
@@ -128,7 +129,7 @@ class CheckoutService {
                     if ($stock === 0) {
                         return ['success' => false, 'message' => "Sorry, '{$name}' is currently out of stock."];
                     }
-                    return ['success' => false, 'message' => "Sorry, '{$name}' only has {$stock} left in stock. Please reduce your quantity."];
+                    return ['success' => false, 'message' => "Sorry, '{$name}' only has {$stock} left in stock. Please reduce your cart quantity."];
                 }
             }
         }

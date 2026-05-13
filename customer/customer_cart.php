@@ -98,7 +98,20 @@
                     </div>
                 <?php else: ?>
                     <?php foreach ($cart_items as $item): ?>
-                        <div class="cart-item-card" data-id="<?= $item['id']; ?>" data-price="<?= $item['sub_total']; ?>" onclick="toggleSelection(this)">
+                        <?php
+                            $isReadyMade = isset($item['current_stock']);
+                            $stock = $isReadyMade ? (int)$item['current_stock'] : 9999;
+                            $qty = (int)$item['quantity'];
+                            $outOfStock = $isReadyMade && ($stock === 0);
+                            $insufficientStock = $isReadyMade && ($stock < $qty) && !$outOfStock;
+                            $isDisabled = $outOfStock || $insufficientStock;
+                            $cardClass = $isDisabled ? 'cart-item-card disabled-card' : 'cart-item-card';
+                            $clickAction = $isDisabled ? "event.stopPropagation(); Swal.fire('Unavailable', 'This item has insufficient stock. Please reduce the quantity or remove it.', 'warning');" : "toggleSelection(this)";
+                        ?>
+                        <div class="<?= $cardClass ?>" data-id="<?= $item['id']; ?>" data-price="<?= $item['sub_total']; ?>" onclick="<?= $clickAction ?>">
+                            <?php if ($isDisabled): ?>
+                                <style>.disabled-card { opacity: 0.65; background-color: #f8f9fa; cursor: not-allowed; }</style>
+                            <?php endif; ?>
                             <div class="cart-item-img">
                                 <?php if (!empty($item['display_image'])): ?>
                                     <img src="<?= htmlspecialchars(str_replace(' ', '%20', $item['display_image'])); ?>" alt="Frame Image">
@@ -114,6 +127,12 @@
                                     <?= $item['service_type'] === 'FRAME&PRINT' ? 'Frame & Print' : ($item['service_type'] === 'PRINT_ONLY' ? 'Print Only' : 'Frame Only'); ?>
                                     <?php if ($item['width_inch']): ?>
                                         | <?= (float)$item['width_inch'] . 'x' . (float)$item['height_inch']; ?>"
+                                    <?php endif; ?>
+                                    
+                                    <?php if ($outOfStock): ?>
+                                        <br><span class="badge bg-danger mt-1">Out of Stock</span>
+                                    <?php elseif ($insufficientStock): ?>
+                                        <br><span class="badge bg-warning text-dark mt-1">Only <?= $stock ?> left in stock</span>
                                     <?php endif; ?>
                                 </p>
                                 <div class="cart-qty-controls" onclick="event.stopPropagation()">

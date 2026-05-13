@@ -79,29 +79,33 @@ class ReadyMadeRepository implements IReadyMadeRepository
 
    public function addToCart(int $customerId, array $itemData, int $cartId): bool
     {
-        $stmt = $this->db->prepare("
-            SELECT item_id, quantity, sub_total FROM tbl_frame_order_items
-            WHERE cart_id = ? AND r_product_id = ? AND source_type = 'CART'
-                AND frame_category = 'READY_MADE'
-                AND (primary_matboard_id = ? OR (primary_matboard_id IS NULL AND ? IS NULL))
-                AND (secondary_matboard_id = ? OR (secondary_matboard_id IS NULL AND ? IS NULL))
-                AND service_type = ?
-            LIMIT 1
-        ");
-        
-        $stmt->bind_param('iisssss', 
-            $cartId, 
-            $itemData['r_product_id'],
-            $itemData['primary_matboard_id'], $itemData['primary_matboard_id'],
-            $itemData['secondary_matboard_id'], $itemData['secondary_matboard_id'],
-            $itemData['service_type']
-        );
-        $stmt->execute();
-        $existing = $stmt->get_result()->fetch_assoc();
+        // FRAME&PRINT items are never merged: each addition has a unique image/drive link.
+        // Only FRAME_ONLY items may be merged/incremented when the same product + options exist.
+        $existing = null;
+        if ($itemData['service_type'] !== 'FRAME&PRINT') {
+            $stmt = $this->db->prepare("
+                SELECT item_id, quantity, sub_total FROM tbl_frame_order_items
+                WHERE cart_id = ? AND r_product_id = ? AND source_type = 'CART'
+                    AND frame_category = 'READY_MADE'
+                    AND (primary_matboard_id = ? OR (primary_matboard_id IS NULL AND ? IS NULL))
+                    AND (secondary_matboard_id = ? OR (secondary_matboard_id IS NULL AND ? IS NULL))
+                    AND service_type = ?
+                LIMIT 1
+            ");
+            $stmt->bind_param('iisssss',
+                $cartId,
+                $itemData['r_product_id'],
+                $itemData['primary_matboard_id'], $itemData['primary_matboard_id'],
+                $itemData['secondary_matboard_id'], $itemData['secondary_matboard_id'],
+                $itemData['service_type']
+            );
+            $stmt->execute();
+            $existing = $stmt->get_result()->fetch_assoc();
+        }
 
         if ($existing) {
-            $newQty  = $existing['quantity'] + $itemData['quantity'];
-            $newSub  = ($itemData['base_price'] + $itemData['extra_price']) * $newQty;
+            $newQty = $existing['quantity'] + $itemData['quantity'];
+            $newSub = ($itemData['base_price'] + $itemData['extra_price']) * $newQty;
             $upd = $this->db->prepare("UPDATE tbl_frame_order_items SET quantity = ?, sub_total = ? WHERE item_id = ?");
             $upd->bind_param('idi', $newQty, $newSub, $existing['item_id']);
             return $upd->execute();
@@ -109,24 +113,22 @@ class ReadyMadeRepository implements IReadyMadeRepository
 
         $insert = $this->db->prepare("
             INSERT INTO tbl_frame_order_items
-                (cart_id, source_type, frame_category, r_product_id, service_type, 
-                 primary_matboard_id, secondary_matboard_id, mount_type_id, 
+                (cart_id, source_type, frame_category, r_product_id, service_type,
+                 primary_matboard_id, secondary_matboard_id, mount_type_id,
                  printing_order_item_id, quantity, base_price, extra_price, sub_total)
             VALUES (?, 'CART', 'READY_MADE', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        
-        // FIXED: Exactly 11 characters to perfectly match the 11 variables!
-        $insert->bind_param('iissssiiddd', 
-            $cartId, 
-            $itemData['r_product_id'], 
-            $itemData['service_type'], 
-            $itemData['primary_matboard_id'], 
-            $itemData['secondary_matboard_id'], 
-            $itemData['mount_type_id'], 
-            $itemData['printing_order_item_id'], 
-            $itemData['quantity'], 
-            $itemData['base_price'], 
-            $itemData['extra_price'], 
+        $insert->bind_param('iissssiiddd',
+            $cartId,
+            $itemData['r_product_id'],
+            $itemData['service_type'],
+            $itemData['primary_matboard_id'],
+            $itemData['secondary_matboard_id'],
+            $itemData['mount_type_id'],
+            $itemData['printing_order_item_id'],
+            $itemData['quantity'],
+            $itemData['base_price'],
+            $itemData['extra_price'],
             $itemData['sub_total']
         );
         return $insert->execute();

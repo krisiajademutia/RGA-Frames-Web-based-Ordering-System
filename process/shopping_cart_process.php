@@ -130,18 +130,36 @@ if ($action === 'update_qty' && isset($_GET['id'], $_GET['delta'])) {
     $type   = $_GET['type'] ?? 'frame';
 
     if ($type === 'print') {
-        $stmt = $conn->prepare(
-            "UPDATE tbl_printing_order_items
-             SET sub_total = unit_price * GREATEST(1, quantity + ?),
-                 quantity  = GREATEST(1, quantity + ?)
+        // First fetch the current values so we can derive the unit price without a column that doesn't exist.
+        $fetch = $conn->prepare(
+            "SELECT quantity, sub_total FROM tbl_printing_order_items
              WHERE printing_order_item_id = ? AND order_id IS NULL"
         );
-        $stmt->bind_param("iii", $delta, $delta, $itemId);
-        $stmt->execute();
+        $fetch->bind_param("i", $itemId);
+        $fetch->execute();
+        $printRow = $fetch->get_result()->fetch_assoc();
+
+        if ($printRow) {
+            $currentPrintQty  = (int)$printRow['quantity'];
+            $newPrintQty      = max(1, $currentPrintQty + $delta);
+            // Derive unit price from the stored sub_total to avoid a missing-column error.
+            $unitPrice        = $currentPrintQty > 0 ? ((float)$printRow['sub_total'] / $currentPrintQty) : 0;
+            $newPrintSubTotal = $unitPrice * $newPrintQty;
+
+            $stmt = $conn->prepare(
+                "UPDATE tbl_printing_order_items
+                 SET quantity  = ?,
+                     sub_total = ?
+                 WHERE printing_order_item_id = ? AND order_id IS NULL"
+            );
+            $stmt->bind_param("idi", $newPrintQty, $newPrintSubTotal, $itemId);
+            $stmt->execute();
+        }
     } else {
-        // Fetch current item details and stock
+        // Fetch current item details, stock, and any linked print record.
         $stmt_check = $conn->prepare("
-            SELECT f.frame_category, f.r_product_id, f.quantity, 
+            SELECT f.frame_category, f.r_product_id, f.quantity,
+                   f.printing_order_item_id,
                    IFNULL((SELECT quantity FROM tbl_ready_made_product_stocks s WHERE s.r_product_id = f.r_product_id LIMIT 1), 9999) AS current_stock
             FROM tbl_frame_order_items f
             WHERE f.item_id = ?
@@ -161,13 +179,39 @@ if ($action === 'update_qty' && isset($_GET['id'], $_GET['delta'])) {
                 // We could set a session error message here, but silently ignoring is also an option for simple cart UIs.
             } else {
                 $stmt = $conn->prepare(
-                    "UPDATE tbl_frame_order_items 
+                    "UPDATE tbl_frame_order_items
                      SET sub_total = (base_price + extra_price) * ?,
                          quantity  = ?
                      WHERE item_id = ?"
                 );
                 $stmt->bind_param("iii", $newQty, $newQty, $itemId);
                 $stmt->execute();
+
+                // If this frame item has a linked print record, keep them in sync.
+                if (!empty($row['printing_order_item_id'])) {
+                    $printId = (int)$row['printing_order_item_id'];
+                    // Fetch current print unit price.
+                    $fetchPrint = $conn->prepare(
+                        "SELECT quantity, sub_total FROM tbl_printing_order_items
+                         WHERE printing_order_item_id = ? AND order_id IS NULL"
+                    );
+                    $fetchPrint->bind_param("i", $printId);
+                    $fetchPrint->execute();
+                    $printRow = $fetchPrint->get_result()->fetch_assoc();
+
+                    if ($printRow && (int)$printRow['quantity'] > 0) {
+                        $printUnitPrice    = (float)$printRow['sub_total'] / (int)$printRow['quantity'];
+                        $newPrintSubTotal  = $printUnitPrice * $newQty;
+                        $syncPrint = $conn->prepare(
+                            "UPDATE tbl_printing_order_items
+                             SET quantity  = ?,
+                                 sub_total = ?
+                             WHERE printing_order_item_id = ? AND order_id IS NULL"
+                        );
+                        $syncPrint->bind_param("idi", $newQty, $newPrintSubTotal, $printId);
+                        $syncPrint->execute();
+                    }
+                }
             }
         }
     }
