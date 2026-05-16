@@ -29,10 +29,10 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
                     <span>PROVIDE YOUR IMAGE(S)</span>
                     <div class="btn-group" role="group" aria-label="Upload Options">
                         <input type="radio" class="btn-check" name="image_option" id="opt-upload" value="upload" autocomplete="off" checked>
-                        <label class="btn btn-outline-dark btn-sm" for="opt-upload"><i class="fas fa-upload"></i> Upload Image</label>
+                        <label class="btn btn-outline-light btn-sm" for="opt-upload"><i class="fas fa-upload"></i> Upload Image</label>
                         
                         <input type="radio" class="btn-check" name="image_option" id="opt-drive" value="drive" autocomplete="off">
-                        <label class="btn btn-outline-dark btn-sm" for="opt-drive"><i class="fab fa-google-drive"></i> GDrive Link</label>
+                        <label class="btn btn-outline-light btn-sm" for="opt-drive"><i class="fab fa-google-drive"></i> GDrive Link</label>
                     </div>
                 </div>
                 <div class="ps-card-body">
@@ -125,5 +125,6 @@ $paper_type_result = mysqli_query($conn, $paper_type_query);
     </div>
 
 <script src="../assets/js/customer_shop_printing.js?v=<?= time() ?>"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
