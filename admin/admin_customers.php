@@ -269,7 +269,7 @@ $counts['ALL'] = array_sum($counts);
     </div><!-- /.admn-cust-card -->
 </div><!-- /.admn-cust-wrapper -->
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
 async function changeType(customerId, newType, name) {
     const isPromote = newType === 'PHOTOGRAPHER';
