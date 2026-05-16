@@ -206,7 +206,7 @@ $initial        = strtoupper(substr($customer['first_name'], 0, 1));
     </div><!-- /.cust-prof-layout -->
 </div><!-- /.cust-prof-page -->
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
 // ── Toggle password visibility ───────────────────────────
 function togglePw(inputId, btn) {

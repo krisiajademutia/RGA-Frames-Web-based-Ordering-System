@@ -35,10 +35,16 @@
     <span></span>
 </button>
 
-<!-- Navigation -->
         <nav class="idx-hdr-nav" id="mainNav">
-            <a href="login.php" class="idx-hdr-nav-link idx-hdr-btn-login">Login</a>
-            <a href="register.php" class="idx-hdr-nav-link idx-hdr-btn-register">Register</a>
+            <a href="index.php" class="idx-hdr-nav-link idx-hdr-btn-home">
+                <i class="fas fa-home"></i> <span>Home</span>
+            </a>
+            <a href="login.php" class="idx-hdr-nav-link idx-hdr-btn-login">
+                <i class="fas fa-sign-in-alt"></i> <span>Login</span>
+            </a>
+            <a href="register.php" class="idx-hdr-nav-link idx-hdr-btn-register">
+                <i class="fas fa-user-plus"></i> <span>Register</span>
+            </a>
         </nav>
 
         <div class="idx-mobile-overlay" id="mobileOverlay"></div>

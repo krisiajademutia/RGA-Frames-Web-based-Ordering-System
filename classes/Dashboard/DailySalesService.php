@@ -32,6 +32,28 @@ class DailySalesService {
         return $formattedData;
     }
 
+    public function getFormattedMonthlySalesReport() {
+        $rawData = $this->repository->getMonthlySalesData();
+        $formattedData = [];
+
+        foreach ($rawData as $row) {
+            $readyMade = (int)$row['ready_made_qty'];
+            $custom = (int)$row['custom_qty'];
+            $printing = (int)$row['printing_qty'];
+            
+            $formattedData[] = [
+                'month' => $row['sale_month'],
+                'ready_made' => $readyMade,
+                'custom' => $custom,
+                'printing' => $printing,
+                'total_sold' => $readyMade + $custom + $printing,
+                'earnings' => number_format((float)$row['monthly_earnings'], 2, '.', ',')
+            ];
+        }
+
+        return $formattedData;
+    }
+
     public function getTodaysCombinedBreakdown() {
         return $this->repository->getTodaysCombinedBreakdown();
     }

@@ -13,6 +13,13 @@ class DashboardStats {
         return $row['total'] ? (float)$row['total'] : 0.00;
     }
 
+    public function getMonthlyEarnings() {
+        $query = "SELECT SUM(total_price) as total FROM tbl_orders WHERE order_status = 'COMPLETED' AND MONTH(created_at) = MONTH(CURRENT_DATE()) AND YEAR(created_at) = YEAR(CURRENT_DATE())";
+        $result = $this->conn->query($query);
+        $row = $result->fetch_assoc();
+        return $row['total'] ? (float)$row['total'] : 0.00;
+    }
+
     public function getSoldReadyMadeFrames() {
         $query = "
             SELECT SUM(i.quantity) as total 

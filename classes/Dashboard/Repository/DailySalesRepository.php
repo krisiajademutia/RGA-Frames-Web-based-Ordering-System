@@ -3,6 +3,7 @@ namespace Classes\Dashboard\Repository;
 
 interface IDailySalesRepository {
     public function getDailySalesData();
+    public function getMonthlySalesData();
     public function getTodaysCombinedBreakdown();
 }
 
@@ -25,6 +26,23 @@ class DailySalesRepository implements IDailySalesRepository {
             WHERE o.order_status = 'COMPLETED'
             GROUP BY DATE(o.created_at)
             ORDER BY sale_date DESC LIMIT 30
+        ";
+        return $this->conn->query($query)->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public function getMonthlySalesData() {
+        $query = "
+            SELECT 
+                DATE_FORMAT(o.created_at, '%Y-%m') as sale_month_val,
+                DATE_FORMAT(o.created_at, '%M %Y') as sale_month,
+                SUM(o.total_price) as monthly_earnings,
+                (SELECT COALESCE(SUM(i.quantity), 0) FROM tbl_frame_order_items i JOIN tbl_orders o2 ON i.order_id = o2.order_id WHERE DATE_FORMAT(o2.created_at, '%Y-%m') = DATE_FORMAT(o.created_at, '%Y-%m') AND o2.order_status = 'COMPLETED' AND i.frame_category = 'READY_MADE') as ready_made_qty,
+                (SELECT COALESCE(SUM(i.quantity), 0) FROM tbl_frame_order_items i JOIN tbl_orders o2 ON i.order_id = o2.order_id WHERE DATE_FORMAT(o2.created_at, '%Y-%m') = DATE_FORMAT(o.created_at, '%Y-%m') AND o2.order_status = 'COMPLETED' AND i.frame_category = 'CUSTOM') as custom_qty,
+                (SELECT COALESCE(SUM(p.quantity), 0) FROM tbl_printing_order_items p JOIN tbl_orders o2 ON p.order_id = o2.order_id WHERE DATE_FORMAT(o2.created_at, '%Y-%m') = DATE_FORMAT(o.created_at, '%Y-%m') AND o2.order_status = 'COMPLETED') as printing_qty
+            FROM tbl_orders o
+            WHERE o.order_status = 'COMPLETED'
+            GROUP BY sale_month_val, sale_month
+            ORDER BY sale_month_val DESC LIMIT 24
         ";
         return $this->conn->query($query)->fetch_all(MYSQLI_ASSOC);
     }

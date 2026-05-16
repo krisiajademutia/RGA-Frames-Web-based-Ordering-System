@@ -54,7 +54,7 @@ $counts['ALL'] = array_sum($counts);
 
     <!-- Summary Cards -->
     <div class="row g-3 mb-4">
-        <div class="col-6 col-md-4">
+        <div class="col-12 col-md-4">
             <div class="admn-ordr-summary-card admn-ordr-summary-new">
                 <div class="card-body">
                     <p class="admn-ordr-summary-label mb-1">Total Customers</p>
@@ -63,7 +63,7 @@ $counts['ALL'] = array_sum($counts);
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-4">
+        <div class="col-12 col-md-4">
             <div class="admn-ordr-summary-card admn-ordr-summary-completed">
                 <div class="card-body">
                     <p class="admn-ordr-summary-label mb-1">Regular</p>
@@ -72,7 +72,7 @@ $counts['ALL'] = array_sum($counts);
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-4">
+        <div class="col-12 col-md-4">
             <div class="admn-ordr-summary-card admn-ordr-summary-progress">
                 <div class="card-body">
                     <p class="admn-ordr-summary-label mb-1">Photographers</p>

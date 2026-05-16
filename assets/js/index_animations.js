@@ -15,6 +15,7 @@ var dropdownToggles = document.querySelectorAll('[data-bs-toggle="dropdown"]');
     }
 
     function closeMobileMenu() {
+        if (mobileMenuToggle) mobileMenuToggle.classList.remove('active');
         mainNav.classList.remove('active');
         mobileOverlay.classList.remove('active');
         document.body.style.overflow = '';
@@ -22,6 +23,7 @@ var dropdownToggles = document.querySelectorAll('[data-bs-toggle="dropdown"]');
 
     if (mobileMenuToggle) {
         mobileMenuToggle.addEventListener('click', function () {
+            mobileMenuToggle.classList.toggle('active');
             mainNav.classList.toggle('active');
             mobileOverlay.classList.toggle('active');
 

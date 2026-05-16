@@ -12989,3 +12989,238 @@ body {
     background: #fff; border: 1px dashed #e5e7eb; border-radius: 14px;
 }
 .rv-preview-empty i { font-size: 2rem; display: block; margin-bottom: 0.5rem; color: #d1d5db; }
+
+/* --- MOBILE RESPONSIVENESS OVERRIDES --- */
+@media (max-width: 768px) {
+    /* Admin Dashboard Fixes */
+    .admn-dshbrd-earnings-side > div[style*="display: flex"] {
+        flex-direction: column !important;
+    }
+    .admn-dshbrd-stat-card {
+        width: 100% !important;
+        margin-bottom: 10px;
+    }
+    
+    /* Order Breakdown Fixes */
+    .admn-bkdn-grid, .admn-bkdn-card {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+    .admn-bkdn-table {
+        min-width: 700px; /* Ensure table doesn't squish */
+    }
+    .admn-bkdn-wrapper > div[style*="justify-content: flex-end"] {
+        justify-content: flex-start !important;
+        flex-wrap: wrap;
+    }
+    
+    /* Customers Fixes */
+    .admn-ordr-tabs-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 15px;
+    }
+    .admn-ordr-tabs {
+        flex-wrap: nowrap !important;
+        white-space: nowrap;
+    }
+    .admn-cust-page-header {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+    .row.g-3.mb-4 > div {
+        width: 100% !important; /* Stack summary cards */
+    }
+    .admn-ordr-search-bar {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 10px;
+    }
+    .admn-ordr-search-bar .admn-cust-count {
+        text-align: left;
+    }
+
+    /* Daily/Monthly Sales Fixes */
+    .admn-sales-header {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+    .admn-sales-header > div:last-child > a {
+        display: block !important;
+        text-align: center;
+        width: 100%;
+    }
+}
+
+
+@media (max-width: 768px) {
+    /* Fix Download Buttons to ALWAYS be horizontally aligned */
+    .admn-bkdn-wrapper > div[style*="justify-content: flex-end"] {
+        flex-wrap: nowrap !important;
+        justify-content: space-between !important;
+        gap: 5px !important;
+    }
+    .admn-bkdn-btn-export {
+        flex: 1;
+        padding: 8px 5px !important;
+        font-size: 0.75rem !important;
+        white-space: nowrap;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+    }
+}
+
+
+
+/* Update Index Mobile Menu to match Guest Menu */
+@media (max-width: 768px) {
+    .idx-hdr-nav {
+        justify-content: flex-start !important;
+        align-items: flex-start !important;
+        padding-top: 6rem !important;
+        gap: 1rem !important;
+    }
+    .idx-hdr-nav-link {
+        width: 100% !important;
+        max-width: none !important;
+        text-align: left !important;
+        padding: 12px 20px !important;
+        font-size: 1rem !important;
+        background: transparent !important;
+        color: #004030 !important;
+        border: none !important;
+        box-shadow: none !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+    }
+    .idx-hdr-nav-link:hover {
+        background: #f8f9fa !important;
+        transform: none !important;
+    }
+    .idx-hdr-nav-link i {
+        font-size: 1.1rem;
+        width: 24px;
+        text-align: center;
+    }
+}
+
+/* Hide Home button on desktop and keep original button look for Login/Register */
+@media (min-width: 769px) {
+    .idx-hdr-btn-home {
+        display: none !important;
+    }
+    .idx-hdr-nav-link i {
+        display: none !important;
+    }
+}
+
+
+
+/* Mobile 2-column Grid for Ready-Made Frames */
+@media (max-width: 768px) {
+    .posted-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+        padding: 10px !important;
+    }
+    .posted-card-item {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+        margin-bottom: 0 !important;
+    }
+    .posted-image-box {
+        height: 140px !important; /* Reduce image height to fit better in 2 columns */
+    }
+    .posted-info {
+        padding: 8px !important;
+        flex-grow: 1 !important;
+    }
+    .posted-item-title {
+        font-size: 0.85rem !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .posted-item-meta, .posted-item-subtext {
+        font-size: 0.7rem !important;
+    }
+    .posted-stock-pill {
+        font-size: 0.65rem !important;
+        padding: 3px 6px !important;
+        margin-top: 5px !important;
+        display: inline-block !important;
+    }
+    .posted-card-footer {
+        padding: 8px !important;
+        display: flex !important;
+        flex-direction: column !important; /* Stack price and button vertically to fit small width */
+        align-items: center !important;
+        gap: 5px !important;
+        border-top: 1px solid #eee !important;
+    }
+    .posted-price-text {
+        font-size: 0.9rem !important;
+        font-weight: bold !important;
+    }
+    .open-details-btn {
+        width: 100% !important;
+        font-size: 0.75rem !important;
+        padding: 4px 8px !important;
+    }
+    .posted-action-group {
+        width: 100% !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        gap: 5px !important;
+    }
+    .posted-edit-btn, .posted-delete-btn {
+        flex: 1 !important;
+        font-size: 0.8rem !important;
+        padding: 5px !important;
+    }
+    /* Search Bar Adjustment for Mobile Grid */
+    .csc-title-wrap {
+        padding: 0 10px !important;
+    }
+    .shop-search-filter-group {
+        width: 100% !important;
+    }
+    .search-filter-pill {
+        width: 100% !important;
+    }
+}
+
+
+
+/* Universal Fix for Horizontal Mobile Overflow */
+@media (max-width: 768px) {
+    html, body {
+        overflow-x: hidden !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+    }
+    .services-container {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)) !important;
+        padding: 0 15px !important;
+        gap: 1.5rem !important;
+    }
+    .idx-hero {
+        overflow: hidden !important;
+        width: 100% !important;
+    }
+    .idx-hero .container {
+        padding: 0 15px !important;
+        max-width: 100% !important;
+    }
+    .idx-hero-content {
+        padding: 0 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+}
+

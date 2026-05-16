@@ -21,18 +21,23 @@ require_once '../process/fetch_daily_sales.php';
     <?php include_once '../includes/admin_header.php'; ?>
 
     <main class="admn-bkdn-wrapper">
-        <a href="admin_daily_sales.php" class="admn-bkdn-back-btn">
-            <i class="fas fa-arrow-left"></i> Back to Daily Sales
-        </a>
+
 
         <h1 class="admn-bkdn-title">Order Breakdown</h1>
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; gap: 10px;">
             <a href="/rga_frames/process/export_order_transaction.php" class="admn-bkdn-btn-export">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
                     <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
                     <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
                 </svg>
                 Download to Excel
+            </a>
+            <a href="/rga_frames/process/export_order_transaction_pdf.php" class="admn-bkdn-btn-export" style="background-color: #dc3545; color: white;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                </svg>
+                Download to PDF
             </a>
         </div>
 

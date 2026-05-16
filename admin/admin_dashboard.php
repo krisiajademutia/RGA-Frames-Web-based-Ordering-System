@@ -1,6 +1,14 @@
 <?php
 session_start();
 require_once '../process/fetch_dashboard.php';
+
+/**
+ * @var string $formattedEarnings
+ * @var string $formattedMonthlyEarnings
+ * @var int $soldReadyMade
+ * @var int $soldCustom
+ * @var int $postedReadyMade
+ */
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -37,14 +45,26 @@ require_once '../process/fetch_dashboard.php';
                     </a>
                 </div>
                 
-                <div class="admn-dshbrd-stat-card admn-dshbrd-total-earnings-card">
-                    <div class="admn-dshbrd-stat-content">
-                        <span class="admn-dshbrd-stat-label">TOTAL EARNINGS</span>
-                        <h2 class="admn-dshbrd-stat-value">₱ <?php echo $formattedEarnings; ?></h2>
+                <div style="display: flex; gap: 15px; width: 100%;">
+                    <div class="admn-dshbrd-stat-card admn-dshbrd-total-earnings-card" style="flex: 1;">
+                        <div class="admn-dshbrd-stat-content">
+                            <span class="admn-dshbrd-stat-label">TOTAL SALES</span>
+                            <h2 class="admn-dshbrd-stat-value">₱ <?php echo $formattedEarnings; ?></h2>
+                        </div>
+                        <div class="admn-dshbrd-stat-icon admn-dshbrd-icon-earnings">
+                            <i class="fas fa-arrow-trend-up"></i>
+                        </div>
                     </div>
-                    <div class="admn-dshbrd-stat-icon admn-dshbrd-icon-earnings">
-                        <i class="fas fa-arrow-trend-up"></i>
-                    </div>
+
+                    <a href="admin_monthly_sales.php" class="admn-dshbrd-stat-card admn-dshbrd-total-earnings-card" style="flex: 1; text-decoration: none; color: inherit; transition: transform 0.2s;">
+                        <div class="admn-dshbrd-stat-content">
+                            <span class="admn-dshbrd-stat-label">MONTHLY EARNINGS</span>
+                            <h2 class="admn-dshbrd-stat-value">₱ <?php echo $formattedMonthlyEarnings; ?></h2>
+                        </div>
+                        <div class="admn-dshbrd-stat-icon admn-dshbrd-icon-earnings" style="background-color: #e0f2fe; color: #0284c7;">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                    </a>
                 </div>
             </div>
         </div>
