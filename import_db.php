@@ -1,41 +1,77 @@
 <?php
-// Pulls the configuration variables
-if (file_exists('config/db_connect.php')) {
-    // We will build a direct connection here using SSL to bypass restrictions
-    $host = getenv('DB_HOST') ?: 'mysql-f30bdf6-rga-frames.aivencloud.com';
-    $user = getenv('DB_USER') ?: 'avnadmin';
-    $pass = getenv('DB_PASSWORD'); 
-    $db   = 'defaultdb';
-    $port = getenv('DB_PORT') ?: 10491;
+// import_db.php - One-time database import script
+
+echo "<h2>🚀 Starting Database Import...</h2>";
+
+// === Connection Settings ===
+$host     = getenv('DB_HOST') ?: 'mysql-f30bdf6-rga-frames.aivencloud.com';
+$user     = getenv('DB_USER') ?: 'avnadmin';
+$password = getenv('DB_PASSWORD');
+$dbname   = getenv('DB_NAME') ?: 'defaultdb';
+$port     = getenv('DB_PORT') ?: 10491;
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+try {
+    $conn = mysqli_init();
+    if (!$conn) {
+        throw new Exception("mysqli_init failed");
+    }
+
+    // === Proper SSL for Aiven ===
+    $conn->ssl_set(
+        NULL, 
+        NULL, 
+        __DIR__ . '/ca.pem',        // ca.pem must be in the same folder as this file
+        NULL, 
+        NULL
+    );
+
+    $conn->options(MYSQLI_OPT_SSL_VERIFY_SERVER_CERT, true);
+
+    $success = $conn->real_connect(
+        $host, 
+        $user, 
+        $password, 
+        $dbname, 
+        $port, 
+        NULL, 
+        MYSQLI_CLIENT_SSL
+    );
+
+    if (!$success) {
+        throw new Exception("Connection failed: " . $conn->connect_error);
+    }
+
+    $conn->set_charset("utf8mb4");
+
+    echo "<p>✅ Connected to Aiven successfully.</p>";
+
+} catch (Exception $e) {
+    die("<h1>❌ Database connection failed:</h1> " . $e->getMessage());
 }
 
-$conn = mysqli_init();
-if (!$conn) {
-    die("mysqli_init failed");
-}
-
-// This flag tells PHP to connect using SSL, which Aiven requires!
-$conn->ssl_set(NULL, NULL, NULL, NULL, NULL);
-
-if (!@$conn->real_connect($host, $user, $pass, $db, $port, NULL, MYSQLI_CLIENT_SSL)) {
-    die("<h1>❌ Database connection failed:</h1> " . $conn->connect_error);
-}
-
+// === Import SQL File ===
 $sqlFile = 'rga_frames_db.sql';
+
 if (!file_exists($sqlFile)) {
-    die("<h1>❌ Error: $sqlFile not found!</h1><p>Please upload your .sql file to your main GitHub repository directory.</p>");
+    die("<h1>❌ Error: $sqlFile not found!</h1><p>Please make sure rga_frames_db.sql is in the root folder and committed to GitHub.</p>");
 }
 
 try {
     $lines = file($sqlFile);
     $cleanQuery = "";
-    
+
     foreach ($lines as $line) {
-        // Skip local database creation strings that crash on Aiven
-        if (stripos(trim($line), 'CREATE DATABASE') === 0 || stripos(trim($line), 'USE ') === 0) {
-            continue; 
+        $line = trim($line);
+        // Skip these lines that usually cause problems on Aiven
+        if (stripos($line, 'CREATE DATABASE') === 0 || 
+            stripos($line, 'USE ') === 0 || 
+            empty($line) || 
+            strpos($line, '--') === 0) {
+            continue;
         }
-        $cleanQuery .= $line;
+        $cleanQuery .= $line . "\n";
     }
 
     if ($conn->multi_query($cleanQuery)) {
@@ -44,12 +80,17 @@ try {
                 $result->free();
             }
         } while ($conn->next_result());
-        echo "<h1>🎉 Success! Your rga_frames_db.sql database tables have been fully imported into Aiven defaultdb!</h1>";
-        echo "<p>You can now go to your home link and log in. Please delete <b>import_db.php</b> from GitHub for security.</p>";
+
+        echo "<h1>🎉 SUCCESS! Database tables have been imported successfully!</h1>";
+        echo "<p>You can now try logging into your system.</p>";
+        echo "<p><strong>Security Note:</strong> Delete or rename this import_db.php file after use.</p>";
     } else {
-        echo "<h1>❌ Query execution failed:</h1> " . $conn->error;
+        throw new Exception($conn->error);
     }
+
 } catch (Exception $e) {
-    echo "<h1>❌ Database import error:</h1> " . $e->getMessage();
+    die("<h1>❌ Import Failed:</h1> " . $e->getMessage());
 }
+
+$conn->close();
 ?>
