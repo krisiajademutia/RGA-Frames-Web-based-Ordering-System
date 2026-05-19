@@ -1,10 +1,9 @@
 <?php
 // import_db.php - One-time database import script
-
 echo "<h2>🚀 Starting Database Import...</h2>";
 
 // === Connection Settings ===
-$host     = getenv('DB_HOST') ?: 'mysql-f30bdf6-rga-frames.aivencloud.com';
+$host     = getenv('DB_HOST') ?: 'mysql-f30bdf6-rga-frames.a.aivencloud.com';
 $user     = getenv('DB_USER') ?: 'avnadmin';
 $password = getenv('DB_PASSWORD');
 $dbname   = getenv('DB_NAME') ?: 'defaultdb';
@@ -19,24 +18,11 @@ try {
     }
 
     // === Proper SSL for Aiven ===
-    $conn->ssl_set(
-        NULL, 
-        NULL, 
-        __DIR__ . '/ca.pem',        // ca.pem must be in the same folder as this file
-        NULL, 
-        NULL
-    );
-
+    $conn->ssl_set(NULL, NULL, __DIR__ . '/ca.pem', NULL, NULL);
     $conn->options(MYSQLI_OPT_SSL_VERIFY_SERVER_CERT, true);
 
     $success = $conn->real_connect(
-        $host, 
-        $user, 
-        $password, 
-        $dbname, 
-        $port, 
-        NULL, 
-        MYSQLI_CLIENT_SSL
+        $host, $user, $password, $dbname, (int)$port, NULL, MYSQLI_CLIENT_SSL
     );
 
     if (!$success) {
@@ -44,7 +30,6 @@ try {
     }
 
     $conn->set_charset("utf8mb4");
-
     echo "<p>✅ Connected to Aiven successfully.</p>";
 
 } catch (Exception $e) {
@@ -52,10 +37,10 @@ try {
 }
 
 // === Import SQL File ===
-$sqlFile = 'rga_frames_db.sql';
+$sqlFile = __DIR__ . '/rga_frames_db.sql';
 
 if (!file_exists($sqlFile)) {
-    die("<h1>❌ Error: $sqlFile not found!</h1><p>Please make sure rga_frames_db.sql is in the root folder and committed to GitHub.</p>");
+    die("<h1>❌ Error: rga_frames_db.sql not found!</h1><p>Make sure it is in the root folder and committed to GitHub.</p>");
 }
 
 try {
@@ -64,15 +49,20 @@ try {
 
     foreach ($lines as $line) {
         $line = trim($line);
-        // Skip these lines that usually cause problems on Aiven
-        if (stripos($line, 'CREATE DATABASE') === 0 || 
-            stripos($line, 'USE ') === 0 || 
-            empty($line) || 
+
+        // Skip lines that cause problems on Aiven
+        if (stripos($line, 'CREATE DATABASE') === 0 ||
+            stripos($line, 'USE ') === 0 ||
+            empty($line) ||
             strpos($line, '--') === 0) {
             continue;
         }
+
         $cleanQuery .= $line . "\n";
     }
+
+    // === Fix for Aiven's strict primary key requirement ===
+    $cleanQuery = "SET SESSION sql_require_primary_key = 0;\n" . $cleanQuery;
 
     if ($conn->multi_query($cleanQuery)) {
         do {
@@ -84,6 +74,7 @@ try {
         echo "<h1>🎉 SUCCESS! Database tables have been imported successfully!</h1>";
         echo "<p>You can now try logging into your system.</p>";
         echo "<p><strong>Security Note:</strong> Delete or rename this import_db.php file after use.</p>";
+
     } else {
         throw new Exception($conn->error);
     }
