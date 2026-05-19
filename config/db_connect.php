@@ -1,20 +1,51 @@
 <?php
-$host = getenv('DB_HOST');
-$user = getenv('DB_USER');
+// config/db_connect.php
+
+$host     = getenv('DB_HOST');
+$user     = getenv('DB_USER');
 $password = getenv('DB_PASSWORD');
-$dbname = getenv('DB_NAME');
-$port = getenv('DB_PORT') ?: 3306;
+$dbname   = getenv('DB_NAME');
+$port     = getenv('DB_PORT') ?: 10491;   // ← Correct Aiven port
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 try {
     $conn = mysqli_init();
-    // Aiven databases require a secure SSL connection over the public internet
+    if (!$conn) {
+        throw new Exception("mysqli_init failed");
+    }
+
+    // === Proper SSL setup for Aiven ===
+    $conn->ssl_set(
+        NULL,                          // key
+        NULL,                          // cert
+        __DIR__ . '/../ca.pem',        // CA Certificate (adjust path if needed)
+        NULL, 
+        NULL
+    );
+
     $conn->options(MYSQLI_OPT_SSL_VERIFY_SERVER_CERT, true);
-    $conn->real_connect($host, $user, $password, $dbname, $port);
-    
-    // Keeps your character set exactly the same as your local XAMPP setup
-    $conn->set_charset("utf8");
+
+    // Connect with SSL flag
+    $success = $conn->real_connect(
+        $host, 
+        $user, 
+        $password, 
+        $dbname, 
+        $port,
+        NULL,
+        MYSQLI_CLIENT_SSL
+    );
+
+    if (!$success) {
+        throw new Exception($conn->connect_error);
+    }
+
+    $conn->set_charset("utf8mb4");     // Better than utf8
+
+    // Optional: Uncomment during testing
+    // echo "<!-- ✅ Connected to Aiven MySQL successfully -->";
+
 } catch (Exception $e) {
     die("Database connection failed: " . $e->getMessage());
 }
