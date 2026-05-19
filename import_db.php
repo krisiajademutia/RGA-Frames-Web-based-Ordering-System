@@ -1,5 +1,6 @@
 <?php
-require_back_or_include_once 'config/db_connect.php'; // Pulls the safe Aiven connection settings
+// Pulls the safe Aiven connection settings
+require_once 'config/db_connect.php'; 
 
 $sqlFile = 'rga_frames_db.sql';
 
