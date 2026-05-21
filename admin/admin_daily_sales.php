@@ -44,7 +44,7 @@ require_once '../process/fetch_daily_sales.php';
                         <th>PRINTING</th>
                         <th>TOTAL SOLD</th>
                         <th>EARNINGS</th>
-                        <th><i class="fas fa-sliders-h"></i></th>
+                        <th><i class=""></i></th>
                     </tr>
                 </thead>
                 <tbody>
