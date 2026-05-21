@@ -1,13 +1,17 @@
 FROM php:8.2-apache
 
-# Install system dependencies needed for zip and MySQL
+# Install system dependencies needed for zip, MySQL, and GD
 RUN apt-get update && apt-get install -y \
     libzip-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
     zip \
     unzip \
-    && docker-php-ext-install mysqli pdo pdo_mysql zip
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install mysqli pdo pdo_mysql zip gd
 
-# Enable Apache mod_rewrite for clean URLs if your app uses them
+# Enable Apache mod_rewrite for clean URLs
 RUN a2enmod rewrite
 
 # Install Composer automatically
