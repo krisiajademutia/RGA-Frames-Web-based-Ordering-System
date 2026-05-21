@@ -1,5 +1,8 @@
-let selectedFiles = []; // For NEW file objects
-let removedExistingFiles = []; // For filenames to be deleted from DB
+let selectedFiles = [];
+let removedExistingFiles = [];
+
+// Exposed globally so updatePhotoError can call it
+let updateSubmitState = function () {};
 
 document.addEventListener('DOMContentLoaded', () => {
     const selects = document.querySelectorAll('.post-calc-trigger');
@@ -10,7 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const heightInput = document.querySelector('input[name="height"]');
 
     function runCalculation(isInitialLoad = false) {
-        // Prevent overwriting existing prices on Edit page load
         if (isEditMode && isInitialLoad) return;
 
         let widthValue = parseFloat(widthInput?.value) || 0;
@@ -19,54 +21,43 @@ document.addEventListener('DOMContentLoaded', () => {
         let frameDesignPrice = 0;
         let frameTypePrice = 0;
 
-        // Loop through selects to find both Design and Type prices
         selects.forEach(s => {
             const selectedOption = s.options[s.selectedIndex];
             const price = parseFloat(selectedOption?.getAttribute('data-price')) || 0;
 
-            if (s.name === 'frame_design_id') {
-                frameDesignPrice = price;
-            }
-
-            // ADDED: Capture Frame Type Price
-            if (s.name === 'frame_type_id') {
-                frameTypePrice = price;
-            }
+            if (s.name === 'frame_design_id') frameDesignPrice = price;
+            if (s.name === 'frame_type_id') frameTypePrice = price;
         });
 
-        /**
-         * UPDATED FORMULA: 
-         * ((Width + Height) / 6) * Frame Design Price + Frame Type Price
-         **/
         let total = (((widthValue + heightValue) / 6) * frameDesignPrice) + frameTypePrice;
 
         if (priceDisplay) {
             priceDisplay.value = total.toFixed(2);
         }
     }
-    selects.forEach(s => {
-        s.addEventListener('change', () => runCalculation(false));
-    });
 
+    selects.forEach(s => s.addEventListener('change', () => runCalculation(false)));
     if (widthInput) widthInput.addEventListener('input', () => runCalculation(false));
     if (heightInput) heightInput.addEventListener('input', () => runCalculation(false));
-
     runCalculation(true);
-
-    // On new post form, disable submit and show error until photos are added
-    const isNewPostForm = document.getElementById('post_img_input') !== null;
-    if (isNewPostForm) {
-        updatePhotoError(false);
-    }
 
     const postSubmitBtn = document.querySelector('button[name="add_product"], button[name="update_product"]');
 
-    function updateSubmitState() {
+    // Override the global so updatePhotoError and loadExistingPhotos can call it
+    updateSubmitState = function () {
         if (!postSubmitBtn) return;
+
         const hasNegative = Array.from(document.querySelectorAll('input[type="number"]'))
             .some(input => parseFloat(input.value) < 0);
-        const missingPhotos = (document.getElementById('post_img_input') || document.getElementById('edit_design_imgs'))
-            && selectedFiles.length === 0;
+
+        const isNewPost = !!document.getElementById('post_img_input');
+        const isEdit = !!document.getElementById('edit_design_imgs');
+
+        let missingPhotos = false;
+
+        if (isNewPost || isEdit) {
+            missingPhotos = selectedFiles.length === 0;
+        }
 
         if (hasNegative || missingPhotos) {
             postSubmitBtn.disabled = true;
@@ -77,7 +68,16 @@ document.addEventListener('DOMContentLoaded', () => {
             postSubmitBtn.style.opacity = '';
             postSubmitBtn.style.cursor = '';
         }
+    };
+
+    // Show photo error only on new post form, not edit
+    const isNewPostForm = !!document.getElementById('post_img_input');
+    if (isNewPostForm) {
+        updatePhotoError(false);
     }
+
+    // Run initial state check
+    updateSubmitState();
 
     function setupNegativeNumberValidation() {
         const numberInputs = document.querySelectorAll('input[type="number"]');
@@ -109,9 +109,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
-    setupNegativeNumberValidation();
 
+    setupNegativeNumberValidation();
 });
+
+// ─── PHOTO LOADING (Edit mode) ────────────────────────────────────────────────
 
 function loadExistingPhotos(images, containerId, textId, inputId) {
     images.forEach(img => {
@@ -123,7 +125,10 @@ function loadExistingPhotos(images, containerId, textId, inputId) {
         });
     });
     renderPreviews(containerId, textId, inputId);
+    updateSubmitState(); // ← Unlock button after existing photos are loaded
 }
+
+// ─── FILE INPUT HANDLER ───────────────────────────────────────────────────────
 
 function handleMultipleFilePreview(input, containerId, textId) {
     if (input.files && input.files.length > 0) {
@@ -133,6 +138,8 @@ function handleMultipleFilePreview(input, containerId, textId) {
     }
     renderPreviews(containerId, textId, input.id);
 }
+
+// ─── PHOTO ERROR UI ───────────────────────────────────────────────────────────
 
 function updatePhotoError(hasPhotos) {
     const uploadZone = document.querySelector('.post-upload-zone');
@@ -158,9 +165,10 @@ function updatePhotoError(hasPhotos) {
         uploadZone.style.borderColor = '';
     }
 
-    // Let updateSubmitState handle the button (it checks both photos + negative numbers)
-    if (typeof updateSubmitState === 'function') updateSubmitState();
+    updateSubmitState();
 }
+
+// ─── RENDER PREVIEWS ──────────────────────────────────────────────────────────
 
 function renderPreviews(containerId, textId, inputId) {
     const previewContainer = document.getElementById(containerId);
@@ -183,13 +191,14 @@ function renderPreviews(containerId, textId, inputId) {
 
             const isPrimary = file.is_primary || (!hasExistingPrimary && index === 0);
 
-            const primaryBadge = isPrimary ?
-                `<span style="position:absolute; bottom:0; left:0; right:0; background:rgba(0,64,48,0.9); color:white; font-size:10px; text-align:center; padding:2px 0; z-index:5; border-radius: 0 0 6px 6px;">Primary</span>` : '';
+            const primaryBadge = isPrimary
+                ? `<span style="position:absolute; bottom:0; left:0; right:0; background:rgba(0,64,48,0.9); color:white; font-size:10px; text-align:center; padding:2px 0; z-index:5; border-radius: 0 0 6px 6px;">Primary</span>`
+                : '';
 
             wrapper.innerHTML = `
                 ${primaryBadge}
-                <button type="button" 
-                    onclick="removeImage(event, ${index}, '${containerId}', '${textId}', '${inputId}')" 
+                <button type="button"
+                    onclick="removeImage(event, ${index}, '${containerId}', '${textId}', '${inputId}')"
                     style="position:absolute; top:-10px; right:-10px; background:#000; color:#fff; border:2px solid #fff; border-radius:50%; width:24px; height:24px; cursor:pointer; z-index:10; display:flex; align-items:center; justify-content:center; font-size:16px;">
                     &times;
                 </button>
@@ -224,6 +233,8 @@ function renderPreviews(containerId, textId, inputId) {
     }
 }
 
+// ─── REMOVE IMAGE ─────────────────────────────────────────────────────────────
+
 function removeImage(event, index, containerId, textId, inputId) {
     event.stopPropagation();
     const removedFile = selectedFiles[index];
@@ -235,6 +246,8 @@ function removeImage(event, index, containerId, textId, inputId) {
     selectedFiles.splice(index, 1);
     renderPreviews(containerId, textId, inputId);
 }
+
+// ─── DELETE CONFIRMATION ──────────────────────────────────────────────────────
 
 function confirmDelete(id, name) {
     Swal.fire({
