@@ -24,4 +24,8 @@ COPY . /var/www/html/
 WORKDIR /var/www/html
 RUN composer install --no-interaction --optimize-autoloader
 
+# Create upload directories and set permissions
+RUN mkdir -p /var/www/html/uploads/customer_print \
+    && chmod -R 777 /var/www/html/uploads
+
 EXPOSE 80
