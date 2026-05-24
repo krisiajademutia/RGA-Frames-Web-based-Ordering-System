@@ -48,7 +48,8 @@ if (!empty($mount_type_id)) {
     $extra_price += $service->getMountTypeFee($mount_type_id);
 }
 
-$print_subtotal = 0; 
+$print_subtotal = 0;
+$print_price = 0; 
 
 // --- HANDLE PRINTING ORDER LINKING ---
 if ($service_type === 'FRAME&PRINT') {
@@ -96,13 +97,16 @@ if ($service_type === 'FRAME&PRINT') {
         $printing_order_item_id = $conn->insert_id; 
         $conn->commit();
     } catch (Exception $e) {
-        $conn->rollback(); if (file_exists($targetFile)) unlink($targetFile);
+        $conn->rollback(); 
+        if (!empty($imagePathForDB) && file_exists(__DIR__ . '/../' . $imagePathForDB)) {
+            unlink(__DIR__ . '/../' . $imagePathForDB);
+        }
         ob_clean(); echo json_encode(['success' => false, 'message' => 'Internal error: ' . $e->getMessage()]); exit();
     }
 }
 
-$sub_total = ($base_price + $extra_price) * $quantity; 
-$total_price = $sub_total + $print_subtotal; 
+$sub_total = ($base_price + $extra_price + $print_price) * $quantity; 
+$total_price = $sub_total; // Print is already included in $sub_total
 
 $itemData = [
     'r_product_id'          => $r_product_id,
