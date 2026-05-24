@@ -36,6 +36,7 @@ class CheckoutRepository {
                 ci.*,
                 'FRAME' as category_type,
                 rm.product_name    AS ready_name,
+                COALESCE(pi.sub_total, 0) AS print_sub_total,
                 (SELECT quantity FROM tbl_ready_made_product_stocks s WHERE s.r_product_id = rm.r_product_id LIMIT 1) AS current_stock,
                 fd.design_name     AS custom_design_name,
                 cfp.custom_width   AS width,
@@ -45,6 +46,7 @@ class CheckoutRepository {
             LEFT JOIN tbl_ready_made_product rm    ON ci.r_product_id    = rm.r_product_id
             LEFT JOIN tbl_custom_frame_product cfp ON ci.c_product_id    = cfp.c_product_id
             LEFT JOIN tbl_frame_designs fd         ON cfp.frame_design_id = fd.frame_design_id
+            LEFT JOIN tbl_printing_order_items pi ON ci.printing_order_item_id = pi.printing_order_item_id
             WHERE c.customer_id = ? AND ci.source_type = 'CART'
               AND ci.item_id IN ($ph)
         ");
@@ -109,6 +111,9 @@ class CheckoutRepository {
                     break;
                 }
             }
+        }
+        if (!empty($frame['print_sub_total'])) {
+            $frame['sub_total'] = (float)($frame['sub_total'] ?? 0) + (float)$frame['print_sub_total'];
         }
         $finalCartItems[] = $frame;
     }
