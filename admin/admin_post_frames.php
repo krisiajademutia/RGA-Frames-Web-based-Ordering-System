@@ -38,7 +38,7 @@ $posted_frames = $frameService->getAllFrames();
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="/rga_frames/assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
 
@@ -84,41 +84,41 @@ $posted_frames = $frameService->getAllFrames();
                     $product_images = $img_res->fetch_all(MYSQLI_ASSOC);
                 ?>
                     <div class="posted-card-item">
-                                                    <div class="posted-image-box position-relative">
-                                <div id="carousel-<?= $p_id ?>" class="carousel slide h-100" data-bs-ride="false">
-                                    
-                                    <?php if(count($product_images) > 1): ?>
-                                        <div class="carousel-indicators">
-                                            <?php foreach($product_images as $index => $img): ?>
-                                                <button type="button" data-bs-target="#carousel-<?= $p_id ?>" data-bs-slide-to="<?= $index ?>" class="<?= $index === 0 ? 'active' : '' ?>" aria-current="true"></button>
-                                            <?php endforeach; ?>
+                        <div class="posted-image-box position-relative">
+                            <div id="carousel-<?= $p_id ?>" class="carousel slide h-100" data-bs-ride="false">
+                                
+                                <?php if(count($product_images) > 1): ?>
+                                    <div class="carousel-indicators">
+                                        <?php foreach($product_images as $index => $img): ?>
+                                            <button type="button" data-bs-target="#carousel-<?= $p_id ?>" data-bs-slide-to="<?= $index ?>" class="<?= $index === 0 ? 'active' : '' ?>" aria-current="true"></button>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+
+                                <div class="carousel-inner h-100">
+                                    <?php if(!empty($product_images)): ?>
+                                        <?php foreach($product_images as $index => $img): ?>
+                                            <div class="carousel-item h-100 <?= $index === 0 ? 'active' : '' ?>">
+                                                <img src="../uploads/<?= $img['image_name'] ?>" class="d-block w-100 h-100 object-fit-cover" alt="Product">
+                                            </div>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <div class="carousel-item active h-100">
+                                            <div class="d-flex align-items-center justify-content-center h-100 bg-light text-muted">No Image</div>
                                         </div>
                                     <?php endif; ?>
-
-                                    <div class="carousel-inner h-100">
-                                        <?php if(!empty($product_images)): ?>
-                                            <?php foreach($product_images as $index => $img): ?>
-                                                <div class="carousel-item h-100 <?= $index === 0 ? 'active' : '' ?>">
-                                                    <img src="/rga_frames/uploads/<?= $img['image_name'] ?>" class="d-block w-100 h-100 object-fit-cover" alt="Product">
-                                                </div>
-                                            <?php endforeach; ?>
-                                        <?php else: ?>
-                                            <div class="carousel-item active h-100">
-                                                <div class="d-flex align-items-center justify-content-center h-100 bg-light text-muted">No Image</div>
-                                            </div>
-                                        <?php endif; ?>
-                                    </div>
-
-                                    <?php if(count($product_images) > 1): ?>
-                                        <button class="carousel-control-prev custom-nav" type="button" data-bs-target="#carousel-<?= $p_id ?>" data-bs-slide="prev">
-                                            <span class="nav-circle"><i class="fa-solid fa-chevron-left"></i></span>
-                                        </button>
-                                        <button class="carousel-control-next custom-nav" type="button" data-bs-target="#carousel-<?= $p_id ?>" data-bs-slide="next">
-                                            <span class="nav-circle"><i class="fa-solid fa-chevron-right"></i></span>
-                                        </button>
-                                    <?php endif; ?>
                                 </div>
+
+                                <?php if(count($product_images) > 1): ?>
+                                    <button class="carousel-control-prev custom-nav" type="button" data-bs-target="#carousel-<?= $p_id ?>" data-bs-slide="prev">
+                                        <span class="nav-circle"><i class="fa-solid fa-chevron-left"></i></span>
+                                    </button>
+                                    <button class="carousel-control-next custom-nav" type="button" data-bs-target="#carousel-<?= $p_id ?>" data-bs-slide="next">
+                                        <span class="nav-circle"><i class="fa-solid fa-chevron-right"></i></span>
+                                    </button>
+                                <?php endif; ?>
                             </div>
+                        </div>
                         <div class="posted-info">
                             <h4 class="posted-item-title"><?= htmlspecialchars($row['product_name']) ?></h4>
                             <p class="posted-item-meta m-0"><?= $row['width'] ?>x<?= $row['height'] ?>"</p>
@@ -148,7 +148,7 @@ $posted_frames = $frameService->getAllFrames();
     <?php elseif($view == 'edit' && $edit_data): ?>
     <div class="post-card shadow-sm">
     <div class="post-card-header">EDIT READY-MADE FRAME</div>
-    <form action="/rga_frames/process/postframe_process.php" method="POST" enctype="multipart/form-data">
+    <form action="../process/postframe_process.php" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="r_product_id" value="<?= $edit_data['r_product_id'] ?>">
         <input type="hidden" name="removed_images" id="removed_images" value="">
         
@@ -203,7 +203,7 @@ $posted_frames = $frameService->getAllFrames();
                 <label class="post-label">STOCK QUANTITY <span class="text-danger">*</span></label>
                 <input type="number" name="stock_quantity" class="post-input" value="<?= $edit_data['quantity'] ?>" required>
             </div>
-                <div class="post-upload-container">
+            <div class="post-upload-container">
                 <label class="post-label">PRODUCT PHOTOS <span class="text-danger">*</span></label>
                 <div class="post-upload-zone position-relative" onclick="document.getElementById('edit_design_imgs').click();">
                     <input type="file" name="images[]" id="edit_design_imgs" style="display:none;" multiple onchange="handleMultipleFilePreview(this, 'image_preview_container', 'post_img_text')">
@@ -233,7 +233,7 @@ $posted_frames = $frameService->getAllFrames();
     <?php else: ?>
     <div class="post-card shadow-sm">
         <div class="post-card-header">POST READY-MADE FRAMES</div>
-        <form action="/rga_frames/process/postframe_process.php" method="POST" enctype="multipart/form-data">
+        <form action="../process/postframe_process.php" method="POST" enctype="multipart/form-data">
             <div class="post-form-grid">
                 <div>
                     <label class="post-label">PRODUCT NAME <span class="text-danger">*</span></label>
@@ -306,8 +306,6 @@ $posted_frames = $frameService->getAllFrames();
     <?php endif; ?>
 </div>
 
-
-
 <?php if (isset($_SESSION['post_success_modal'])): ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -342,6 +340,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="/rga_frames/assets/js/post_script.js"></script>
+<script src="../assets/js/post_script.js"></script>
 </body>
 </html>
