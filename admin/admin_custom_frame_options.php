@@ -1,4 +1,5 @@
 <?php
+session_start();
 // Include the logic that initializes the database, the OptionService, and registers all repositories
 require_once __DIR__ . '/../process/fetch_options.php';
 
