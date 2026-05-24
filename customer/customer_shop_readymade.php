@@ -44,7 +44,7 @@ foreach ($paperOptions as $paper) {
         <?php if (!empty($posted_frames)): foreach ($posted_frames as $row): ?>
         <div class="posted-card-item border">
             <div class="posted-image-box">
-                <img src="/rga_frames/uploads/<?= htmlspecialchars($row['image_name'] ?? '') ?>" alt="Frame">
+                <img src="../uploads/<?= htmlspecialchars($row['image_name'] ?? '') ?>" alt="Frame">
             </div>
             <div class="posted-info">
                 <h4 class="posted-item-title"><?= htmlspecialchars($row['product_name']) ?></h4>
@@ -174,7 +174,7 @@ foreach ($paperOptions as $paper) {
                                              onclick="selectMat(this, null, true)">None</div>
                                         <?php foreach ($matOptions as $mat): ?>
                                         <div class="cust-rdymd-swatch-item"
-                                             style="<?= $mat['image_name'] ? "background-image:url('/rga_frames/uploads/" . htmlspecialchars($mat['image_name']) . "'); background-size:cover;" : "background:#ccc;" ?>"
+                                             style="<?= $mat['image_name'] ?"background-image:url('../uploads/" . htmlspecialchars($mat['image_name']) . "'); background-size:cover;" : "background:#ccc;" ?>"
                                              title="<?= htmlspecialchars($mat['matboard_color_name']) ?> (+₱<?= number_format($mat['base_price'], 2) ?>)"
                                              data-mat-id="<?= $mat['matboard_color_id'] ?>"
                                              data-price="<?= $mat['base_price'] ?>"
@@ -192,7 +192,7 @@ foreach ($paperOptions as $paper) {
                                              onclick="selectSecondaryMat(this, null)">None</div>
                                         <?php foreach ($matOptions as $mat): ?>
                                         <div class="cust-rdymd-swatch-item"
-                                             style="<?= $mat['image_name'] ? "background-image:url('/rga_frames/uploads/" . htmlspecialchars($mat['image_name']) . "'); background-size:cover;" : "background:#ccc;" ?>"
+                                             style="<?= $mat['image_name'] ? "background-image:url('../uploads/" . htmlspecialchars($mat['image_name']) . "'); background-size:cover;" : "background:#ccc;" ?>"
                                              title="<?= htmlspecialchars($mat['matboard_color_name']) ?> (+₱<?= number_format($mat['base_price'], 2) ?>)"
                                              data-mat-id="<?= $mat['matboard_color_id'] ?>"
                                              data-price="<?= $mat['base_price'] ?>"
