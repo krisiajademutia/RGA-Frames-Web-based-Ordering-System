@@ -16,7 +16,7 @@ productModal.addEventListener('show.bs.modal', function (event) {
     document.getElementById('hiddenProductHeight').value = productHeight;
     document.getElementById('modalProductId').value      = product.r_product_id;
     document.getElementById('modalProductName').innerText = product.product_name;
-    document.getElementById('modalProductImg').src        = "/rga_frames/uploads/" + (product.image_name || '');
+    document.getElementById('modalProductImg').src        = "/uploads/" + (product.image_name || '');
     document.getElementById('specSize').innerText         = `${productWidth}x${productHeight}"`;
     document.getElementById('specDesign').innerText       = product.design_name || '—';
     document.getElementById('specColor').innerText        = product.color_name  || '—';
