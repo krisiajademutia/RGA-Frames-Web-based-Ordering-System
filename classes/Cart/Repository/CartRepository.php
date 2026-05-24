@@ -130,11 +130,6 @@ class CartRepository implements CartRepositoryInterface
         $row['design_base_price_display'] = $designBasePrice > 0 ? $designBasePrice : null;
         $row['frame_type_price_display']  = $frameTypePrice  > 0 ? $frameTypePrice  : null;
 
-        // Add print sub_total to the item's main sub_total so the Cart displays the full price
-        if (isset($row['print_sub_total'])) {
-            $row['sub_total'] = (float)($row['sub_total'] ?? 0) + (float)$row['print_sub_total'];
-        }
-
         return $row;
     }
 
