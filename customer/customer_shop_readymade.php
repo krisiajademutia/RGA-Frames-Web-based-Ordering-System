@@ -174,7 +174,7 @@ foreach ($paperOptions as $paper) {
                                              onclick="selectMat(this, null, true)">None</div>
                                         <?php foreach ($matOptions as $mat): ?>
                                         <div class="cust-rdymd-swatch-item"
-                                             style="<?= $mat['image_name'] ?"background-image:url('../uploads/" . htmlspecialchars($mat['image_name']) . "'); background-size:cover;" : "background:#ccc;" ?>"
+                                             style="<?= $mat['image_name'] ? "background-image:url('../uploads/" . htmlspecialchars($mat['image_name']) . "'); background-size:cover;" : "background:#ccc;" ?>"
                                              title="<?= htmlspecialchars($mat['matboard_color_name']) ?> (+₱<?= number_format($mat['base_price'], 2) ?>)"
                                              data-mat-id="<?= $mat['matboard_color_id'] ?>"
                                              data-price="<?= $mat['base_price'] ?>"
