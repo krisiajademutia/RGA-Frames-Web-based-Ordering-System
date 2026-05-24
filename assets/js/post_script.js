@@ -120,7 +120,7 @@ function loadExistingPhotos(images, containerId, textId, inputId) {
         selectedFiles.push({
             isExisting: true,
             image_name: img.image_name,
-            url: '/rga_frames/uploads/' + img.image_name,
+            url: '/uploads/' + img.image_name,
             is_primary: img.is_primary == 1
         });
     });
