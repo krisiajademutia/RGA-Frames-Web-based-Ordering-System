@@ -89,11 +89,10 @@ class CustomFrameService {
                     }
                 }
             }
-            $extraPrice += $printPrice;
         }
 
         // 6. Calculate Totals
-        $unitSubTotal = $basePrice + $extraPrice;
+        $unitSubTotal = $basePrice + $extraPrice + $printPrice;
         $qty          = max(1, (int)($data['quantity'] ?? 1));
         $grandTotal   = $unitSubTotal * $qty;
 
@@ -209,7 +208,7 @@ class CustomFrameService {
                 max(1, (int)($data['quantity'] ?? 1)),
                 $prices['base_price'],
                 $prices['extra_price'],
-                $prices['sub_total'] // IMPORTANT: per item subtotal only
+                $prices['grand_total'] // IMPORTANT: storing total quantity price to be consistent
             );
 
             $this->conn->commit();
